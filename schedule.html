@@ -147,30 +147,45 @@
     font-weight: 600;
 }
 
-/* Congrats Watermark Animation */
 #congratsMessage {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 48px;
-    font-weight: 800;
-    color: #FFB100;
-    text-shadow: 0 0 20px #FFB100, 0 0 40px #FFB100;
-    opacity: 0;
+    font-weight: 900; /* Bolder text */
+    color: rgba(255, 177, 0, 0.12); /* Slightly stronger opacity */
+    text-transform: uppercase;
     pointer-events: none;
-    z-index: 999;
+    opacity: 0;
+    z-index: 10000;
 }
 
-#congratsMessage.active {
-    animation: watermarkFade 3s ease forwards;
+
+#congratsMessage.watermark-active {
+    animation: fadeWatermark 20s ease forwards;
 }
 
-@keyframes watermarkFade {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+
+@keyframes fadeWatermark {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+    40% {
+        opacity: 0.5;
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+    70% {
+        opacity: 0.08; /* Soft watermark look */
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1);
+    }
 }
+
 
 /* Confetti Canvas */
 #confettiCanvas {
@@ -197,6 +212,26 @@ footer a {
 footer a:hover {
     text-decoration: underline;
 }
+
+
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Push footer down */
+}
+
+.footer-wrapper {
+    width: 100%;
+    margin-top: auto; /* Stick to bottom */
+}
+
+
+
+
 
     </style>
 </head>
@@ -501,6 +536,54 @@ function updateProgress() {
     }
 }
 
+
+// DVD-style bouncing watermark
+let dvdActive = false;
+let dvdInterval;
+
+function startDVDWatermark() {
+    if (dvdActive) return;
+    dvdActive = true;
+
+    const watermark = document.getElementById('congratsMessage');
+    watermark.style.opacity = 0.12; // Subtle visibility
+    watermark.style.display = 'block';
+
+    let x = window.innerWidth / 2;
+    let y = window.innerHeight / 2;
+    let dx = 2; // Horizontal speed
+    let dy = 2; // Vertical speed
+
+    function move() {
+        x += dx;
+        y += dy;
+
+        const rect = watermark.getBoundingClientRect();
+
+        if (x + rect.width / 2 >= window.innerWidth || x - rect.width / 2 <= 0) {
+            dx *= -1; // Reverse X
+        }
+        if (y + rect.height / 2 >= window.innerHeight || y - rect.height / 2 <= 0) {
+            dy *= -1; // Reverse Y
+        }
+
+        watermark.style.left = `${x}px`;
+        watermark.style.top = `${y}px`;
+    }
+
+    dvdInterval = setInterval(move, 15); // Smooth movement
+
+    // Stop after 60 seconds
+    setTimeout(() => {
+        clearInterval(dvdInterval);
+        watermark.style.display = 'none';
+        dvdActive = false;
+    }, 60000);
+}
+
+
+
+
 // Checkbox Logic
 document.querySelectorAll('input[type="checkbox"]').forEach(box => {
     if (today !== lastCheckDate) {
@@ -523,6 +606,9 @@ if (today !== lastCheckDate) {
 }
 
 updateProgress();
+startDVDWatermark();
+successSound.play();
+
 </script>
 
 
