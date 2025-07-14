@@ -115,6 +115,38 @@
             color: #777;
         }
 
+
+
+
+
+.progress-container {
+    width: 100%;
+    background: #333;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 20px;
+    margin-bottom: 20px;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #FFB100, #FF7700);
+    transition: width 0.3s ease;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
         /* Footer Section */
         footer {
             text-align: center;
@@ -262,7 +294,7 @@
     <div class="task">
         <h2>7:30 PM – 8:15 PM</h2>
         <p><input type="checkbox" id="task15"><label for="task15"><strong>Eat Dinner + social media check-in📰 + chat break 💬</strong></label></p>
-        <p class="category">Fitness</p>
+        <p class="category">Routine</p>
         <p>Priority: Medium</p>
     </div>
 
@@ -307,6 +339,26 @@
         <p class="tagline">"The strength to conquer tomorrow lies in the relentless drive to master today." - Jordan B. Peterson</p>
     </header>
         </div>
+        
+
+
+
+<div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+</div>
+<p id="progressText" style="text-align:center; margin-top:10px; color: #FFB100; font-weight:600;">0% Completed</p>
+
+
+
+
+
+
+
+
+
+
+
+
 
         <!-- Footer -->
     <footer>
@@ -321,4 +373,55 @@
     </div>
 
 </body>
+<script>
+// Get today's date as a string (e.g., "Mon Jul 15 2025")
+const today = new Date().toDateString();
+const lastCheckDate = localStorage.getItem('lastCheckDate');
+
+// Function to update progress bar & percentage text
+function updateProgress() {
+    const boxes = document.querySelectorAll('input[type="checkbox"]');
+    const total = boxes.length;
+    const checked = Array.from(boxes).filter(box => box.checked).length;
+
+    const percent = Math.round((checked / total) * 100);
+
+    // Update progress bar width
+    document.getElementById('progressBar').style.width = percent + '%';
+
+    // Update text
+    document.getElementById('progressText').innerText = percent + '% Completed';
+}
+
+// Initialize checkboxes and handle daily reset
+document.querySelectorAll('input[type="checkbox"]').forEach(box => {
+    if (today !== lastCheckDate) {
+        // New day: Reset checkboxes
+        box.checked = false;
+        localStorage.setItem(box.id, false);
+    } else {
+        // Load saved state
+        const saved = localStorage.getItem(box.id);
+        if (saved) box.checked = saved === 'true';
+    }
+
+    // Save changes and update progress
+    box.addEventListener('change', () => {
+        localStorage.setItem(box.id, box.checked);
+        localStorage.setItem('lastCheckDate', today);
+        updateProgress();
+    });
+});
+
+// After resetting, update the stored date
+if (today !== lastCheckDate) {
+    localStorage.setItem('lastCheckDate', today);
+}
+
+// Run progress update on page load
+updateProgress();
+</script>
+
+
+
 </html>
