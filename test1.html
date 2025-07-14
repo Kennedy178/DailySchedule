@@ -115,120 +115,22 @@
             color: #777;
         }
 
+        /* Footer Section */
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 14px;
+            color: #777;
+        }
 
+        footer a {
+            color: #FFB100;
+            text-decoration: none;
+        }
 
-
-.footer-wrapper {
-    margin-top: 30px;
-    padding-bottom: 20px;
-}
-
-.progress-container {
-    width: 90%;
-    max-width: 600px;
-    height: 20px;
-    background: #333;
-    border-radius: 10px;
-    margin: 0 auto;
-    overflow: hidden;
-}
-
-.progress-bar {
-    height: 100%;
-    width: 0%;
-    background: #FFB100; /* Golden accent */
-    transition: width 0.5s ease;
-}
-
-#progressText {
-    text-align: center;
-    margin: 10px 0;
-    color: #FFB100;
-    font-weight: 600;
-}
-
-#congratsMessage {
-    position: fixed;
-    font-size: 50px;
-    font-weight: 900;
-    color: #FFB100;
-    text-shadow: 0 0 15px rgba(255,177,0,0.8);
-    pointer-events: none;
-    z-index: 10000;
-    display: none;
-}
-
-
-
-
-
-
-@keyframes fadeWatermark {
-    0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.8);
-    }
-    40% {
-        opacity: 0.5;
-        transform: translate(-50%, -50%) scale(1.05);
-    }
-    70% {
-        opacity: 0.08; /* Soft watermark look */
-        transform: translate(-50%, -50%) scale(1);
-    }
-    100% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(1);
-    }
-}
-
-
-/* Confetti Canvas */
-#confettiCanvas {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 998;
-}
-
-/* Footer Style */
-footer {
-    text-align: center;
-    margin-top: 10px;
-    font-size: 14px;
-    color: #777;
-}
-
-footer a {
-    color: #FFB100;
-    text-decoration: none;
-}
-
-footer a:hover {
-    text-decoration: underline;
-}
-
-
-html, body {
-    height: 100%;
-}
-
-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* Push footer down */
-}
-
-.footer-wrapper {
-    width: 100%;
-    margin-top: auto; /* Stick to bottom */
-}
-
-
-
-
-
+        footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -360,7 +262,7 @@ body {
     <div class="task">
         <h2>7:30 PM – 8:15 PM</h2>
         <p><input type="checkbox" id="task15"><label for="task15"><strong>Eat Dinner + social media check-in📰 + chat break 💬</strong></label></p>
-        <p class="category">Routine</p>
+        <p class="category">Fitness</p>
         <p>Priority: Medium</p>
     </div>
 
@@ -405,191 +307,95 @@ body {
         <p class="tagline">"The strength to conquer tomorrow lies in the relentless drive to master today." - Jordan B. Peterson</p>
     </header>
         </div>
-        
 
-
-
-<!-- Footer Wrapper to control spacing -->
-<div class="footer-wrapper">
-
-    <!-- Progress Bar -->
-    <div class="progress-container">
-        <div class="progress-bar" id="progressBar"></div>
-    </div>
-
-    <!-- Progress Text -->
-    <p id="progressText">0% Completed</p>
-
-    <!-- Watermark Congrats Message -->
-    <div id="congratsMessage">Congratulations!</div>
-
-    <!-- Confetti Canvas -->
-    <canvas id="confettiCanvas"></canvas>
-
-    <!-- Success Sound -->
-    <audio id="successSound" preload="auto">
-        <source src="https://assets.mixkit.co/active_storage/sfx/3009/3009-preview.mp3" type="audio/mpeg">
-    </audio>
-
-    <!-- Footer Section -->
+        <!-- Footer -->
     <footer>
-        <p>
-            Created by Kennedy |
-            <a href="https://www.linkedin.com/in/kennedy-munene-dsml" target="_blank">LinkedIn</a> |
-            <a href="https://github.com/Kennedy178" target="_blank">GitHub</a> |
-            2025
-        </p>
-    </footer>
-
-</div>
-
-
+    <p>
+        Created by Kennedy |
+        <a href="https://www.linkedin.com/in/kennedy-munene-dsml" target="_blank">LinkedIn</a> |
+        <a href="https://github.com/Kennedy178" target="_blank">GitHub</a> |
+        2025
+    </p>
+</footer>
     </div>
 
-</body>
 
-
-<script>
-const today = new Date().toDateString();
-const lastCheckDate = localStorage.getItem('lastCheckDate');
-
-const successSound = document.getElementById('successSound');
-const congratsText = document.getElementById('congratsMessage');
-const canvas = document.getElementById('confettiCanvas');
-const ctx = canvas.getContext('2d');
-
-let confettiActive = false;
-let confettiAnimation;
-let dvdActive = false;
-let dvdInterval;
-
-function fireConfetti() {
-    if (confettiActive) return;
-
-    confettiActive = true;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const confetti = [];
-    for (let i = 0; i < 150; i++) {
-        confetti.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height - canvas.height,
-            size: Math.random() * 8 + 2,
-            color: Math.random() < 0.5 ? '#FFB100' : '#FFD700',
-            speed: Math.random() * 3 + 2
-        });
-    }
-
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        confetti.forEach(c => {
-            ctx.fillStyle = c.color;
-            ctx.fillRect(c.x, c.y, c.size, c.size);
-            c.y += c.speed;
-            if (c.y > canvas.height) c.y = -10;
-        });
-        confettiAnimation = requestAnimationFrame(draw);
-    }
-
-    draw();
-
-    setTimeout(() => {
-        cancelAnimationFrame(confettiAnimation);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        confettiActive = false;
-    }, 60000);
+    <script>
+// Utility: Get today's date in YYYY-MM-DD format
+function getTodayDate() {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
 }
 
-function startDVDMessage() {
-    if (dvdActive) return;
-
-    dvdActive = true;
-    congratsText.style.display = 'block';
-    congratsText.style.color = '#FFB100';
-    successSound.play();
-
-    let x = Math.random() * (window.innerWidth - congratsText.offsetWidth);
-    let y = Math.random() * (window.innerHeight - congratsText.offsetHeight);
-    let dx = 2;
-    let dy = 2;
-
-    dvdInterval = setInterval(() => {
-        x += dx;
-        y += dy;
-
-        if (x <= 0 || x + congratsText.offsetWidth >= window.innerWidth) dx *= -1;
-        if (y <= 0 || y + congratsText.offsetHeight >= window.innerHeight) dy *= -1;
-
-        congratsText.style.left = x + 'px';
-        congratsText.style.top = y + 'px';
-    }, 16);
-
-    setTimeout(() => {
-        clearInterval(dvdInterval);
-        congratsText.style.display = 'none';
-        dvdActive = false;
-    }, 60000);
+// Utility: Get current time in HH:MM 24-hour format
+function getCurrentTime() {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
 }
 
-function stopEffects() {
-    // Stop Confetti
-    cancelAnimationFrame(confettiAnimation);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    confettiActive = false;
-
-    // Stop DVD Text
-    clearInterval(dvdInterval);
-    congratsText.style.display = 'none';
-    dvdActive = false;
+// Utility: Compare two HH:MM times
+function isPastCutoff(cutoff) {
+    return getCurrentTime() > cutoff;
 }
 
-function updateProgress() {
-    const boxes = document.querySelectorAll('input[type="checkbox"]');
-    const total = boxes.length;
-    const checked = Array.from(boxes).filter(box => box.checked).length;
-
-    const percent = Math.round((checked / total) * 100);
-
-    document.getElementById('progressBar').style.width = percent + '%';
-    document.getElementById('progressText').innerText = percent + '% Completed';
-
-    if (percent === 100) {
-        if (!confettiActive && !dvdActive) {
-            fireConfetti();
-            startDVDMessage();
-        }
-    } else {
-        stopEffects();
-    }
-}
-
-// Initialize checkboxes
-document.querySelectorAll('input[type="checkbox"]').forEach(box => {
-    if (today !== lastCheckDate) {
-        box.checked = false;
-        localStorage.setItem(box.id, false);
-    } else {
-        const saved = localStorage.getItem(box.id);
-        if (saved) box.checked = saved === 'true';
-    }
-
-    box.addEventListener('change', () => {
-        localStorage.setItem(box.id, box.checked);
-        localStorage.setItem('lastCheckDate', today);
-        updateProgress();
+// Function to reset checkboxes (new day logic)
+function resetCheckboxes() {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.checked = false;
+        cb.disabled = false;
+        localStorage.removeItem(cb.id);
     });
-});
-
-if (today !== lastCheckDate) {
-    localStorage.setItem('lastCheckDate', today);
 }
 
-updateProgress();
+// Function to load checkbox states + apply time-lock
+function loadCheckboxStates() {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        const savedState = localStorage.getItem(cb.id);
+        const cutoff = cb.dataset.cutoff;
+
+        if (savedState === 'true') {
+            cb.checked = true;
+            cb.disabled = true;
+        } else if (cutoff && isPastCutoff(cutoff)) {
+            cb.disabled = true;
+        }
+    });
+}
+
+// Function to handle checkbox interaction
+function setupCheckboxListeners() {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', () => {
+            if (cb.checked) {
+                localStorage.setItem(cb.id, true);
+                cb.disabled = true;  // Immediately disable after checking
+            }
+        });
+    });
+}
+
+// Master initializer (runs on page load)
+function initializeSchedule() {
+    const today = getTodayDate();
+    const lastResetDate = localStorage.getItem('lastResetDate');
+
+    if (lastResetDate !== today) {
+        resetCheckboxes();
+        localStorage.setItem('lastResetDate', today);
+    }
+
+    loadCheckboxStates();
+    setupCheckboxListeners();
+}
+
+// Execute after DOM is fully loaded
+document.addEventListener('DOMContentLoaded', initializeSchedule);
 </script>
 
-
-
-
-
+</body>
 </html>
