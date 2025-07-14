@@ -118,51 +118,86 @@
 
 
 
+.footer-wrapper {
+    margin-top: 30px;
+    padding-bottom: 20px;
+}
 
 .progress-container {
-    width: 100%;
+    width: 90%;
+    max-width: 600px;
+    height: 20px;
     background: #333;
     border-radius: 10px;
+    margin: 0 auto;
     overflow: hidden;
-    height: 20px;
-    margin-bottom: 20px;
 }
 
 .progress-bar {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #FFB100, #FF7700);
-    transition: width 0.3s ease;
+    background: #FFB100; /* Golden accent */
+    transition: width 0.5s ease;
 }
 
+#progressText {
+    text-align: center;
+    margin: 10px 0;
+    color: #FFB100;
+    font-weight: 600;
+}
 
+/* Congrats Watermark Animation */
+#congratsMessage {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    font-weight: 800;
+    color: #FFB100;
+    text-shadow: 0 0 20px #FFB100, 0 0 40px #FFB100;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 999;
+}
 
+#congratsMessage.active {
+    animation: watermarkFade 3s ease forwards;
+}
 
+@keyframes watermarkFade {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
 
+/* Confetti Canvas */
+#confettiCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 998;
+}
 
+/* Footer Style */
+footer {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 14px;
+    color: #777;
+}
 
+footer a {
+    color: #FFB100;
+    text-decoration: none;
+}
 
+footer a:hover {
+    text-decoration: underline;
+}
 
-
-
-
-
-        /* Footer Section */
-        footer {
-            text-align: center;
-            margin-top: 50px;
-            font-size: 14px;
-            color: #777;
-        }
-
-        footer a {
-            color: #FFB100;
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
@@ -343,42 +378,111 @@
 
 
 
-<div class="progress-container">
-    <div class="progress-bar" id="progressBar"></div>
-</div>
-<p id="progressText" style="text-align:center; margin-top:10px; color: #FFB100; font-weight:600;">0% Completed</p>
+<!-- Footer Wrapper to control spacing -->
+<div class="footer-wrapper">
 
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
 
+    <!-- Progress Text -->
+    <p id="progressText">0% Completed</p>
 
+    <!-- Watermark Congrats Message -->
+    <div id="congratsMessage">Congratulations!</div>
 
+    <!-- Confetti Canvas -->
+    <canvas id="confettiCanvas"></canvas>
 
+    <!-- Success Sound -->
+    <audio id="successSound" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/3009/3009-preview.mp3" type="audio/mpeg">
+    </audio>
 
-
-
-
-
-
-
-
-        <!-- Footer -->
+    <!-- Footer Section -->
     <footer>
-    <p>
-        Created by Kennedy |
-        <a href="https://www.linkedin.com/in/kennedy-munene-dsml" target="_blank">LinkedIn</a> |
-        <a href="https://github.com/Kennedy178" target="_blank">GitHub</a> |
-        2025
-    </p>
-</footer>
+        <p>
+            Created by Kennedy |
+            <a href="https://www.linkedin.com/in/kennedy-munene-dsml" target="_blank">LinkedIn</a> |
+            <a href="https://github.com/Kennedy178" target="_blank">GitHub</a> |
+            2025
+        </p>
+    </footer>
+
+</div>
+
 
     </div>
 
 </body>
+
+
 <script>
-// Get today's date as a string (e.g., "Mon Jul 15 2025")
+// Get today's date
 const today = new Date().toDateString();
 const lastCheckDate = localStorage.getItem('lastCheckDate');
 
-// Function to update progress bar & percentage text
+const successSound = document.getElementById('successSound');
+const congratsText = document.getElementById('congratsMessage');
+const canvas = document.getElementById('confettiCanvas');
+const ctx = canvas.getContext('2d');
+
+let confettiActive = false;
+let confettiAnimation;
+
+// Confetti Function
+function fireConfetti() {
+    if (confettiActive) return; // Prevent multiple runs
+
+    confettiActive = true;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const confetti = [];
+    for (let i = 0; i < 150; i++) {
+        confetti.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            size: Math.random() * 8 + 2,
+            color: Math.random() < 0.5 ? '#FFB100' : '#FFD700',
+            speed: Math.random() * 3 + 2
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        confetti.forEach(c => {
+            ctx.fillStyle = c.color;
+            ctx.fillRect(c.x, c.y, c.size, c.size);
+            c.y += c.speed;
+            if (c.y > canvas.height) c.y = -10;
+        });
+        confettiAnimation = requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    // Stop after 60 seconds
+    setTimeout(() => {
+        cancelAnimationFrame(confettiAnimation);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        confettiActive = false;
+    }, 60000);
+}
+
+// Show watermark-style congrats message
+function showCongratsWatermark() {
+    congratsText.classList.add('watermark-active');
+    successSound.play();
+
+    // Auto-hide after 4 seconds
+    setTimeout(() => {
+        congratsText.classList.remove('watermark-active');
+    }, 4000);
+}
+
+// Progress & Completion Check
 function updateProgress() {
     const boxes = document.querySelectorAll('input[type="checkbox"]');
     const total = boxes.length;
@@ -386,26 +490,27 @@ function updateProgress() {
 
     const percent = Math.round((checked / total) * 100);
 
-    // Update progress bar width
     document.getElementById('progressBar').style.width = percent + '%';
-
-    // Update text
     document.getElementById('progressText').innerText = percent + '% Completed';
+
+    if (percent === 100) {
+        if (!congratsText.classList.contains('watermark-active')) {
+            fireConfetti();
+            showCongratsWatermark();
+        }
+    }
 }
 
-// Initialize checkboxes and handle daily reset
+// Checkbox Logic
 document.querySelectorAll('input[type="checkbox"]').forEach(box => {
     if (today !== lastCheckDate) {
-        // New day: Reset checkboxes
         box.checked = false;
         localStorage.setItem(box.id, false);
     } else {
-        // Load saved state
         const saved = localStorage.getItem(box.id);
         if (saved) box.checked = saved === 'true';
     }
 
-    // Save changes and update progress
     box.addEventListener('change', () => {
         localStorage.setItem(box.id, box.checked);
         localStorage.setItem('lastCheckDate', today);
@@ -413,14 +518,13 @@ document.querySelectorAll('input[type="checkbox"]').forEach(box => {
     });
 });
 
-// After resetting, update the stored date
 if (today !== lastCheckDate) {
     localStorage.setItem('lastCheckDate', today);
 }
 
-// Run progress update on page load
 updateProgress();
 </script>
+
 
 
 
