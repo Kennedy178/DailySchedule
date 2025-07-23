@@ -240,6 +240,11 @@ body {
             <p class="tagline">"Success is the sum of small efforts, repeated day in and day out." – Robert Collier.</p>
         </header>
 
+
+
+
+
+        
     <!-- Schedule Section -->
 <div class="schedule">
     <!-- Task 1 -->
@@ -446,6 +451,85 @@ body {
 
 
     </div>
+    
+
+
+
+
+    <!-- SECTION FOR ADDING CUSTOM TASKS, AIMED FOR ONE PAGE WB DOR EASIER DEPLYMENT N LIGHTWEIGHT -->
+<!-- Add New Task Button -->
+<div style="text-align:center; margin-top: 30px;">
+    <button id="showFormBtn" style="padding: 10px 20px; font-size: 18px; background-color: #FFB100; color: #121212; border: none; border-radius: 5px; cursor: pointer;">
+        ➕ Add New Task
+    </button>
+</div>
+
+<!-- Task Input Form (Hidden by Default) -->
+<div id="taskForm" style="display:none; margin: 30px auto; width: 90%; max-width: 500px; background-color: #1e1e1e; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #000;">
+    <h3 style="color:#FFB100; text-align:center;">Create Your Custom Task</h3>
+   <!-- Time Inputs with Scroll Picker -->
+<input type="time" id="startTime" style="width:100%; margin:10px 0; padding:10px;">
+<input type="time" id="endTime" style="width:100%; margin:10px 0; padding:10px;">
+
+    <input type="text" id="taskName" placeholder="Task Name" style="width:100%; margin:10px 0; padding:10px;">
+    <input type="text" id="category" placeholder="Category (e.g. Fitness)" style="width:100%; margin:10px 0; padding:10px;">
+    <select id="priority" style="width:100%; margin:10px 0; padding:10px;">
+        <option value="">Select Priority</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+    </select>
+    <button id="addTaskBtn" style="margin-top:10px; padding:10px 20px; background-color:#FFB100; color:#121212; border:none; border-radius:5px; width:100%;">✅ Add Task</button>
+</div>
+
+<script>
+    const showFormBtn = document.getElementById("showFormBtn");
+    const taskForm = document.getElementById("taskForm");
+    const addTaskBtn = document.getElementById("addTaskBtn");
+    const scheduleContainer = document.querySelector(".schedule");
+
+    let tasksReplaced = false;
+
+    showFormBtn.addEventListener("click", () => {
+        taskForm.style.display = taskForm.style.display === "none" ? "block" : "none";
+    });
+
+    addTaskBtn.addEventListener("click", () => {
+        const start = document.getElementById("startTime").value.trim();
+        const end = document.getElementById("endTime").value.trim();
+        const name = document.getElementById("taskName").value.trim();
+        const category = document.getElementById("category").value.trim();
+        const priority = document.getElementById("priority").value;
+
+        if (!start || !end || !name || !category || !priority) {
+            alert("Please fill in all fields!");
+            return;
+        }
+
+        if (!tasksReplaced) {
+            scheduleContainer.innerHTML = "";  // Clear existing tasks
+            tasksReplaced = true;
+        }
+
+        const taskDiv = document.createElement("div");
+        taskDiv.className = "task";
+        taskDiv.innerHTML = `
+            <h2>${start} – ${end}</h2>
+            <p><input type="checkbox"><label><strong>${name}</strong></label></p>
+            <p class="category">${category}</p>
+            <p>Priority: ${priority}</p>
+        `;
+
+        scheduleContainer.appendChild(taskDiv);
+
+        // Optional: clear form fields after submission
+        taskForm.querySelectorAll("input").forEach(input => input.value = "");
+        taskForm.querySelector("select").value = "";
+    });
+</script>
+
+
+
 
 </body>
 
