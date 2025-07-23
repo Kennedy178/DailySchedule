@@ -458,16 +458,17 @@ body {
 
     <!-- SECTION FOR ADDING CUSTOM TASKS, AIMED FOR ONE PAGE WB DOR EASIER DEPLYMENT N LIGHTWEIGHT -->
 <!-- Add New Task Button -->
+ <!--
 <div style="text-align:center; margin-top: 30px;">
     <button id="showFormBtn" style="padding: 10px 20px; font-size: 18px; background-color: #FFB100; color: #121212; border: none; border-radius: 5px; cursor: pointer;">
         ➕ Add New Task
     </button>
 </div>
 
-<!-- Task Input Form (Hidden by Default) -->
+
 <div id="taskForm" style="display:none; margin: 30px auto; width: 90%; max-width: 500px; background-color: #1e1e1e; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #000;">
     <h3 style="color:#FFB100; text-align:center;">Create Your Custom Task</h3>
-   <!-- Time Inputs with Scroll Picker -->
+  
 <input type="time" id="startTime" style="width:100%; margin:10px 0; padding:10px;">
 <input type="time" id="endTime" style="width:100%; margin:10px 0; padding:10px;">
 
@@ -526,8 +527,8 @@ body {
         taskForm.querySelectorAll("input").forEach(input => input.value = "");
         taskForm.querySelector("select").value = "";
     });
-</script>
-
+</script> 
+-->
 
 
 
@@ -633,17 +634,12 @@ function updateProgress() {
     const boxes = document.querySelectorAll('input[type="checkbox"]');
     const total = boxes.length;
     const checked = Array.from(boxes).filter(box => box.checked).length;
-
-    const percent = Math.round((checked / total) * 100);
-
+    const percent = total ? Math.round((checked / total) * 100) : 0;
     document.getElementById('progressBar').style.width = percent + '%';
     document.getElementById('progressText').innerText = percent + '% Completed';
-
-    if (percent === 100) {
-        if (!confettiActive && !dvdActive) {
-            fireConfetti();
-            startDVDMessage();
-        }
+    if (percent === 100 && !confettiActive && !dvdActive) {
+        fireConfetti();
+        startDVDMessage();
     } else {
         stopEffects();
     }
