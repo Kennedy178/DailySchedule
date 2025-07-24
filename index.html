@@ -42,7 +42,7 @@
         }
 
         header h1 {
-            font-size: clamp(32px, 5vw, 48px);
+            font-size: clamp(28px, 5vw, 40px);
             font-weight: 700;
             color: #FFB100;
             text-transform: uppercase;
@@ -50,16 +50,16 @@
         }
 
         header p {
-            font-size: clamp(16px, 3vw, 18px);
+            font-size: clamp(14px, 3vw, 16px);
             color: #999;
             margin-top: 10px;
         }
 
         .add-task-btn, .reset-default-btn {
             display: inline-block;
-            margin: 10px auto;
-            padding: 12px 24px;
-            font-size: 18px;
+            margin: 10px 5px;
+            padding: 10px 20px;
+            font-size: clamp(16px, 4vw, 18px);
             font-weight: 600;
             background-color: #FFB100;
             color: #121212;
@@ -73,7 +73,6 @@
 
         .reset-default-btn {
             background-color: #444;
-            margin-left: 10px;
         }
 
         .add-task-btn:hover, .reset-default-btn:hover {
@@ -84,10 +83,10 @@
         .task-form {
             display: none;
             margin: 20px auto;
-            width: 90%;
+            width: 100%;
             max-width: 500px;
             background: linear-gradient(90deg, #141414, #444);
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
@@ -95,8 +94,8 @@
         .task-form h3 {
             color: #FFB100;
             text-align: center;
-            margin-bottom: 20px;
-            font-size: 24px;
+            margin-bottom: 15px;
+            font-size: clamp(20px, 5vw, 22px);
             font-weight: 700;
         }
 
@@ -104,20 +103,20 @@
             display: block;
             color: #E5E5E5;
             margin-bottom: 5px;
-            font-size: 14px;
+            font-size: clamp(12px, 3vw, 14px);
             font-weight: 600;
         }
 
         .task-form input,
         .task-form select {
             width: 100%;
-            margin: 5px 0 15px;
-            padding: 10px;
+            margin: 5px 0 10px;
+            padding: 8px;
             background-color: #1e1e1e;
             border: none;
             border-radius: 5px;
             color: #E5E5E5;
-            font-size: 16px;
+            font-size: clamp(14px, 4vw, 16px);
         }
 
         .task-form select {
@@ -130,16 +129,21 @@
 
         .task-form .form-buttons {
             display: flex;
-            gap: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
         }
 
         .task-form button {
             flex: 1;
-            padding: 12px;
+            min-width: 80px;
+            max-width: 120px;
+            padding: 8px;
             background-color: #FFB100;
             color: #121212;
             border: none;
             border-radius: 5px;
+            font-size: clamp(12px, 3vw, 14px);
             font-weight: 600;
             text-transform: uppercase;
             cursor: pointer;
@@ -157,14 +161,14 @@
 
         .schedule {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 15px;
             margin-bottom: 20px;
         }
 
         .task {
             background: linear-gradient(90deg, #141414, #444);
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
@@ -185,14 +189,14 @@
         }
 
         .task h2 {
-            font-size: 22px;
+            font-size: clamp(18px, 4vw, 20px);
             color: #FFB100;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .task p {
-            font-size: 14px;
-            margin-top: 8px;
+            font-size: clamp(12px, 3vw, 13px);
+            margin-top: 6px;
             color: #B5B5B5;
         }
 
@@ -202,29 +206,30 @@
 
         .task .category {
             display: inline-block;
-            padding: 5px 12px;
-            margin-top: 10px;
+            padding: 4px 10px;
+            margin-top: 8px;
             border-radius: 20px;
             background-color: #FFB100;
             color: #121212;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-size: clamp(10px, 2.5vw, 12px);
         }
 
         .task .task-actions {
-            margin-top: 10px;
+            margin-top: 8px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .task .edit-btn, .task .delete-btn {
-            padding: 8px 12px;
+            padding: 6px 10px;
             background-color: #FFB100;
             color: #121212;
             border: none;
             border-radius: 5px;
-            font-size: 14px;
+            font-size: clamp(12px, 3vw, 13px);
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -240,7 +245,7 @@
         }
 
         input[type="checkbox"] {
-            margin-right: 10px;
+            margin-right: 8px;
             transform: scale(1.2);
         }
 
@@ -251,13 +256,13 @@
 
         .footer-wrapper {
             margin-top: auto;
-            padding-bottom: 20px;
+            padding-bottom: 15px;
         }
 
         .progress-container {
             width: 90%;
-            max-width: 600px;
-            height: 20px;
+            max-width: 500px;
+            height: 18px;
             background: #333;
             border-radius: 10px;
             margin: 0 auto;
@@ -273,14 +278,15 @@
 
         #progressText {
             text-align: center;
-            margin: 10px 0;
+            margin: 8px 0;
             color: #FFB100;
             font-weight: 600;
+            font-size: clamp(12px, 3vw, 14px);
         }
 
         #congratsMessage {
             position: fixed;
-            font-size: clamp(40px, 5vw, 50px);
+            font-size: clamp(30px, 5vw, 40px);
             font-weight: 900;
             color: #FFB100;
             text-shadow: 0 0 15px rgba(255,177,0,0.8);
@@ -307,7 +313,7 @@
         footer {
             text-align: center;
             margin-top: 10px;
-            font-size: 14px;
+            font-size: clamp(12px, 3vw, 13px);
             color: #777;
         }
 
@@ -321,21 +327,85 @@
         }
 
         @media (max-width: 600px) {
-            .task {
-                padding: 15px;
+            .container {
+                width: 95%;
             }
-            .task h2 {
-                font-size: 20px;
-            }
-            .task p {
-                font-size: 13px;
-            }
+
             .add-task-btn, .reset-default-btn {
-                font-size: 16px;
-                padding: 10px 20px;
+                padding: 8px 16px;
+                font-size: clamp(14px, 4vw, 16px);
             }
+
             .task-form {
-                padding: 15px;
+                padding: 10px;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .task-form input,
+            .task-form select {
+                padding: 6px;
+                font-size: clamp(12px, 3.5vw, 14px);
+            }
+
+            .task-form .form-buttons {
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .task-form button {
+                max-width: 100%;
+                padding: 8px;
+                font-size: clamp(11px, 3vw, 13px);
+            }
+
+            .schedule {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .task {
+                padding: 12px;
+            }
+
+            .task h2 {
+                font-size: clamp(16px, 4vw, 18px);
+            }
+
+            .task p {
+                font-size: clamp(11px, 3vw, 12px);
+            }
+
+            .task .category {
+                font-size: clamp(9px, 2.5vw, 11px);
+            }
+
+            .task .edit-btn, .task .delete-btn {
+                padding: 5px 8px;
+                font-size: clamp(11px, 3vw, 12px);
+            }
+
+            .progress-container {
+                width: 95%;
+                height: 16px;
+            }
+
+            #progressText {
+                font-size: clamp(11px, 3vw, 13px);
+            }
+        }
+
+        @media (max-width: 400px) {
+            header h1 {
+                font-size: clamp(24px, 6vw, 32px);
+            }
+
+            header p {
+                font-size: clamp(12px, 3.5vw, 14px);
+            }
+
+            .task-form h3 {
+                font-size: clamp(18px, 5vw, 20px);
             }
         }
     </style>
@@ -437,9 +507,7 @@
             { startTime: '09:00', endTime: '10:30', name: 'Focused Project Work 💻', category: 'Project', priority: 'High', id: 'task5', checked: false },
             { startTime: '10:30', endTime: '12:30', name: 'Data Science/ML Study 📖', category: 'Learning', priority: 'High', id: 'task7', checked: false },
             { startTime: '12:30', endTime: '13:30', name: 'Lunch Cooking & Eating 🍲', category: 'Routine', priority: 'Medium', id: 'task8', checked: false },
-            { startTime: '13:30', endTime: '14:30', name
-
-: 'Financial Education 📈', category: 'Finance', priority: 'High', id: 'task9', checked: false },
+            { startTime: '13:30', endTime: '14:30', name: 'Financial Education 📈', category: 'Finance', priority: 'High', id: 'task9', checked: false },
             { startTime: '14:30', endTime: '15:00', name: 'Chat Break 💬', category: 'Social', priority: 'Low', id: 'task10', checked: false },
             { startTime: '15:00', endTime: '16:30', name: 'Professional Networking (LinkedIn/X/Medium/Github) + Article Writing 🌐', category: 'Professional', priority: 'High', id: 'task11', checked: false },
             { startTime: '16:30', endTime: '17:00', name: 'Data Science/ML Study 💻', category: 'Project', priority: 'High', id: 'task12', checked: false },
@@ -504,7 +572,6 @@
 
         function sortTasksByTime(tasks) {
             return tasks.sort((a, b) => {
-                // Convert start times to minutes since midnight for accurate sorting
                 const getMinutesSinceMidnight = (time) => {
                     const [hours, minutes] = time.split(':').map(Number);
                     return hours * 60 + minutes;
@@ -587,7 +654,6 @@
                 tasks[parseInt(editIndex)] = task;
             }
 
-            // Sort tasks immediately after adding or updating
             tasks = sortTasksByTime(tasks);
             saveTasks();
             renderTasks();
