@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mercedes C300d AMG Line 2025 Routine</title>
-    <link rel="icon" href="https://i.postimg.cc/x87RR692/favicon-32x32.png" type="image/png">
-    
+    <link rel="icon" href="https://i.postimg.cc/52PrzsyJ/favicon-32x32.png" type="image/png">
+    <link rel="manifest" href="/manifest.json">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -55,7 +56,7 @@
             margin-top: 10px;
         }
 
-        .add-task-btn, .reset-default-btn {
+        .add-task-btn, .reset-default-btn, .stats-btn {
             display: inline-block;
             margin: 10px 5px;
             padding: 10px 20px;
@@ -71,16 +72,16 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .reset-default-btn {
+        .reset-default-btn, .stats-btn {
             background-color: #444;
         }
 
-        .add-task-btn:hover, .reset-default-btn:hover {
+        .add-task-btn:hover, .reset-default-btn:hover, .stats-btn:hover {
             transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
         }
 
-        .task-form {
+        .task-form, .modal {
             display: none;
             margin: 20px auto;
             width: 100%;
@@ -89,9 +90,28 @@
             padding: 15px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1000;
         }
 
-        .task-form h3 {
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            width: 300px;
+        }
+
+        .modal-error {
+            color: #B00020;
+            font-size: clamp(12px, 3vw, 14px);
+            text-align: center;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .task-form h3, .modal h3 {
             color: #FFB100;
             text-align: center;
             margin-bottom: 15px;
@@ -99,7 +119,7 @@
             font-weight: 700;
         }
 
-        .task-form label {
+        .task-form label, .modal label {
             display: block;
             color: #E5E5E5;
             margin-bottom: 5px;
@@ -107,8 +127,7 @@
             font-weight: 600;
         }
 
-        .task-form input,
-        .task-form select {
+        .task-form input, .task-form select, .modal input {
             width: 100%;
             margin: 5px 0 10px;
             padding: 8px;
@@ -127,14 +146,14 @@
             background-size: 12px;
         }
 
-        .task-form .form-buttons {
+        .task-form .form-buttons, .modal .modal-buttons {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             justify-content: center;
         }
 
-        .task-form button {
+        .task-form button, .modal button {
             flex: 1;
             min-width: 80px;
             max-width: 120px;
@@ -150,13 +169,20 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .task-form .cancel-btn, .task-form .clear-btn {
+        .task-form .cancel-btn, .task-form .clear-btn, .modal .modal-cancel-btn {
             background-color: #444;
         }
 
-        .task-form button:hover {
+        .task-form button:hover, .modal button:hover {
             transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .modal button:disabled {
+            background-color: #777;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .schedule {
@@ -186,6 +212,10 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        .task.task-expired {
+            opacity: 0.6;
         }
 
         .task h2 {
@@ -223,7 +253,7 @@
             gap: 8px;
         }
 
-        .task .edit-btn, .task .delete-btn {
+        .task .edit-btn, .task .delete-btn, .task .mark-late-btn {
             padding: 6px 10px;
             background-color: #FFB100;
             color: #121212;
@@ -239,9 +269,17 @@
             background-color: #B00020;
         }
 
-        .task .edit-btn:hover, .task .delete-btn:hover {
+        .task .mark-late-btn {
+            background-color: #444;
+        }
+
+        .task .edit-btn:hover, .task .delete-btn:hover, .task .mark-late-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        input[type="checkbox"]:disabled {
+            cursor: not-allowed;
         }
 
         input[type="checkbox"] {
@@ -282,6 +320,107 @@
             color: #FFB100;
             font-weight: 600;
             font-size: clamp(12px, 3vw, 14px);
+        }
+
+        .stats-panel {
+            display: none;
+            width: 100%;
+            max-width: 1000px;
+            margin: 20px auto;
+            background: linear-gradient(90deg, #141414, #444);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .stats-panel.active {
+            display: block;
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .stats-panel h3 {
+            color: #FFB100;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: clamp(22px, 5vw, 24px);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stats-section {
+            margin-bottom: 20px;
+            animation: fadeInStats 0.5s ease;
+        }
+
+        @keyframes fadeInStats {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-section h4 {
+            color: #FFB100;
+            font-size: clamp(16px, 4vw, 18px);
+            font-weight: 600;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #FFB100;
+            padding-bottom: 5px;
+        }
+
+        .stats-section p {
+            font-size: clamp(12px, 3vw, 14px);
+            color: #E5E5E5;
+            margin-bottom: 8px;
+        }
+
+        .stats-section ul {
+            list-style: none;
+            padding-left: 10px;
+        }
+
+        .stats-section ul li {
+            font-size: clamp(12px, 3vw, 14px);
+            color: #E5E5E5;
+            margin-bottom: 5px;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .stats-section ul li::before {
+            content: '•';
+            color: #FFB100;
+            position: absolute;
+            left: 0;
+        }
+
+        hr.stats-divider {
+            border: 0;
+            border-top: 1px solid #444;
+            margin: 15px 0;
+        }
+
+        #statsChart {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 20px auto;
+            animation: slideInChart 0.5s ease;
+        }
+
+        @keyframes slideInChart {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        #chartError {
+            display: none;
+            color: #B00020;
+            font-size: clamp(12px, 3vw, 14px);
+            text-align: center;
+            margin: 10px 0;
         }
 
         #congratsMessage {
@@ -331,29 +470,28 @@
                 width: 95%;
             }
 
-            .add-task-btn, .reset-default-btn {
+            .add-task-btn, .reset-default-btn, .stats-btn {
                 padding: 8px 16px;
                 font-size: clamp(14px, 4vw, 16px);
             }
 
-            .task-form {
+            .task-form, .modal {
                 padding: 10px;
                 width: 100%;
                 max-width: 100%;
             }
 
-            .task-form input,
-            .task-form select {
+            .task-form input, .task-form select, .modal input {
                 padding: 6px;
                 font-size: clamp(12px, 3.5vw, 14px);
             }
 
-            .task-form .form-buttons {
+            .task-form .form-buttons, .modal .modal-buttons {
                 flex-direction: column;
                 gap: 6px;
             }
 
-            .task-form button {
+            .task-form button, .modal button {
                 max-width: 100%;
                 padding: 8px;
                 font-size: clamp(11px, 3vw, 13px);
@@ -380,18 +518,25 @@
                 font-size: clamp(9px, 2.5vw, 11px);
             }
 
-            .task .edit-btn, .task .delete-btn {
+            .task .edit-btn, .task .delete-btn, .task .mark-late-btn {
                 padding: 5px 8px;
                 font-size: clamp(11px, 3vw, 12px);
             }
 
-            .progress-container {
+            .progress-container, .stats-panel {
                 width: 95%;
+            }
+
+            .progress-container {
                 height: 16px;
             }
 
-            #progressText {
+            #progressText, .stats-section p, .stats-section ul li {
                 font-size: clamp(11px, 3vw, 13px);
+            }
+
+            #statsChart {
+                max-height: 200px;
             }
         }
 
@@ -404,7 +549,11 @@
                 font-size: clamp(12px, 3.5vw, 14px);
             }
 
-            .task-form h3 {
+            .task-form h3, .modal h3 {
+                font-size: clamp(18px, 5vw, 20px);
+            }
+
+            .stats-panel h3 {
                 font-size: clamp(18px, 5vw, 20px);
             }
         }
@@ -415,6 +564,7 @@
         <div style="text-align: center;">
             <button class="add-task-btn" id="showFormBtn">➕ Add My Own Custom Tasks</button>
             <button class="reset-default-btn" id="resetDefaultBtn">🔄 Reset to Default</button>
+            <button class="stats-btn" id="showStatsBtn">📊 View Stats</button>
         </div>
 
         <div class="task-form" id="taskForm">
@@ -442,13 +592,23 @@
             </div>
         </div>
 
+        <div class="modal" id="lateTaskModal">
+            <h3>Task Time Passed</h3>
+            <p class="modal-error" id="modalError">Please enter a reason.</p>
+            <label for="lateReason">Why was this late?</label>
+            <input type="text" id="lateReason" placeholder="Enter reason, e.g., delayed by meeting" aria-label="Reason for late task">
+            <div class="modal-buttons">
+                <button id="modalConfirmBtn" disabled>✅ Confirm</button>
+                <button class="modal-cancel-btn" id="modalCancelBtn">❌ Cancel</button>
+            </div>
+        </div>
+
         <header>
             <h1>Fueling the Future: One Day at a Time</h1>
             <p class="tagline">"Success is the sum of small efforts, repeated day in and day out." – Robert Collier.</p>
         </header>
 
-        <div class="schedule" id="scheduleContainer">
-        </div>
+        <div class="schedule" id="scheduleContainer"></div>
 
         <header>
             <p class="tagline">"The strength to conquer tomorrow lies in the relentless drive to master today." - Jordan B. Peterson</p>
@@ -460,6 +620,20 @@
             <div class="progress-bar" id="progressBar"></div>
         </div>
         <p id="progressText">0% Completed</p>
+        <div class="stats-panel" id="statsPanel">
+            <h3>Weekly Stats</h3>
+            <div class="stats-section">
+                <h4>Summary</h4>
+                <p id="weeklySummary"></p>
+                <hr class="stats-divider">
+                <p id="weeklyDetails"></p>
+            </div>
+            <div class="stats-section">
+                <h4>Completion Trend</h4>
+                <p id="chartError">Chart failed to load. Please try refreshing.</p>
+                <canvas id="statsChart"></canvas>
+            </div>
+        </div>
         <div id="congratsMessage">Congratulations!</div>
         <canvas id="confettiCanvas"></canvas>
         <audio id="successSound" preload="auto">
@@ -477,8 +651,8 @@
     </div>
 
     <script>
-        const today = new Date().toDateString();
-        const lastCheckDate = localStorage.getItem('lastCheckDate');
+        let today = new Date().toDateString(); // Initialize today
+        let lastCheckDate = localStorage.getItem('lastCheckDate');
         const successSound = document.getElementById('successSound');
         const congratsText = document.getElementById('congratsMessage');
         const canvas = document.getElementById('confettiCanvas');
@@ -486,10 +660,19 @@
         const scheduleContainer = document.getElementById('scheduleContainer');
         const showFormBtn = document.getElementById('showFormBtn');
         const resetDefaultBtn = document.getElementById('resetDefaultBtn');
+        const showStatsBtn = document.getElementById('showStatsBtn');
         const taskForm = document.getElementById('taskForm');
         const addTaskBtn = document.getElementById('addTaskBtn');
         const clearFormBtn = document.getElementById('clearFormBtn');
         const cancelFormBtn = document.getElementById('cancelFormBtn');
+        const lateTaskModal = document.getElementById('lateTaskModal');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+        const modalError = document.getElementById('modalError');
+        const lateReasonInput = document.getElementById('lateReason');
+        const statsPanel = document.getElementById('statsPanel');
+        const chartError = document.getElementById('chartError');
+        let statsChart = null;
 
         let confettiActive = false;
         let confettiAnimation;
@@ -498,28 +681,31 @@
         let taskCounter = 0;
         let tasks = [];
         let hasCustomTasks = localStorage.getItem('hasCustomTasks') === 'true';
+        let lateTaskIndex = null;
+        let lastRenderHash = '';
 
         const defaultTasks = [
-            { startTime: '06:00', endTime: '06:30', name: 'Morning Nature Walk/Virtual 🌳', category: 'Health', priority: 'Medium', id: 'task1', checked: false },
-            { startTime: '06:30', endTime: '07:15', name: 'Workout + Shower 🏋️‍♂️🚿', category: 'Fitness', priority: 'Medium', id: 'task2', checked: false },
-            { startTime: '07:15', endTime: '07:45', name: 'Cooking Breakfast & Quick Chat Break 🍳 💬', category: 'Routine', priority: 'Medium', id: 'task3', checked: false },
-            { startTime: '07:45', endTime: '09:00', name: 'Data Science/ML Study 📖', category: 'Learning', priority: 'High', id: 'task4', checked: false },
-            { startTime: '09:00', endTime: '10:30', name: 'Focused Project Work 💻', category: 'Project', priority: 'High', id: 'task5', checked: false },
-            { startTime: '10:30', endTime: '12:30', name: 'Data Science/ML Study 📖', category: 'Learning', priority: 'High', id: 'task7', checked: false },
-            { startTime: '12:30', endTime: '13:30', name: 'Lunch Cooking & Eating 🍲', category: 'Routine', priority: 'Medium', id: 'task8', checked: false },
-            { startTime: '13:30', endTime: '14:30', name: 'Financial Education 📈', category: 'Finance', priority: 'High', id: 'task9', checked: false },
-            { startTime: '14:30', endTime: '15:00', name: 'Chat Break 💬', category: 'Social', priority: 'Low', id: 'task10', checked: false },
-            { startTime: '15:00', endTime: '16:30', name: 'Professional Networking (LinkedIn/X/Medium/Github) + Article Writing 🌐', category: 'Professional', priority: 'High', id: 'task11', checked: false },
-            { startTime: '16:30', endTime: '17:00', name: 'Data Science/ML Study 💻', category: 'Project', priority: 'High', id: 'task12', checked: false },
-            { startTime: '17:00', endTime: '19:00', name: 'Movie/Walk/Sports Break 🎬🏀 while making dinner', category: 'Leisure', priority: 'Low', id: 'task13', checked: false },
-            { startTime: '19:00', endTime: '19:30', name: 'Evening Workout + Shower 🏋️‍♂️🚿', category: 'Routine', priority: 'Medium', id: 'task14', checked: false },
-            { startTime: '19:30', endTime: '20:15', name: 'Eat Dinner + Social Media Check-in 📰 + Chat Break 💬', category: 'Routine', priority: 'Medium', id: 'task15', checked: false },
-            { startTime: '20:15', endTime: '22:30', name: 'Project Work 💻', category: 'Project', priority: 'High', id: 'task16', checked: false },
-            { startTime: '22:30', endTime: '23:00', name: 'Reflection & Goal Setting for Tomorrow 🔮', category: 'Personal Growth', priority: 'High', id: 'task17', checked: false },
-            { startTime: '23:30', endTime: '05:30', name: 'Sleep 🌙', category: 'Health', priority: 'High', id: 'task18', checked: false }
+            { startTime: '06:00', endTime: '06:30', name: 'Morning Nature Walk/Virtual 🌳', category: 'Health', priority: 'Medium', id: 'task1', checked: false, isLate: false },
+            { startTime: '06:30', endTime: '07:15', name: 'Workout + Shower 🏋️‍♂️🚿', category: 'Fitness', priority: 'Medium', id: 'task2', checked: false, isLate: false },
+            { startTime: '07:15', endTime: '07:45', name: 'Cooking Breakfast & Quick Chat Break 🍳 💬', category: 'Routine', priority: 'Medium', id: 'task3', checked: false, isLate: false },
+            { startTime: '07:45', endTime: '09:00', name: 'Data Science/ML Study 📖', category: 'Learning', priority: 'High', id: 'task4', checked: false, isLate: false },
+            { startTime: '09:00', endTime: '10:30', name: 'Focused Project Work 💻', category: 'Project', priority: 'High', id: 'task5', checked: false, isLate: false },
+            { startTime: '10:30', endTime: '12:30', name: 'Data Science/ML Study 📖', category: 'Learning', priority: 'High', id: 'task7', checked: false, isLate: false },
+            { startTime: '12:30', endTime: '13:30', name: 'Lunch Cooking & Eating 🍲', category: 'Routine', priority: 'Medium', id: 'task8', checked: false, isLate: false },
+            { startTime: '13:30', endTime: '14:30', name: 'Financial Education 📈', category: 'Finance', priority: 'High', id: 'task9', checked: false, isLate: false },
+            { startTime: '14:30', endTime: '15:00', name: 'Chat Break 💬', category: 'Social', priority: 'Low', id: 'task10', checked: false, isLate: false },
+            { startTime: '15:00', endTime: '16:30', name: 'Professional Networking (LinkedIn/X/Medium/Github) + Article Writing 🌐', category: 'Professional', priority: 'High', id: 'task11', checked: false, isLate: false },
+            { startTime: '16:30', endTime: '17:00', name: 'Data Science/ML Study 💻', category: 'Project', priority: 'High', id: 'task12', checked: false, isLate: false },
+            { startTime: '17:00', endTime: '19:00', name: 'Movie/Walk/Sports Break 🎬🏀 while making dinner', category: 'Leisure', priority: 'Low', id: 'task13', checked: false, isLate: false },
+            { startTime: '19:00', endTime: '19:30', name: 'Evening Workout + Shower 🏋️‍♂️🚿', category: 'Routine', priority: 'Medium', id: 'task14', checked: false, isLate: false },
+            { startTime: '19:30', endTime: '20:15', name: 'Eat Dinner + Social Media Check-in 📰 + Chat Break 💬', category: 'Routine', priority: 'Medium', id: 'task15', checked: false, isLate: false },
+            { startTime: '20:15', endTime: '22:30', name: 'Project Work 💻', category: 'Project', priority: 'High', id: 'task16', checked: false, isLate: false },
+            { startTime: '22:30', endTime: '23:00', name: 'Reflection & Goal Setting for Tomorrow 🔮', category: 'Personal Growth', priority: 'High', id: 'task17', checked: false, isLate: false },
+            { startTime: '23:30', endTime: '05:30', name: 'Sleep 🌙', category: 'Health', priority: 'High', id: 'task18', checked: false, isLate: false }
         ];
 
         function loadTasks() {
+            today = new Date().toDateString(); // Update today on load
             if (hasCustomTasks) {
                 const savedTasks = localStorage.getItem('customTasks');
                 tasks = savedTasks ? JSON.parse(savedTasks) : [];
@@ -531,25 +717,29 @@
         }
 
         function renderTasks() {
+            const now = new Date();
+            const taskHash = JSON.stringify(tasks.map(t => ({ id: t.id, checked: t.checked, isLate: t.isLate, expired: isTaskExpired(t, now) })));
+            if (taskHash === lastRenderHash) return; // Skip if no changes
+            lastRenderHash = taskHash;
+
             scheduleContainer.innerHTML = '';
             tasks.forEach((task, index) => {
+                const isExpired = isTaskExpired(task, now);
                 const taskDiv = document.createElement('div');
-                taskDiv.className = 'task task-added';
+                taskDiv.className = `task task-added ${isExpired ? 'task-expired' : ''}`;
                 taskDiv.setAttribute('data-index', index);
                 taskDiv.innerHTML = `
                     <h2>${task.startTime} – ${task.endTime}</h2>
-                    <p><input type="checkbox" id="${task.id}" aria-label="${task.name} task"><label for="${task.id}"><strong>${task.name}</strong></label></p>
+                    <p><input type="checkbox" id="${task.id}" aria-label="${task.name} task" ${task.checked ? 'checked' : ''} ${isExpired && !task.checked && !task.isLate ? 'disabled title="Time passed"' : ''}><label for="${task.id}"><strong>${task.name}</strong></label></p>
                     <p class="category">${task.category}</p>
                     <p>Priority: ${task.priority}</p>
                     <div class="task-actions">
                         <button class="edit-btn" data-index="${index}" aria-label="Edit ${task.name}">✏️ Edit</button>
                         <button class="delete-btn" data-index="${index}" aria-label="Delete ${task.name}">🗑️ Delete</button>
+                        ${isExpired && !task.checked && !task.isLate ? `<button class="mark-late-btn" data-index="${index}" aria-label="Mark ${task.name} as late">🔓 Mark Late</button>` : ''}
                     </div>
                 `;
                 scheduleContainer.appendChild(taskDiv);
-                if (task.checked) {
-                    document.getElementById(task.id).checked = true;
-                }
             });
             const notesDiv = document.createElement('div');
             notesDiv.className = 'task';
@@ -563,11 +753,22 @@
             initializeCheckboxes();
             attachTaskActions();
             updateProgress();
+            if (statsPanel.classList.contains('active')) renderStats();
+        }
+
+        function isTaskExpired(task, now) {
+            const [hours, minutes] = task.endTime.split(':').map(Number);
+            const endDate = new Date(now);
+            endDate.setHours(hours, minutes, 0, 0);
+            const gracePeriod = 15 * 60 * 1000; // 15 minutes in ms
+            console.log(`isTaskExpired: task=${task.name}, now=${now}, endDate=${endDate}, expired=${now > new Date(endDate.getTime() + gracePeriod)}`);
+            return now > new Date(endDate.getTime() + gracePeriod);
         }
 
         function saveTasks() {
             localStorage.setItem('customTasks', JSON.stringify(tasks));
             localStorage.setItem('hasCustomTasks', hasCustomTasks);
+            saveDailyData();
         }
 
         function sortTasksByTime(tasks) {
@@ -640,25 +841,31 @@
                 category,
                 priority,
                 checked: false,
+                isLate: false,
                 id: editIndex !== '' ? tasks[parseInt(editIndex)].id : `customTask${taskCounter++}`
             };
 
-            if (editIndex === '') {
-                if (!hasCustomTasks) {
-                    tasks = [];
-                    hasCustomTasks = true;
-                    localStorage.setItem('hasCustomTasks', 'true');
+            try {
+                if (editIndex === '') {
+                    if (!hasCustomTasks) {
+                        tasks = [];
+                        hasCustomTasks = true;
+                        localStorage.setItem('hasCustomTasks', 'true');
+                    }
+                    tasks.push(task);
+                } else {
+                    tasks[parseInt(editIndex)] = task;
                 }
-                tasks.push(task);
-            } else {
-                tasks[parseInt(editIndex)] = task;
-            }
 
-            tasks = sortTasksByTime(tasks);
-            saveTasks();
-            renderTasks();
-            taskForm.style.display = 'none';
-            clearForm();
+                tasks = sortTasksByTime(tasks);
+                saveTasks();
+                renderTasks();
+                taskForm.style.display = 'none';
+                clearForm();
+            } catch (error) {
+                console.error('Error saving task:', error);
+                alert('Failed to save task. Please try again.');
+            }
         });
 
         resetDefaultBtn.addEventListener('click', () => {
@@ -666,11 +873,12 @@
                 hasCustomTasks = false;
                 localStorage.setItem('hasCustomTasks', 'false');
                 localStorage.removeItem('customTasks');
-                tasks = defaultTasks.map(task => ({ ...task, checked: false }));
+                tasks = defaultTasks.map(task => ({ ...task, checked: false, isLate: false }));
                 taskCounter = 0;
                 document.querySelectorAll('input[type="checkbox"]').forEach(box => {
                     localStorage.removeItem(box.id);
                 });
+                clearWeeklyData();
                 tasks = sortTasksByTime(tasks);
                 saveTasks();
                 renderTasks();
@@ -706,6 +914,260 @@
                     }
                 });
             });
+
+            document.querySelectorAll('.mark-late-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    lateTaskIndex = parseInt(btn.getAttribute('data-index'));
+                    console.log('Mark Late clicked, lateTaskIndex:', lateTaskIndex, 'task:', tasks[lateTaskIndex]);
+                    lateTaskModal.style.display = 'block';
+                    lateReasonInput.value = '';
+                    modalConfirmBtn.disabled = true;
+                    modalError.style.display = 'none';
+                });
+            });
+        }
+
+        lateReasonInput.addEventListener('input', () => {
+            modalConfirmBtn.disabled = !lateReasonInput.value.trim();
+            modalError.style.display = lateReasonInput.value.trim() ? 'none' : 'block';
+        });
+
+        modalConfirmBtn.addEventListener('click', () => {
+            console.log('Confirm Late clicked, lateTaskIndex:', lateTaskIndex, 'tasks:', tasks);
+            if (lateReasonInput.value.trim() && lateTaskIndex !== null && lateTaskIndex >= 0 && lateTaskIndex < tasks.length) {
+                try {
+                    const task = tasks[lateTaskIndex];
+                    task.checked = true;
+                    task.isLate = true;
+                    localStorage.setItem(task.id, 'true');
+                    console.log('Task marked late:', task);
+                    const checkbox = document.getElementById(task.id);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                        checkbox.disabled = false; // Ensure checkbox is not disabled
+                        console.log('Checkbox updated:', checkbox.id, checkbox.checked);
+                    } else {
+                        console.warn('Checkbox not found for task:', task.id);
+                    }
+                    saveTasks();
+                    lastRenderHash = ''; // Force re-render
+                    renderTasks();
+                    lateTaskModal.style.display = 'none';
+                    lateReasonInput.value = '';
+                    modalError.style.display = 'none';
+                    lateTaskIndex = null;
+                } catch (error) {
+                    console.error('Error marking task as late:', error);
+                    alert('Failed to mark task as late. Please try again.');
+                }
+            } else {
+                console.error('Invalid lateTaskIndex or no reason:', lateTaskIndex, lateReasonInput.value);
+                modalError.style.display = 'block';
+            }
+        });
+
+        modalCancelBtn.addEventListener('click', () => {
+            lateTaskModal.style.display = 'none';
+            lateTaskIndex = null;
+            lateReasonInput.value = '';
+            modalError.style.display = 'none';
+        });
+
+        showStatsBtn.addEventListener('click', () => {
+            const isActive = statsPanel.classList.contains('active');
+            statsPanel.classList.toggle('active', !isActive);
+            renderStats();
+            if (!isActive) {
+                statsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+        function saveDailyData() {
+            today = new Date().toDateString(); // Update today
+            const dateKey = `tasks_${today}`;
+            localStorage.setItem(dateKey, JSON.stringify(tasks));
+            const completed = tasks.filter(task => task.checked && !task.isLate).length;
+            const total = tasks.length;
+            const percentage = total ? Math.round((completed / total) * 100) : 0;
+            localStorage.setItem(`completion_${today}`, percentage);
+        }
+
+        function clearWeeklyData() {
+            const now = new Date();
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(now);
+                date.setDate(now.getDate() - i);
+                const dateKey = `tasks_${date.toDateString()}`;
+                const completionKey = `completion_${date.toDateString()}`;
+                localStorage.removeItem(dateKey);
+                localStorage.removeItem(completionKey);
+            }
+        }
+
+        function getWeeklyStats() {
+            today = new Date().toDateString(); // Update today
+            const now = new Date();
+            const days = [];
+            const percentages = [];
+            let hundredPercentDays = 0;
+            let currentStreak = 0;
+            let longestStreak = 0;
+            let tempStreak = 0;
+            let totalTasks = 0;
+            let completedTasks = 0;
+            let missedTasks = [];
+            let lateTasks = [];
+
+            // Include today
+            const todayKey = `tasks_${today}`;
+            const todayCompletionKey = `completion_${today}`;
+            const todayTasks = localStorage.getItem(todayKey);
+            const todayPercentage = parseInt(localStorage.getItem(todayCompletionKey) || '0');
+            days.push(now.toLocaleDateString('en-US', { weekday: 'short' }));
+            percentages.push(todayPercentage);
+
+            if (todayPercentage === 100) {
+                hundredPercentDays++;
+                tempStreak++;
+                currentStreak = tempStreak;
+                longestStreak = tempStreak;
+            }
+
+            if (todayTasks) {
+                const dailyTasks = JSON.parse(todayTasks);
+                totalTasks += dailyTasks.length;
+                completedTasks += dailyTasks.filter(task => task.checked).length;
+                dailyTasks.forEach(task => {
+                    if (!task.checked) {
+                        missedTasks.push(`${task.name} on ${now.toLocaleDateString('en-US', { weekday: 'short' })}`);
+                    } else if (task.isLate) {
+                        lateTasks.push(`${task.name} on ${now.toLocaleDateString('en-US', { weekday: 'short' })}`);
+                    }
+                });
+            }
+
+            // Process previous 6 days
+            for (let i = 1; i < 7; i++) {
+                const date = new Date(now);
+                date.setDate(now.getDate() - i);
+                const dateKey = `tasks_${date.toDateString()}`;
+                const completionKey = `completion_${date.toDateString()}`;
+                const tasksData = localStorage.getItem(dateKey);
+                const percentage = parseInt(localStorage.getItem(completionKey) || '0');
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                days.push(dayName);
+                percentages.push(percentage);
+
+                if (percentage === 100) {
+                    hundredPercentDays++;
+                    tempStreak++;
+                    longestStreak = Math.max(longestStreak, tempStreak);
+                } else {
+                    tempStreak = 0;
+                }
+
+                if (tasksData) {
+                    const dailyTasks = JSON.parse(tasksData);
+                    totalTasks += dailyTasks.length;
+                    completedTasks += dailyTasks.filter(task => task.checked).length;
+                    dailyTasks.forEach(task => {
+                        if (!task.checked) {
+                            missedTasks.push(`${task.name} on ${dayName}`);
+                        } else if (task.isLate) {
+                            lateTasks.push(`${task.name} on ${dayName}`);
+                        }
+                    });
+                }
+            }
+
+            console.log('getWeeklyStats:', { days: days.reverse(), percentages: percentages.reverse() });
+            return {
+                days: days.reverse(),
+                percentages: percentages.reverse(),
+                hundredPercentDays,
+                currentStreak,
+                longestStreak,
+                totalTasks,
+                completedTasks,
+                missedTasks,
+                lateTasks
+            };
+        }
+
+        function renderStats() {
+            today = new Date().toDateString(); // Update today
+            const stats = getWeeklyStats();
+            const summaryText = `
+                <strong>${stats.completedTasks}/${stats.totalTasks} tasks completed (${Math.round((stats.completedTasks / stats.totalTasks) * 100) || 0}%)</strong>
+                <br>100% Days: ${stats.hundredPercentDays}
+                <br>Current Streak: ${stats.currentStreak} day${stats.currentStreak !== 1 ? 's' : ''}
+                <br>Longest Streak: ${stats.longestStreak} day${stats.longestStreak !== 1 ? 's' : ''}
+            `;
+            const detailsText = `
+                ${stats.missedTasks.length ? `<strong>Missed Tasks:</strong><ul>${stats.missedTasks.map(task => `<li>${task}</li>`).join('')}</ul>` : ''}
+                ${stats.lateTasks.length ? `<strong>Late Tasks:</strong><ul>${stats.lateTasks.map(task => `<li>${task}</li>`).join('')}</ul>` : ''}
+            `;
+            document.getElementById('weeklySummary').innerHTML = summaryText;
+            document.getElementById('weeklyDetails').innerHTML = detailsText;
+
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded');
+                chartError.style.display = 'block';
+                return;
+            }
+            chartError.style.display = 'none';
+
+            if (statsChart) {
+                console.log('Destroying previous chart');
+                statsChart.destroy();
+                statsChart = null;
+            }
+            const chartCanvas = document.getElementById('statsChart');
+            chartCanvas.style.display = 'block';
+            chartCanvas.width = chartCanvas.parentElement.offsetWidth;
+            chartCanvas.height = 300;
+            const ctx = chartCanvas.getContext('2d');
+            ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height); // Clear canvas
+            try {
+                console.log('Rendering chart with data:', stats.days, stats.percentages);
+                statsChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: stats.days,
+                        datasets: [{
+                            label: 'Timely Completion %',
+                            data: stats.percentages,
+                            backgroundColor: '#FFB100',
+                            borderColor: '#FFB100',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: { color: '#E5E5E5', stepSize: 20 },
+                                grid: { color: '#444' }
+                            },
+                            x: {
+                                ticks: { color: '#E5E5E5' },
+                                grid: { color: '#444' }
+                            }
+                        },
+                        plugins: {
+                            legend: { labels: { color: '#E5E5E5', font: { size: 14 } } },
+                            title: { display: false }
+                        }
+                    }
+                });
+                console.log('Chart rendered successfully');
+            } catch (error) {
+                console.error('Error rendering chart:', error);
+                chartError.style.display = 'block';
+            }
         }
 
         function fireConfetti() {
@@ -788,31 +1250,47 @@
             } else {
                 stopEffects();
             }
+            saveDailyData();
+            if (statsPanel.classList.contains('active')) renderStats();
         }
 
         function initializeCheckboxes() {
-            document.querySelectorAll('input[type="checkbox"]').forEach(box => {
-                if (today !== lastCheckDate) {
-                    box.checked = false;
-                    localStorage.setItem(box.id, false);
-                    tasks.find(task => task.id === box.id).checked = false;
-                } else {
-                    const saved = localStorage.getItem(box.id);
-                    if (saved) {
-                        box.checked = saved === 'true';
-                        tasks.find(task => task.id === box.id).checked = box.checked;
+            today = new Date().toDateString(); // Update today
+            const now = new Date();
+            if (today !== lastCheckDate) {
+                tasks.forEach(task => {
+                    if (!task.isLate) { // Preserve late tasks
+                        task.checked = false;
+                        localStorage.setItem(task.id, 'false');
                     }
+                });
+                localStorage.setItem('lastCheckDate', today);
+                saveTasks();
+            }
+            document.querySelectorAll('input[type="checkbox"]').forEach(box => {
+                const saved = localStorage.getItem(box.id);
+                const task = tasks.find(t => t.id === box.id);
+                if (saved && task) {
+                    box.checked = saved === 'true';
+                    task.checked = box.checked;
                 }
                 box.removeEventListener('change', handleCheckboxChange);
-                box.addEventListener('change', handleCheckboxChange);
+                box.addEventListener('change', (event) => {
+                    const task = tasks.find(t => t.id === event.target.id);
+                    if (task && !isTaskExpired(task, now) && !task.isLate) {
+                        handleCheckboxChange(event);
+                    } else if (task && !task.isLate) {
+                        event.target.checked = false; // Prevent checking if expired and not late
+                    }
+                });
             });
-            saveTasks();
         }
 
         function handleCheckboxChange(event) {
             const task = tasks.find(t => t.id === event.target.id);
             if (task) {
                 task.checked = event.target.checked;
+                task.isLate = false; // Reset isLate if checked within time
                 localStorage.setItem(event.target.id, event.target.checked);
                 localStorage.setItem('lastCheckDate', today);
                 saveTasks();
@@ -820,16 +1298,34 @@
             }
         }
 
-        if (today !== lastCheckDate) {
-            localStorage.setItem('lastCheckDate', today);
-            tasks.forEach(task => {
-                task.checked = false;
-                localStorage.setItem(task.id, false);
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(err => console.error('Service Worker registration failed:', err));
             });
-            saveTasks();
         }
 
         loadTasks();
+
+        // Check for expired tasks every 5 minutes to reduce re-rendering
+        setInterval(() => {
+            const now = new Date();
+            const newToday = new Date().toDateString();
+            if (newToday !== today) {
+                today = newToday;
+                initializeCheckboxes();
+                lastRenderHash = ''; // Force re-render on date change
+            }
+            const anyExpired = tasks.some(task => isTaskExpired(task, now) !== document.getElementById(task.id)?.disabled);
+            if (anyExpired) renderTasks();
+        }, 5 * 60 * 1000);
+
+        // Verify Chart.js loaded
+        window.addEventListener('load', () => {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js failed to load on window load');
+                chartError.style.display = 'block';
+            }
+        });
     </script>
 </body>
 </html>
