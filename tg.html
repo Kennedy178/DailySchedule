@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mercedes S580 2025 Routine</title>
+    <title>Mercedes C300d AMG Line 2025 Routine</title>
     <link rel="icon" href="https://i.postimg.cc/52PrzsyJ/favicon-32x32.png" type="image/png">
     <link rel="manifest" href="/manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -17,8 +17,8 @@
         }
 
         body {
-            background: #0A0A0A;
-            color: #E5E5E5;
+            background: linear-gradient(180deg, #1C2526 0%, #0B0C0E 100%);
+            color: #D8D8D8;
             font-size: 16px;
             line-height: 1.6;
             padding: 20px 0;
@@ -35,11 +35,11 @@
         }
 
         header {
-            background: #0A0A0A;
+            background: linear-gradient(90deg, #0B0C0E, #1C2526);
             padding: 15px 0;
             text-align: center;
             margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(255, 177, 0, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             border-bottom: 2px solid #FFB100;
             animation: slideInHeader 0.5s ease-out;
         }
@@ -71,8 +71,8 @@
             padding: 12px 24px;
             font-size: clamp(16px, 4vw, 18px);
             font-weight: 600;
-            background: #FFB100;
-            color: #0A0A0A;
+            background: linear-gradient(45deg, #FFB100, #FFD700);
+            color: #0B0C0E;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -81,7 +81,6 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 0 15px rgba(255, 177, 0, 0.4);
         }
 
         .add-task-btn::after, .reset-default-btn::after, .stats-btn::after {
@@ -101,18 +100,17 @@
 
         .add-task-btn:hover, .reset-default-btn:hover, .stats-btn:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(255, 177, 0, 0.6);
-            background: #FFD700;
+            box-shadow: 0 8px 20px rgba(255, 177, 0, 0.5);
+            background: linear-gradient(45deg, #FFD700, #FFB100);
         }
 
         .reset-default-btn, .stats-btn {
-            background: #3A3A3A;
-            color: #E5E5E5;
+            background: linear-gradient(45deg, #3A3A3A, #5A5A5A);
+            color: #D8D8D8;
         }
 
         .reset-default-btn:hover, .stats-btn:hover {
-            box-shadow: 0 8px 20px rgba(255, 177, 0, 0.4);
-            background: #5A5A5A;
+            box-shadow: 0 8px 20px rgba(255, 177, 0, 0.3);
         }
 
         .task-form, .modal {
@@ -120,14 +118,13 @@
             margin: 20px auto;
             width: 100%;
             max-width: 500px;
-            background: #0A0A0A;
+            background: linear-gradient(90deg, #1C2526, #2A2F31);
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 6px 25px rgba(255, 177, 0, 0.2);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.5);
             position: relative;
             z-index: 1000;
             animation: fadeInForm 0.5s ease;
-            border: 1px solid #FFB100;
         }
 
         @keyframes fadeInForm {
@@ -139,10 +136,9 @@
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(1);
+            transform: translate(-50%, -50%);
             max-width: 90%;
             width: 320px;
-            transition: transform 0.3s ease, opacity 0.3s ease;
         }
 
         .modal-error {
@@ -164,7 +160,7 @@
 
         .task-form label, .modal label {
             display: block;
-            color: #E5E5E5;
+            color: #D8D8D8;
             margin-bottom: 6px;
             font-size: clamp(13px, 3vw, 15px);
             font-weight: 600;
@@ -174,23 +170,22 @@
             width: 100%;
             margin: 6px 0 12px;
             padding: 10px;
-            background: #3A3A3A;
-            border: 1px solid #444;
+            background-color: #2A2F31;
+            border: 1px solid #3A3A3A;
             border-radius: 8px;
-            color: #E5E5E5;
+            color: #D8D8D8;
             font-size: clamp(14px, 4vw, 16px);
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            transition: border-color 0.3s ease;
         }
 
         .task-form input:focus, .task-form select:focus, .modal input:focus {
             border-color: #FFB100;
-            box-shadow: 0 0 10px rgba(255, 177, 0, 0.3);
             outline: none;
         }
 
         .task-form select {
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23E5E5E5' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23D8D8D8' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 12px center;
             background-size: 14px;
@@ -208,8 +203,8 @@
             min-width: 90px;
             max-width: 130px;
             padding: 10px;
-            background: #FFB100;
-            color: #0A0A0A;
+            background: linear-gradient(45deg, #FFB100, #FFD700);
+            color: #0B0C0E;
             border: none;
             border-radius: 8px;
             font-size: clamp(13px, 3vw, 15px);
@@ -217,12 +212,11 @@
             text-transform: uppercase;
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 0 10px rgba(255, 177, 0, 0.3);
         }
 
         .task-form .cancel-btn, .task-form .clear-btn, .modal .modal-cancel-btn {
-            background: #3A3A3A;
-            color: #E5E5E5;
+            background: linear-gradient(45deg, #3A3A3A, #5A5A5A);
+            color: #D8D8D8;
         }
 
         .task-form button:hover, .modal button:hover {
@@ -245,14 +239,13 @@
         }
 
         .task {
-            background: #0A0A0A;
+            background: linear-gradient(90deg, #1C2526, #2A2F31);
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(255, 177, 0, 0.2);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
             transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
             position: relative;
             overflow: hidden;
-            border: 1px solid #FFB100;
         }
 
         .task::before {
@@ -262,13 +255,13 @@
             left: 0;
             width: 100%;
             height: 4px;
-            background: #FFB100;
-            opacity: 0.7;
+            background: linear-gradient(90deg, #FFB100, transparent);
+            opacity: 0.5;
         }
 
         .task:hover {
             transform: translateY(-10px);
-            box-shadow: 0 12px 30px rgba(255, 177, 0, 0.4);
+            box-shadow: 0 12px 30px rgba(255, 177, 0, 0.3);
         }
 
         .task.task-added {
@@ -282,7 +275,7 @@
 
         .task.task-expired {
             opacity: 0.7;
-            background: #3A3A3A;
+            background: linear-gradient(90deg, #2A2F31, #3A3A3A);
         }
 
         .task h2 {
@@ -299,7 +292,7 @@
         }
 
         .task strong {
-            color: #E5E5E5;
+            color: #D8D8D8;
             font-weight: 600;
         }
 
@@ -308,8 +301,8 @@
             padding: 6px 12px;
             margin-top: 10px;
             border-radius: 20px;
-            background: #FFB100;
-            color: #0A0A0A;
+            background: linear-gradient(45deg, #FFB100, #FFD700);
+            color: #0B0C0E;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -325,8 +318,8 @@
 
         .task .edit-btn, .task .delete-btn, .task .complete-late-btn {
             padding: 8px 12px;
-            background: #FFB100;
-            color: #0A0A0A;
+            background: linear-gradient(45deg, #FFB100, #FFD700);
+            color: #0B0C0E;
             border: none;
             border-radius: 8px;
             font-size: clamp(13px, 3vw, 14px);
@@ -334,17 +327,16 @@
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: relative;
-            box-shadow: 0 0 10px rgba(255, 177, 0, 0.3);
         }
 
         .task .delete-btn {
-            background: #B00020;
-            color: #E5E5E5;
+            background: linear-gradient(45deg, #B00020, #D32F2F);
+            color: #D8D8D8;
         }
 
         .task .complete-late-btn {
-            background: #3A3A3A;
-            color: #E5E5E5;
+            background: linear-gradient(45deg, #3A3A3A, #5A5A5A);
+            color: #D8D8D8;
         }
 
         .task .edit-btn:hover, .task .delete-btn:hover, .task .complete-late-btn:hover {
@@ -353,7 +345,7 @@
         }
 
         .task .complete-late-btn:hover {
-            box-shadow: 0 5px 15px rgba(255, 177, 0, 0.4);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
         }
 
         .task .complete-late-btn::after {
@@ -362,8 +354,8 @@
             bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
-            background: #3A3A3A;
-            color: #E5E5E5;
+            background: #2A2F31;
+            color: #D8D8D8;
             padding: 6px 12px;
             border-radius: 6px;
             font-size: 12px;
@@ -372,7 +364,6 @@
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
             z-index: 10;
-            box-shadow: 0 2px 10px rgba(255, 177, 0, 0.3);
         }
 
         .task .complete-late-btn:hover::after {
@@ -405,21 +396,19 @@
             width: 90%;
             max-width: 600px;
             height: 20px;
-            background: #3A3A3A;
+            background: #2A2F31;
             border-radius: 10px;
             margin: 0 auto;
             overflow: hidden;
-            box-shadow: 0 4px 10px rgba(255, 177, 0, 0.2);
-            border: 1px solid #FFB100;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
         .progress-bar {
             height: 100%;
             width: 0%;
-            background: #FFB100;
+            background: linear-gradient(45deg, #FFB100, #FFD700);
             transition: width 0.5s ease;
             position: relative;
-            box-shadow: inset 0 0 10px rgba(255, 177, 0, 0.5);
         }
 
         .progress-bar::after {
@@ -429,7 +418,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
             animation: progressShine 2s infinite;
         }
 
@@ -445,7 +434,7 @@
             color: #FFB100;
             font-weight: 600;
             font-size: clamp(14px, 3vw, 16px);
-            text-shadow: 0 1px 3px rgba(255, 177, 0, 0.3);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
         }
 
         .stats-panel {
@@ -453,14 +442,13 @@
             width: 100%;
             max-width: 1000px;
             margin: 20px auto;
-            background: #0A0A0A;
+            background: linear-gradient(90deg, #1C2526, #2A2F31);
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(255, 177, 0, 0.2);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
             transform: translateY(20px);
             opacity: 0;
             transition: transform 0.5s ease, opacity 0.5s ease;
-            border: 1px solid #FFB100;
         }
 
         .stats-panel.active {
@@ -501,7 +489,7 @@
 
         .stats-section p {
             font-size: clamp(13px, 3vw, 15px);
-            color: #E5E5E5;
+            color: #D8D8D8;
             margin-bottom: 10px;
         }
 
@@ -512,7 +500,7 @@
 
         .stats-section ul li {
             font-size: clamp(13px, 3vw, 15px);
-            color: #E5E5E5;
+            color: #D8D8D8;
             margin-bottom: 8px;
             position: relative;
             padding-left: 20px;
@@ -528,7 +516,7 @@
 
         hr.stats-divider {
             border: 0;
-            border-top: 1px solid #444;
+            border-top: 1px solid #3A3A3A;
             margin: 20px 0;
         }
 
@@ -698,7 +686,7 @@
 <body>
     <div class="container">
         <div style="text-align: center;">
-            <button class="add-task-btn" id="showFormBtn">➕ Add My Own Custom Task</button>
+            <button class="add-task-btn" id="showFormBtn">➕ Add Custom Task</button>
             <button class="reset-default-btn" id="resetDefaultBtn">🔄 Reset to Default</button>
             <button class="stats-btn" id="showStatsBtn">📊 View Stats</button>
         </div>
@@ -1318,13 +1306,13 @@
                                 beginAtZero: true,
                                 max: 100,
                                 ticks: {
-                                    color: '#E5E5E5',
+                                    color: '#D8D8D8',
                                     stepSize: 20,
                                     font: { size: 14, weight: '600' }
                                 },
                                 grid: {
                                     color: 'rgba(255, 177, 0, 0.2)',
-                                    borderColor: '#444'
+                                    borderColor: '#3A3A3A'
                                 },
                                 title: {
                                     display: true,
@@ -1336,7 +1324,7 @@
                             x: {
                                 stacked: true,
                                 ticks: {
-                                    color: '#E5E5E5',
+                                    color: '#D8D8D8',
                                     font: { size: 14, weight: '600' }
                                 },
                                 grid: {
@@ -1353,7 +1341,7 @@
                         plugins: {
                             legend: {
                                 labels: {
-                                    color: '#E5E5E5',
+                                    color: '#D8D8D8',
                                     font: { size: 14, weight: '600' },
                                     boxWidth: 20
                                 },
@@ -1367,9 +1355,9 @@
                                 padding: 20
                             },
                             tooltip: {
-                                backgroundColor: '#3A3A3A',
+                                backgroundColor: '#2A2F31',
                                 titleColor: '#FFB100',
-                                bodyColor: '#E5E5E5',
+                                bodyColor: '#D8D8D8',
                                 borderColor: '#FFB100',
                                 borderWidth: 1,
                                 cornerRadius: 8
