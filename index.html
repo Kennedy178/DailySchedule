@@ -3,28 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mercedes C300d AMG Line 2025 Routine</title>
-    <link rel="icon" href="https://i.postimg.cc/52PrzsyJ/favicon-32x32.png" type="image/png">
+    <title>Mercedes S580 2025 Routine</title>
+    <link rel="icon" href="https://i.postimg.cc/x87RR692/favicon-32x32.png" type="image/png">
     <link rel="manifest" href="/manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Helvetica Neue', sans-serif;
+            font-family: 'Montserrat', sans-serif;
         }
 
         body {
-            background-color: #121212;
+            background: #0A0A0A;
             color: #E5E5E5;
             font-size: 16px;
             line-height: 1.6;
             padding: 20px 0;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .container {
@@ -34,51 +35,84 @@
         }
 
         header {
-            background-color: #121212;
-            z-index: 100;
-            padding: 10px 0;
+            background: #0A0A0A;
+            padding: 15px 0;
             text-align: center;
             margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 20px rgba(255, 177, 0, 0.2);
+            border-bottom: 2px solid #FFB100;
+            animation: slideInHeader 0.5s ease-out;
+        }
+
+        @keyframes slideInHeader {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         header h1 {
-            font-size: clamp(28px, 5vw, 40px);
-            font-weight: 700;
+            font-size: clamp(30px, 5vw, 42px);
+            font-weight: 900;
             color: #FFB100;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
+            text-shadow: 0 2px 5px rgba(255, 177, 0, 0.3);
         }
 
         header p {
             font-size: clamp(14px, 3vw, 16px);
-            color: #999;
+            color: #A0A0A0;
             margin-top: 10px;
+            font-style: italic;
         }
 
         .add-task-btn, .reset-default-btn, .stats-btn {
             display: inline-block;
-            margin: 10px 5px;
-            padding: 10px 20px;
+            margin: 10px 8px;
+            padding: 12px 24px;
             font-size: clamp(16px, 4vw, 18px);
             font-weight: 600;
-            background-color: #FFB100;
-            color: #121212;
+            background: #FFB100;
+            color: #0A0A0A;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            letter-spacing: 1.5px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(255, 177, 0, 0.4);
         }
 
-        .reset-default-btn, .stats-btn {
-            background-color: #444;
+        .add-task-btn::after, .reset-default-btn::after, .stats-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .add-task-btn:hover::after, .reset-default-btn:hover::after, .stats-btn:hover::after {
+            left: 100%;
         }
 
         .add-task-btn:hover, .reset-default-btn:hover, .stats-btn:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 20px rgba(255, 177, 0, 0.6);
+            background: #FFD700;
+        }
+
+        .reset-default-btn, .stats-btn {
+            background: #3A3A3A;
+            color: #E5E5E5;
+        }
+
+        .reset-default-btn:hover, .stats-btn:hover {
+            box-shadow: 0 8px 20px rgba(255, 177, 0, 0.4);
+            background: #5A5A5A;
         }
 
         .task-form, .modal {
@@ -86,21 +120,29 @@
             margin: 20px auto;
             width: 100%;
             max-width: 500px;
-            background: linear-gradient(90deg, #141414, #444);
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            background: #0A0A0A;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 25px rgba(255, 177, 0, 0.2);
             position: relative;
             z-index: 1000;
+            animation: fadeInForm 0.5s ease;
+            border: 1px solid #FFB100;
+        }
+
+        @keyframes fadeInForm {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         .modal {
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(1);
             max-width: 90%;
-            width: 300px;
+            width: 320px;
+            transition: transform 0.3s ease, opacity 0.3s ease;
         }
 
         .modal-error {
@@ -115,71 +157,81 @@
             color: #FFB100;
             text-align: center;
             margin-bottom: 15px;
-            font-size: clamp(20px, 5vw, 22px);
+            font-size: clamp(22px, 5vw, 24px);
             font-weight: 700;
+            text-transform: uppercase;
         }
 
         .task-form label, .modal label {
             display: block;
             color: #E5E5E5;
-            margin-bottom: 5px;
-            font-size: clamp(12px, 3vw, 14px);
+            margin-bottom: 6px;
+            font-size: clamp(13px, 3vw, 15px);
             font-weight: 600;
         }
 
         .task-form input, .task-form select, .modal input {
             width: 100%;
-            margin: 5px 0 10px;
-            padding: 8px;
-            background-color: #1e1e1e;
-            border: none;
-            border-radius: 5px;
+            margin: 6px 0 12px;
+            padding: 10px;
+            background: #3A3A3A;
+            border: 1px solid #444;
+            border-radius: 8px;
             color: #E5E5E5;
             font-size: clamp(14px, 4vw, 16px);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .task-form input:focus, .task-form select:focus, .modal input:focus {
+            border-color: #FFB100;
+            box-shadow: 0 0 10px rgba(255, 177, 0, 0.3);
+            outline: none;
         }
 
         .task-form select {
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23E5E5E5' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 12px;
+            background-position: right 12px center;
+            background-size: 14px;
         }
 
         .task-form .form-buttons, .modal .modal-buttons {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
             justify-content: center;
         }
 
         .task-form button, .modal button {
             flex: 1;
-            min-width: 80px;
-            max-width: 120px;
-            padding: 8px;
-            background-color: #FFB100;
-            color: #121212;
+            min-width: 90px;
+            max-width: 130px;
+            padding: 10px;
+            background: #FFB100;
+            color: #0A0A0A;
             border: none;
-            border-radius: 5px;
-            font-size: clamp(12px, 3vw, 14px);
+            border-radius: 8px;
+            font-size: clamp(13px, 3vw, 15px);
             font-weight: 600;
             text-transform: uppercase;
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 177, 0, 0.3);
         }
 
         .task-form .cancel-btn, .task-form .clear-btn, .modal .modal-cancel-btn {
-            background-color: #444;
+            background: #3A3A3A;
+            color: #E5E5E5;
         }
 
         .task-form button:hover, .modal button:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(255, 177, 0, 0.5);
         }
 
         .modal button:disabled {
-            background-color: #777;
+            background: #5A5A5A;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
@@ -187,124 +239,178 @@
 
         .schedule {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
             margin-bottom: 20px;
         }
 
         .task {
-            background: linear-gradient(90deg, #141414, #444);
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            background: #0A0A0A;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(255, 177, 0, 0.2);
             transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #FFB100;
+        }
+
+        .task::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #FFB100;
+            opacity: 0.7;
         }
 
         .task:hover {
             transform: translateY(-10px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 12px 30px rgba(255, 177, 0, 0.4);
         }
 
         .task.task-added {
-            animation: fadeIn 0.5s ease;
+            animation: fadeInTask 0.5s ease;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+        @keyframes fadeInTask {
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .task.task-expired {
-            opacity: 0.6;
+            opacity: 0.7;
+            background: #3A3A3A;
         }
 
         .task h2 {
-            font-size: clamp(18px, 4vw, 20px);
+            font-size: clamp(20px, 4vw, 22px);
             color: #FFB100;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            font-weight: 700;
         }
 
         .task p {
-            font-size: clamp(12px, 3vw, 13px);
-            margin-top: 6px;
-            color: #B5B5B5;
+            font-size: clamp(13px, 3vw, 14px);
+            margin-top: 8px;
+            color: #A0A0A0;
         }
 
         .task strong {
             color: #E5E5E5;
+            font-weight: 600;
         }
 
         .task .category {
             display: inline-block;
-            padding: 4px 10px;
-            margin-top: 8px;
+            padding: 6px 12px;
+            margin-top: 10px;
             border-radius: 20px;
-            background-color: #FFB100;
-            color: #121212;
+            background: #FFB100;
+            color: #0A0A0A;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
-            font-size: clamp(10px, 2.5vw, 12px);
+            font-size: clamp(11px, 2.5vw, 13px);
         }
 
         .task .task-actions {
-            margin-top: 8px;
+            margin-top: 10px;
             display: flex;
-            gap: 8px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
-        .task .edit-btn, .task .delete-btn, .task .mark-late-btn {
-            padding: 6px 10px;
-            background-color: #FFB100;
-            color: #121212;
+        .task .edit-btn, .task .delete-btn, .task .complete-late-btn {
+            padding: 8px 12px;
+            background: #FFB100;
+            color: #0A0A0A;
             border: none;
-            border-radius: 5px;
-            font-size: clamp(12px, 3vw, 13px);
+            border-radius: 8px;
+            font-size: clamp(13px, 3vw, 14px);
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            box-shadow: 0 0 10px rgba(255, 177, 0, 0.3);
         }
 
         .task .delete-btn {
-            background-color: #B00020;
+            background: #B00020;
+            color: #E5E5E5;
         }
 
-        .task .mark-late-btn {
-            background-color: #444;
+        .task .complete-late-btn {
+            background: #3A3A3A;
+            color: #E5E5E5;
         }
 
-        .task .edit-btn:hover, .task .delete-btn:hover, .task .mark-late-btn:hover {
+        .task .edit-btn:hover, .task .delete-btn:hover, .task .complete-late-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 5px 15px rgba(255, 177, 0, 0.5);
+        }
+
+        .task .complete-late-btn:hover {
+            box-shadow: 0 5px 15px rgba(255, 177, 0, 0.4);
+        }
+
+        .task .complete-late-btn::after {
+            content: 'Mark this task as completed late';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #3A3A3A;
+            color: #E5E5E5;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(255, 177, 0, 0.3);
+        }
+
+        .task .complete-late-btn:hover::after {
+            opacity: 1;
+            visibility: visible;
         }
 
         input[type="checkbox"]:disabled {
             cursor: not-allowed;
+            opacity: 0.5;
         }
 
         input[type="checkbox"] {
-            margin-right: 8px;
-            transform: scale(1.2);
+            margin-right: 10px;
+            transform: scale(1.3);
+            accent-color: #FFB100;
         }
 
         input[type="checkbox"]:checked + label {
             text-decoration: line-through;
-            color: #777;
+            color: #A0A0A0;
         }
 
         .footer-wrapper {
             margin-top: auto;
-            padding-bottom: 15px;
+            padding-bottom: 20px;
         }
 
         .progress-container {
             width: 90%;
-            max-width: 500px;
-            height: 18px;
-            background: #333;
+            max-width: 600px;
+            height: 20px;
+            background: #3A3A3A;
             border-radius: 10px;
             margin: 0 auto;
             overflow: hidden;
+            box-shadow: 0 4px 10px rgba(255, 177, 0, 0.2);
+            border: 1px solid #FFB100;
         }
 
         .progress-bar {
@@ -312,14 +418,34 @@
             width: 0%;
             background: #FFB100;
             transition: width 0.5s ease;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(255, 177, 0, 0.5);
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: progressShine 2s infinite;
+        }
+
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+            100% { transform: translateX(100%); }
         }
 
         #progressText {
             text-align: center;
-            margin: 8px 0;
+            margin: 10px 0;
             color: #FFB100;
             font-weight: 600;
-            font-size: clamp(12px, 3vw, 14px);
+            font-size: clamp(14px, 3vw, 16px);
+            text-shadow: 0 1px 3px rgba(255, 177, 0, 0.3);
         }
 
         .stats-panel {
@@ -327,13 +453,14 @@
             width: 100%;
             max-width: 1000px;
             margin: 20px auto;
-            background: linear-gradient(90deg, #141414, #444);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            background: #0A0A0A;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(255, 177, 0, 0.2);
             transform: translateY(20px);
             opacity: 0;
-            transition: transform 0.3s ease, opacity 0.3s ease;
+            transition: transform 0.5s ease, opacity 0.5s ease;
+            border: 1px solid #FFB100;
         }
 
         .stats-panel.active {
@@ -346,14 +473,15 @@
             color: #FFB100;
             text-align: center;
             margin-bottom: 20px;
-            font-size: clamp(22px, 5vw, 24px);
-            font-weight: 700;
+            font-size: clamp(24px, 5vw, 26px);
+            font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 5px rgba(255, 177, 0, 0.3);
         }
 
         .stats-section {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             animation: fadeInStats 0.5s ease;
         }
 
@@ -364,30 +492,30 @@
 
         .stats-section h4 {
             color: #FFB100;
-            font-size: clamp(16px, 4vw, 18px);
-            font-weight: 600;
-            margin-bottom: 10px;
+            font-size: clamp(18px, 4vw, 20px);
+            font-weight: 700;
+            margin-bottom: 12px;
             border-bottom: 2px solid #FFB100;
-            padding-bottom: 5px;
+            padding-bottom: 6px;
         }
 
         .stats-section p {
-            font-size: clamp(12px, 3vw, 14px);
+            font-size: clamp(13px, 3vw, 15px);
             color: #E5E5E5;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .stats-section ul {
             list-style: none;
-            padding-left: 10px;
+            padding-left: 15px;
         }
 
         .stats-section ul li {
-            font-size: clamp(12px, 3vw, 14px);
+            font-size: clamp(13px, 3vw, 15px);
             color: #E5E5E5;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             position: relative;
-            padding-left: 15px;
+            padding-left: 20px;
         }
 
         .stats-section ul li::before {
@@ -395,19 +523,20 @@
             color: #FFB100;
             position: absolute;
             left: 0;
+            font-size: 20px;
         }
 
         hr.stats-divider {
             border: 0;
             border-top: 1px solid #444;
-            margin: 15px 0;
+            margin: 20px 0;
         }
 
         #statsChart {
             max-width: 100%;
-            max-height: 300px;
+            max-height: 350px;
             margin: 20px auto;
-            animation: slideInChart 0.5s ease;
+            animation: slideInChart 0.7s ease;
         }
 
         @keyframes slideInChart {
@@ -418,50 +547,57 @@
         #chartError {
             display: none;
             color: #B00020;
-            font-size: clamp(12px, 3vw, 14px);
+            font-size: clamp(13px, 3vw, 15px);
             text-align: center;
             margin: 10px 0;
         }
 
         #congratsMessage {
             position: fixed;
-            font-size: clamp(30px, 5vw, 40px);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(32px, 5vw, 48px);
             font-weight: 900;
             color: #FFB100;
-            text-shadow: 0 0 15px rgba(255,177,0,0.8);
+            text-shadow: 0 0 20px rgba(255, 177, 0, 0.8);
             pointer-events: none;
             z-index: 10000;
             display: none;
+            animation: pulseText 2s infinite;
         }
 
-        @keyframes fadeWatermark {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-            40% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.05); }
-            70% { opacity: 0.08; transform: translate(-50%, -50%) scale(1); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        @keyframes pulseText {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
         }
 
         #confettiCanvas {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
             z-index: 998;
         }
 
         footer {
             text-align: center;
-            margin-top: 10px;
-            font-size: clamp(12px, 3vw, 13px);
-            color: #777;
+            margin-top: 15px;
+            font-size: clamp(13px, 3vw, 14px);
+            color: #A0A0A0;
         }
 
         footer a {
             color: #FFB100;
             text-decoration: none;
+            transition: color 0.3s ease;
         }
 
         footer a:hover {
+            color: #FFD700;
             text-decoration: underline;
         }
 
@@ -471,56 +607,56 @@
             }
 
             .add-task-btn, .reset-default-btn, .stats-btn {
-                padding: 8px 16px;
+                padding: 10px 20px;
                 font-size: clamp(14px, 4vw, 16px);
             }
 
             .task-form, .modal {
-                padding: 10px;
+                padding: 15px;
                 width: 100%;
                 max-width: 100%;
             }
 
             .task-form input, .task-form select, .modal input {
-                padding: 6px;
-                font-size: clamp(12px, 3.5vw, 14px);
+                padding: 8px;
+                font-size: clamp(13px, 3.5vw, 15px);
             }
 
             .task-form .form-buttons, .modal .modal-buttons {
                 flex-direction: column;
-                gap: 6px;
+                gap: 8px;
             }
 
             .task-form button, .modal button {
                 max-width: 100%;
-                padding: 8px;
-                font-size: clamp(11px, 3vw, 13px);
+                padding: 10px;
+                font-size: clamp(12px, 3vw, 14px);
             }
 
             .schedule {
                 grid-template-columns: 1fr;
-                gap: 12px;
+                gap: 15px;
             }
 
             .task {
-                padding: 12px;
+                padding: 15px;
             }
 
             .task h2 {
-                font-size: clamp(16px, 4vw, 18px);
+                font-size: clamp(18px, 4vw, 20px);
             }
 
             .task p {
-                font-size: clamp(11px, 3vw, 12px);
+                font-size: clamp(12px, 3vw, 13px);
             }
 
             .task .category {
-                font-size: clamp(9px, 2.5vw, 11px);
+                font-size: clamp(10px, 2.5vw, 12px);
             }
 
-            .task .edit-btn, .task .delete-btn, .task .mark-late-btn {
-                padding: 5px 8px;
-                font-size: clamp(11px, 3vw, 12px);
+            .task .edit-btn, .task .delete-btn, .task .complete-late-btn {
+                padding: 6px 10px;
+                font-size: clamp(12px, 3vw, 13px);
             }
 
             .progress-container, .stats-panel {
@@ -528,21 +664,21 @@
             }
 
             .progress-container {
-                height: 16px;
+                height: 18px;
             }
 
             #progressText, .stats-section p, .stats-section ul li {
-                font-size: clamp(11px, 3vw, 13px);
+                font-size: clamp(12px, 3vw, 14px);
             }
 
             #statsChart {
-                max-height: 200px;
+                max-height: 250px;
             }
         }
 
         @media (max-width: 400px) {
             header h1 {
-                font-size: clamp(24px, 6vw, 32px);
+                font-size: clamp(26px, 6vw, 34px);
             }
 
             header p {
@@ -550,11 +686,11 @@
             }
 
             .task-form h3, .modal h3 {
-                font-size: clamp(18px, 5vw, 20px);
+                font-size: clamp(20px, 5vw, 22px);
             }
 
             .stats-panel h3 {
-                font-size: clamp(18px, 5vw, 20px);
+                font-size: clamp(20px, 5vw, 22px);
             }
         }
     </style>
@@ -562,7 +698,7 @@
 <body>
     <div class="container">
         <div style="text-align: center;">
-            <button class="add-task-btn" id="showFormBtn">➕ Add My Own Custom Tasks</button>
+            <button class="add-task-btn" id="showFormBtn">➕ Add My Own Custom Task</button>
             <button class="reset-default-btn" id="resetDefaultBtn">🔄 Reset to Default</button>
             <button class="stats-btn" id="showStatsBtn">📊 View Stats</button>
         </div>
@@ -593,10 +729,10 @@
         </div>
 
         <div class="modal" id="lateTaskModal">
-            <h3>Task Time Passed</h3>
+            <h3>Complete Task Late</h3>
             <p class="modal-error" id="modalError">Please enter a reason.</p>
-            <label for="lateReason">Why was this late?</label>
-            <input type="text" id="lateReason" placeholder="Enter reason, e.g., delayed by meeting" aria-label="Reason for late task">
+            <label for="lateReason">Reason for Late Completion</label>
+            <input type="text" id="lateReason" placeholder="e.g., Delayed by meeting" aria-label="Reason for late task">
             <div class="modal-buttons">
                 <button id="modalConfirmBtn" disabled>✅ Confirm</button>
                 <button class="modal-cancel-btn" id="modalCancelBtn">❌ Cancel</button>
@@ -605,13 +741,13 @@
 
         <header>
             <h1>Fueling the Future: One Day at a Time</h1>
-            <p class="tagline">"Success is the sum of small efforts, repeated day in and day out." – Robert Collier.</p>
+            <p class="tagline">"Success is the sum of small efforts, repeated day in and day out." – Robert Collier</p>
         </header>
 
         <div class="schedule" id="scheduleContainer"></div>
 
         <header>
-            <p class="tagline">"The strength to conquer tomorrow lies in the relentless drive to master today." - Jordan B. Peterson</p>
+            <p class="tagline">"The strength to conquer tomorrow lies in the relentless drive to master today." – Jordan B. Peterson</p>
         </header>
     </div>
 
@@ -621,7 +757,7 @@
         </div>
         <p id="progressText">0% Completed</p>
         <div class="stats-panel" id="statsPanel">
-            <h3>Weekly Stats</h3>
+            <h3>Weekly Performance</h3>
             <div class="stats-section">
                 <h4>Summary</h4>
                 <p id="weeklySummary"></p>
@@ -651,7 +787,7 @@
     </div>
 
     <script>
-        let today = new Date().toDateString(); // Initialize today
+        let today = new Date().toDateString();
         let lastCheckDate = localStorage.getItem('lastCheckDate');
         const successSound = document.getElementById('successSound');
         const congratsText = document.getElementById('congratsMessage');
@@ -705,7 +841,7 @@
         ];
 
         function loadTasks() {
-            today = new Date().toDateString(); // Update today on load
+            today = new Date().toDateString();
             if (hasCustomTasks) {
                 const savedTasks = localStorage.getItem('customTasks');
                 tasks = savedTasks ? JSON.parse(savedTasks) : [];
@@ -719,7 +855,7 @@
         function renderTasks() {
             const now = new Date();
             const taskHash = JSON.stringify(tasks.map(t => ({ id: t.id, checked: t.checked, isLate: t.isLate, expired: isTaskExpired(t, now) })));
-            if (taskHash === lastRenderHash) return; // Skip if no changes
+            if (taskHash === lastRenderHash) return;
             lastRenderHash = taskHash;
 
             scheduleContainer.innerHTML = '';
@@ -736,7 +872,7 @@
                     <div class="task-actions">
                         <button class="edit-btn" data-index="${index}" aria-label="Edit ${task.name}">✏️ Edit</button>
                         <button class="delete-btn" data-index="${index}" aria-label="Delete ${task.name}">🗑️ Delete</button>
-                        ${isExpired && !task.checked && !task.isLate ? `<button class="mark-late-btn" data-index="${index}" aria-label="Mark ${task.name} as late">🔓 Mark Late</button>` : ''}
+                        ${isExpired && !task.checked && !task.isLate ? `<button class="complete-late-btn" data-index="${index}" aria-label="Complete ${task.name} late">🔓 Complete Late</button>` : ''}
                     </div>
                 `;
                 scheduleContainer.appendChild(taskDiv);
@@ -747,7 +883,7 @@
                 <h2>NOTES 📋</h2>
                 <p class="category">General</p>
                 <p>Priority: Low</p>
-                <p>Note: Feel free to tweak any part of this schedule to fit your goals, lifestyle, or priorities.</p>
+                <p>Note: Customize your schedule to align with your goals and lifestyle.</p>
             `;
             scheduleContainer.appendChild(notesDiv);
             initializeCheckboxes();
@@ -760,7 +896,7 @@
             const [hours, minutes] = task.endTime.split(':').map(Number);
             const endDate = new Date(now);
             endDate.setHours(hours, minutes, 0, 0);
-            const gracePeriod = 15 * 60 * 1000; // 15 minutes in ms
+            const gracePeriod = 15 * 60 * 1000;
             console.log(`isTaskExpired: task=${task.name}, now=${now}, endDate=${endDate}, expired=${now > new Date(endDate.getTime() + gracePeriod)}`);
             return now > new Date(endDate.getTime() + gracePeriod);
         }
@@ -869,7 +1005,7 @@
         });
 
         resetDefaultBtn.addEventListener('click', () => {
-            if (confirm('Are you sure you want to reset to the default schedule? All custom tasks will be cleared.')) {
+            if (confirm('Reset to default schedule? All custom tasks will be cleared.')) {
                 hasCustomTasks = false;
                 localStorage.setItem('hasCustomTasks', 'false');
                 localStorage.removeItem('customTasks');
@@ -906,7 +1042,7 @@
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const index = parseInt(btn.getAttribute('data-index'));
-                    if (confirm('Are you sure you want to delete this task?')) {
+                    if (confirm('Delete this task?')) {
                         tasks.splice(index, 1);
                         tasks = sortTasksByTime(tasks);
                         saveTasks();
@@ -915,10 +1051,10 @@
                 });
             });
 
-            document.querySelectorAll('.mark-late-btn').forEach(btn => {
+            document.querySelectorAll('.complete-late-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     lateTaskIndex = parseInt(btn.getAttribute('data-index'));
-                    console.log('Mark Late clicked, lateTaskIndex:', lateTaskIndex, 'task:', tasks[lateTaskIndex]);
+                    console.log('Complete Late clicked, lateTaskIndex:', lateTaskIndex, 'task:', tasks[lateTaskIndex]);
                     lateTaskModal.style.display = 'block';
                     lateReasonInput.value = '';
                     modalConfirmBtn.disabled = true;
@@ -944,13 +1080,13 @@
                     const checkbox = document.getElementById(task.id);
                     if (checkbox) {
                         checkbox.checked = true;
-                        checkbox.disabled = false; // Ensure checkbox is not disabled
+                        checkbox.disabled = false;
                         console.log('Checkbox updated:', checkbox.id, checkbox.checked);
                     } else {
                         console.warn('Checkbox not found for task:', task.id);
                     }
                     saveTasks();
-                    lastRenderHash = ''; // Force re-render
+                    lastRenderHash = '';
                     renderTasks();
                     lateTaskModal.style.display = 'none';
                     lateReasonInput.value = '';
@@ -983,13 +1119,17 @@
         });
 
         function saveDailyData() {
-            today = new Date().toDateString(); // Update today
+            today = new Date().toDateString();
             const dateKey = `tasks_${today}`;
             localStorage.setItem(dateKey, JSON.stringify(tasks));
-            const completed = tasks.filter(task => task.checked && !task.isLate).length;
+            const completed = tasks.filter(task => task.checked).length;
             const total = tasks.length;
+            const timelyCompleted = tasks.filter(task => task.checked && !task.isLate).length;
+            const lateCompleted = tasks.filter(task => task.checked && task.isLate).length;
             const percentage = total ? Math.round((completed / total) * 100) : 0;
             localStorage.setItem(`completion_${today}`, percentage);
+            localStorage.setItem(`timely_${today}`, timelyCompleted);
+            localStorage.setItem(`late_${today}`, lateCompleted);
         }
 
         function clearWeeklyData() {
@@ -999,16 +1139,21 @@
                 date.setDate(now.getDate() - i);
                 const dateKey = `tasks_${date.toDateString()}`;
                 const completionKey = `completion_${date.toDateString()}`;
+                const timelyKey = `timely_${date.toDateString()}`;
+                const lateKey = `late_${date.toDateString()}`;
                 localStorage.removeItem(dateKey);
                 localStorage.removeItem(completionKey);
+                localStorage.removeItem(timelyKey);
+                localStorage.removeItem(lateKey);
             }
         }
 
         function getWeeklyStats() {
-            today = new Date().toDateString(); // Update today
+            today = new Date().toDateString();
             const now = new Date();
             const days = [];
-            const percentages = [];
+            const timelyPercentages = [];
+            const latePercentages = [];
             let hundredPercentDays = 0;
             let currentStreak = 0;
             let longestStreak = 0;
@@ -1018,13 +1163,17 @@
             let missedTasks = [];
             let lateTasks = [];
 
-            // Include today
             const todayKey = `tasks_${today}`;
             const todayCompletionKey = `completion_${today}`;
+            const todayTimelyKey = `timely_${today}`;
+            const todayLateKey = `late_${today}`;
             const todayTasks = localStorage.getItem(todayKey);
             const todayPercentage = parseInt(localStorage.getItem(todayCompletionKey) || '0');
+            const todayTimely = parseInt(localStorage.getItem(todayTimelyKey) || '0');
+            const todayLate = parseInt(localStorage.getItem(todayLateKey) || '0');
             days.push(now.toLocaleDateString('en-US', { weekday: 'short' }));
-            percentages.push(todayPercentage);
+            timelyPercentages.push(todayTasks ? Math.round((todayTimely / JSON.parse(todayTasks).length) * 100) : 0);
+            latePercentages.push(todayTasks ? Math.round((todayLate / JSON.parse(todayTasks).length) * 100) : 0);
 
             if (todayPercentage === 100) {
                 hundredPercentDays++;
@@ -1038,7 +1187,7 @@
                 totalTasks += dailyTasks.length;
                 completedTasks += dailyTasks.filter(task => task.checked).length;
                 dailyTasks.forEach(task => {
-                    if (!task.checked) {
+                    if (!task.checked && isTaskExpired(task, now)) {
                         missedTasks.push(`${task.name} on ${now.toLocaleDateString('en-US', { weekday: 'short' })}`);
                     } else if (task.isLate) {
                         lateTasks.push(`${task.name} on ${now.toLocaleDateString('en-US', { weekday: 'short' })}`);
@@ -1046,17 +1195,21 @@
                 });
             }
 
-            // Process previous 6 days
             for (let i = 1; i < 7; i++) {
                 const date = new Date(now);
                 date.setDate(now.getDate() - i);
                 const dateKey = `tasks_${date.toDateString()}`;
                 const completionKey = `completion_${date.toDateString()}`;
+                const timelyKey = `timely_${date.toDateString()}`;
+                const lateKey = `late_${date.toDateString()}`;
                 const tasksData = localStorage.getItem(dateKey);
                 const percentage = parseInt(localStorage.getItem(completionKey) || '0');
+                const timely = parseInt(localStorage.getItem(timelyKey) || '0');
+                const late = parseInt(localStorage.getItem(lateKey) || '0');
                 const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                 days.push(dayName);
-                percentages.push(percentage);
+                timelyPercentages.push(tasksData ? Math.round((timely / JSON.parse(tasksData).length) * 100) : 0);
+                latePercentages.push(tasksData ? Math.round((late / JSON.parse(tasksData).length) * 100) : 0);
 
                 if (percentage === 100) {
                     hundredPercentDays++;
@@ -1071,7 +1224,7 @@
                     totalTasks += dailyTasks.length;
                     completedTasks += dailyTasks.filter(task => task.checked).length;
                     dailyTasks.forEach(task => {
-                        if (!task.checked) {
+                        if (!task.checked && isTaskExpired(task, new Date(date))) {
                             missedTasks.push(`${task.name} on ${dayName}`);
                         } else if (task.isLate) {
                             lateTasks.push(`${task.name} on ${dayName}`);
@@ -1080,10 +1233,11 @@
                 }
             }
 
-            console.log('getWeeklyStats:', { days: days.reverse(), percentages: percentages.reverse() });
+            console.log('getWeeklyStats:', { days: days.reverse(), timelyPercentages: timelyPercentages.reverse(), latePercentages: latePercentages.reverse() });
             return {
                 days: days.reverse(),
-                percentages: percentages.reverse(),
+                timelyPercentages: timelyPercentages.reverse(),
+                latePercentages: latePercentages.reverse(),
                 hundredPercentDays,
                 currentStreak,
                 longestStreak,
@@ -1095,7 +1249,7 @@
         }
 
         function renderStats() {
-            today = new Date().toDateString(); // Update today
+            today = new Date().toDateString();
             const stats = getWeeklyStats();
             const summaryText = `
                 <strong>${stats.completedTasks}/${stats.totalTasks} tasks completed (${Math.round((stats.completedTasks / stats.totalTasks) * 100) || 0}%)</strong>
@@ -1125,41 +1279,105 @@
             const chartCanvas = document.getElementById('statsChart');
             chartCanvas.style.display = 'block';
             chartCanvas.width = chartCanvas.parentElement.offsetWidth;
-            chartCanvas.height = 300;
+            chartCanvas.height = 350;
             const ctx = chartCanvas.getContext('2d');
-            ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height); // Clear canvas
+            ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
             try {
-                console.log('Rendering chart with data:', stats.days, stats.percentages);
+                console.log('Rendering chart with data:', stats.days, stats.timelyPercentages, stats.latePercentages);
                 statsChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: stats.days,
-                        datasets: [{
-                            label: 'Timely Completion %',
-                            data: stats.percentages,
-                            backgroundColor: '#FFB100',
-                            borderColor: '#FFB100',
-                            borderWidth: 1
-                        }]
+                        datasets: [
+                            {
+                                label: 'Timely Completion %',
+                                data: stats.timelyPercentages,
+                                backgroundColor: '#FFB100',
+                                borderColor: '#FFD700',
+                                borderWidth: 1,
+                                barPercentage: 0.45,
+                                categoryPercentage: 0.45
+                            },
+                            {
+                                label: 'Late Completion %',
+                                data: stats.latePercentages,
+                                backgroundColor: '#B00020',
+                                borderColor: '#D32F2F',
+                                borderWidth: 1,
+                                barPercentage: 0.45,
+                                categoryPercentage: 0.45
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         scales: {
                             y: {
+                                stacked: true,
                                 beginAtZero: true,
                                 max: 100,
-                                ticks: { color: '#E5E5E5', stepSize: 20 },
-                                grid: { color: '#444' }
+                                ticks: {
+                                    color: '#E5E5E5',
+                                    stepSize: 20,
+                                    font: { size: 14, weight: '600' }
+                                },
+                                grid: {
+                                    color: 'rgba(255, 177, 0, 0.2)',
+                                    borderColor: '#444'
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Completion Percentage',
+                                    color: '#FFB100',
+                                    font: { size: 16, weight: '700' }
+                                }
                             },
                             x: {
-                                ticks: { color: '#E5E5E5' },
-                                grid: { color: '#444' }
+                                stacked: true,
+                                ticks: {
+                                    color: '#E5E5E5',
+                                    font: { size: 14, weight: '600' }
+                                },
+                                grid: {
+                                    display: false
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Day of Week',
+                                    color: '#FFB100',
+                                    font: { size: 16, weight: '700' }
+                                }
                             }
                         },
                         plugins: {
-                            legend: { labels: { color: '#E5E5E5', font: { size: 14 } } },
-                            title: { display: false }
+                            legend: {
+                                labels: {
+                                    color: '#E5E5E5',
+                                    font: { size: 14, weight: '600' },
+                                    boxWidth: 20
+                                },
+                                position: 'top'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Weekly Task Completion',
+                                color: '#FFB100',
+                                font: { size: 18, weight: '900' },
+                                padding: 20
+                            },
+                            tooltip: {
+                                backgroundColor: '#3A3A3A',
+                                titleColor: '#FFB100',
+                                bodyColor: '#E5E5E5',
+                                borderColor: '#FFB100',
+                                borderWidth: 1,
+                                cornerRadius: 8
+                            }
+                        },
+                        animation: {
+                            duration: 1000,
+                            easing: 'easeOutQuart'
                         }
                     }
                 });
@@ -1207,7 +1425,6 @@
             if (dvdActive) return;
             dvdActive = true;
             congratsText.style.display = 'block';
-            congratsText.style.color = '#FFB100';
             successSound.play();
             let x = Math.random() * (window.innerWidth - congratsText.offsetWidth);
             let y = Math.random() * (window.innerHeight - congratsText.offsetHeight);
@@ -1255,11 +1472,11 @@
         }
 
         function initializeCheckboxes() {
-            today = new Date().toDateString(); // Update today
+            today = new Date().toDateString();
             const now = new Date();
             if (today !== lastCheckDate) {
                 tasks.forEach(task => {
-                    if (!task.isLate) { // Preserve late tasks
+                    if (!task.isLate) {
                         task.checked = false;
                         localStorage.setItem(task.id, 'false');
                     }
@@ -1280,7 +1497,7 @@
                     if (task && !isTaskExpired(task, now) && !task.isLate) {
                         handleCheckboxChange(event);
                     } else if (task && !task.isLate) {
-                        event.target.checked = false; // Prevent checking if expired and not late
+                        event.target.checked = false;
                     }
                 });
             });
@@ -1290,7 +1507,7 @@
             const task = tasks.find(t => t.id === event.target.id);
             if (task) {
                 task.checked = event.target.checked;
-                task.isLate = false; // Reset isLate if checked within time
+                task.isLate = false;
                 localStorage.setItem(event.target.id, event.target.checked);
                 localStorage.setItem('lastCheckDate', today);
                 saveTasks();
@@ -1306,23 +1523,21 @@
 
         loadTasks();
 
-        // Check for expired tasks every 5 minutes to reduce re-rendering
         setInterval(() => {
             const now = new Date();
             const newToday = new Date().toDateString();
             if (newToday !== today) {
                 today = newToday;
                 initializeCheckboxes();
-                lastRenderHash = ''; // Force re-render on date change
+                lastRenderHash = '';
             }
             const anyExpired = tasks.some(task => isTaskExpired(task, now) !== document.getElementById(task.id)?.disabled);
             if (anyExpired) renderTasks();
         }, 5 * 60 * 1000);
 
-        // Verify Chart.js loaded
         window.addEventListener('load', () => {
             if (typeof Chart === 'undefined') {
-                console.error('Chart.js failed to load on window load');
+                console.error('Chart.js failed to load');
                 chartError.style.display = 'block';
             }
         });
