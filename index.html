@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mercedes S580 2025 Routine</title>
-    <link rel="icon" href="https://i.postimg.cc/52PrzsyJ/favicon-32x32.png" type="image/png">
+    <link rel="icon" href="https://i.postimg.cc/x87RR692/favicon-32x32.png" type="image/png">
     <link rel="manifest" href="/manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -65,7 +65,7 @@
             font-style: italic;
         }
 
-        .add-task-btn, .reset-default-btn, .stats-btn {
+        .add-task-btn, .reset-default-btn, .report-btn {
             display: inline-block;
             margin: 10px 8px;
             padding: 12px 24px;
@@ -84,7 +84,7 @@
             box-shadow: 0 0 15px rgba(255, 177, 0, 0.4);
         }
 
-        .add-task-btn::after, .reset-default-btn::after, .stats-btn::after {
+        .add-task-btn::after, .reset-default-btn::after, .report-btn::after {
             content: '';
             position: absolute;
             top: 0;
@@ -95,22 +95,22 @@
             transition: left 0.5s ease;
         }
 
-        .add-task-btn:hover::after, .reset-default-btn:hover::after, .stats-btn:hover::after {
+        .add-task-btn:hover::after, .reset-default-btn:hover::after, .report-btn:hover::after {
             left: 100%;
         }
 
-        .add-task-btn:hover, .reset-default-btn:hover, .stats-btn:hover {
+        .add-task-btn:hover, .reset-default-btn:hover, .report-btn:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 20px rgba(255, 177, 0, 0.6);
             background: #FFD700;
         }
 
-        .reset-default-btn, .stats-btn {
+        .reset-default-btn, .report-btn {
             background: #3A3A3A;
             color: #E5E5E5;
         }
 
-        .reset-default-btn:hover, .stats-btn:hover {
+        .reset-default-btn:hover, .report-btn:hover {
             box-shadow: 0 8px 20px rgba(255, 177, 0, 0.4);
             background: #5A5A5A;
         }
@@ -553,11 +553,8 @@
         }
 
         #congratsMessage {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: clamp(32px, 5vw, 48px);
+            position: absolute;
+            font-size: clamp(24px, 4vw, 36px);
             font-weight: 900;
             color: #FFB100;
             text-shadow: 0 0 20px rgba(255, 177, 0, 0.8);
@@ -565,12 +562,16 @@
             z-index: 10000;
             display: none;
             animation: pulseText 2s infinite;
+            max-width: 90%;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
         @keyframes pulseText {
-            0% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.1); }
-            100% { transform: translate(-50%, -50%) scale(1); }
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
 
         #confettiCanvas {
@@ -606,7 +607,7 @@
                 width: 95%;
             }
 
-            .add-task-btn, .reset-default-btn, .stats-btn {
+            .add-task-btn, .reset-default-btn, .report-btn {
                 padding: 10px 20px;
                 font-size: clamp(14px, 4vw, 16px);
             }
@@ -700,7 +701,7 @@
         <div style="text-align: center;">
             <button class="add-task-btn" id="showFormBtn">➕ Add My Own Custom Task</button>
             <button class="reset-default-btn" id="resetDefaultBtn">🔄 Reset to Default</button>
-            <button class="stats-btn" id="showStatsBtn">📊 View Stats</button>
+            <button class="report-btn" id="showReportBtn">📊 View Report</button>
         </div>
 
         <div class="task-form" id="taskForm">
@@ -757,7 +758,7 @@
         </div>
         <p id="progressText">0% Completed</p>
         <div class="stats-panel" id="statsPanel">
-            <h3>Weekly Performance</h3>
+            <h3>Weekly Report</h3>
             <div class="stats-section">
                 <h4>Summary</h4>
                 <p id="weeklySummary"></p>
@@ -796,7 +797,7 @@
         const scheduleContainer = document.getElementById('scheduleContainer');
         const showFormBtn = document.getElementById('showFormBtn');
         const resetDefaultBtn = document.getElementById('resetDefaultBtn');
-        const showStatsBtn = document.getElementById('showStatsBtn');
+        const showReportBtn = document.getElementById('showReportBtn');
         const taskForm = document.getElementById('taskForm');
         const addTaskBtn = document.getElementById('addTaskBtn');
         const clearFormBtn = document.getElementById('clearFormBtn');
@@ -1109,7 +1110,7 @@
             modalError.style.display = 'none';
         });
 
-        showStatsBtn.addEventListener('click', () => {
+        showReportBtn.addEventListener('click', () => {
             const isActive = statsPanel.classList.contains('active');
             statsPanel.classList.toggle('active', !isActive);
             renderStats();
@@ -1279,11 +1280,12 @@
             const chartCanvas = document.getElementById('statsChart');
             chartCanvas.style.display = 'block';
             chartCanvas.width = chartCanvas.parentElement.offsetWidth;
-            chartCanvas.height = 350;
+            chartCanvas.height = window.innerWidth <= 600 ? 250 : 350;
             const ctx = chartCanvas.getContext('2d');
             ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
             try {
                 console.log('Rendering chart with data:', stats.days, stats.timelyPercentages, stats.latePercentages);
+                const isMobile = window.innerWidth <= 600;
                 statsChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
@@ -1295,17 +1297,17 @@
                                 backgroundColor: '#FFB100',
                                 borderColor: '#FFD700',
                                 borderWidth: 1,
-                                barPercentage: 0.45,
-                                categoryPercentage: 0.45
+                                barPercentage: isMobile ? 0.4 : 0.45,
+                                categoryPercentage: isMobile ? 0.4 : 0.45
                             },
                             {
                                 label: 'Late Completion %',
                                 data: stats.latePercentages,
                                 backgroundColor: '#B00020',
-                                borderColor: '#D32F2F',
+                                borderColor: '#D32F2D',
                                 borderWidth: 1,
-                                barPercentage: 0.45,
-                                categoryPercentage: 0.45
+                                barPercentage: isMobile ? 0.4 : 0.45,
+                                categoryPercentage: isMobile ? 0.4 : 0.45
                             }
                         ]
                     },
@@ -1319,8 +1321,8 @@
                                 max: 100,
                                 ticks: {
                                     color: '#E5E5E5',
-                                    stepSize: 20,
-                                    font: { size: 14, weight: '600' }
+                                    stepSize: 25,
+                                    font: { size: isMobile ? 12 : 14, weight: '600' }
                                 },
                                 grid: {
                                     color: 'rgba(255, 177, 0, 0.2)',
@@ -1328,16 +1330,19 @@
                                 },
                                 title: {
                                     display: true,
-                                    text: 'Completion Percentage',
+                                    text: 'Completion %',
                                     color: '#FFB100',
-                                    font: { size: 16, weight: '700' }
+                                    font: { size: isMobile ? 14 : 16, weight: '700' },
+                                    padding: { top: 10, bottom: 5 }
                                 }
                             },
                             x: {
                                 stacked: true,
                                 ticks: {
                                     color: '#E5E5E5',
-                                    font: { size: 14, weight: '600' }
+                                    font: { size: isMobile ? 10 : 14, weight: '600' },
+                                    maxRotation: isMobile ? 0 : 45,
+                                    minRotation: 0
                                 },
                                 grid: {
                                     display: false
@@ -1346,7 +1351,8 @@
                                     display: true,
                                     text: 'Day of Week',
                                     color: '#FFB100',
-                                    font: { size: 16, weight: '700' }
+                                    font: { size: 16, weight: '600' },
+                                    padding: { top: 10 }
                                 }
                             }
                         },
@@ -1354,8 +1360,8 @@
                             legend: {
                                 labels: {
                                     color: '#E5E5E5',
-                                    font: { size: 14, weight: '600' },
-                                    boxWidth: 20
+                                    font: { size: isMobile ? 12 : 14, weight: '600' },
+                                    boxWidth: isMobile ? 15 : 20
                                 },
                                 position: 'top'
                             },
@@ -1363,8 +1369,8 @@
                                 display: true,
                                 text: 'Weekly Task Completion',
                                 color: '#FFB100',
-                                font: { size: 18, weight: '900' },
-                                padding: 20
+                                font: { size: isMobile ? 16 : 18, weight: '900' },
+                                padding: isMobile ? 15 : 20
                             },
                             tooltip: {
                                 backgroundColor: '#3A3A3A',
@@ -1424,24 +1430,81 @@
         function startDVDMessage() {
             if (dvdActive) return;
             dvdActive = true;
-            congratsText.style.display = 'block';
-            successSound.play();
-            let x = Math.random() * (window.innerWidth - congratsText.offsetWidth);
-            let y = Math.random() * (window.innerHeight - congratsText.offsetHeight);
+            congratsText.style.display = 'inline-block';
+            const textWidth = congratsText.offsetWidth;
+            const textHeight = congratsText.offsetHeight;
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            const padding = 10;
+            const maxX = windowWidth - textWidth - padding;
+            const maxY = windowHeight - textHeight - padding;
+            let x = padding + Math.random() * (maxX - padding);
+            let y = padding + Math.random() * (maxY - padding);
             let dx = 2;
             let dy = 2;
+
+            console.log('startDVDMessage: Initial', {
+                textWidth,
+                textHeight,
+                windowWidth,
+                windowHeight,
+                maxX,
+                maxY,
+                x,
+                y
+            });
+
+            if (textWidth >= windowWidth || textWidth <= 0) {
+                console.warn('Text width out of bounds or invalid:', textWidth);
+                congratsText.style.display = 'none';
+                dvdActive = false;
+                return;
+            }
+
+            congratsText.style.left = x + 'px';
+            congratsText.style.top = y + 'px';
+
             dvdInterval = setInterval(() => {
                 x += dx;
                 y += dy;
-                if (x <= 0 || x + congratsText.offsetWidth >= window.innerWidth) dx *= -1;
-                if (y <= 0 || y + congratsText.offsetHeight >= window.innerHeight) dy *= -1;
+
+                if (x <= padding) {
+                    x = padding;
+                    dx = Math.abs(dx);
+                } else if (x >= maxX) {
+                    x = maxX;
+                    dx = -Math.abs(dx);
+                }
+                if (y <= padding) {
+                    y = padding;
+                    dy = Math.abs(dy);
+                } else if (y >= maxY) {
+                    y = maxY;
+                    dy = -Math.abs(dy);
+                }
+
+                x = Math.max(padding, Math.min(x, maxX));
+                y = Math.max(padding, Math.min(y, maxY));
+
                 congratsText.style.left = x + 'px';
                 congratsText.style.top = y + 'px';
+
+                console.log('startDVDMessage: Moving', {
+                    x,
+                    y,
+                    dx,
+                    dy,
+                    maxX,
+                    maxY,
+                    textWidth: congratsText.offsetWidth
+                });
             }, 16);
+
             setTimeout(() => {
                 clearInterval(dvdInterval);
                 congratsText.style.display = 'none';
                 dvdActive = false;
+                console.log('startDVDMessage: Stopped');
             }, 60000);
         }
 
@@ -1539,6 +1602,13 @@
             if (typeof Chart === 'undefined') {
                 console.error('Chart.js failed to load');
                 chartError.style.display = 'block';
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (dvdActive) {
+                clearInterval(dvdInterval);
+                startDVDMessage();
             }
         });
     </script>
