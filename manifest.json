@@ -1,21 +1,41 @@
 {
-    "name": "Daily Planner",
-    "short_name": "Planner",
-    "description": "A daily routine planner for productivity and growth.",
+    "name": "Mercedes S580 2025 Routine",
+    "short_name": "S580 Routine",
+    "description": "A daily routine planner for productivity and growth, inspired by the Mercedes S580 2025.",
     "start_url": "/index.html",
     "display": "standalone",
-    "background_color": "#121212",
+    "background_color": "#0A0A0A",
     "theme_color": "#FFB100",
     "icons": [
         {
-            "src": "icon-192x192.png",
-            "sizes": "192x192",
-            "type": "image/png"
+            "src": "/favicon-32x32.png",
+            "sizes": "32x32",
+            "type": "image/png",
+            "purpose": "any"
         },
         {
-            "src": "icon-512x512.png",
+            "src": "/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/icon-512x512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }
     ]
 }

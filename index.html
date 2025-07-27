@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mercedes S580 2025 Routine</title>
-    <link rel="icon" href="https://i.postimg.cc/x87RR692/favicon-32x32.png" type="image/png">
+    <link rel="icon" href="/favicon-32x32.png" type="image/png">
     <link rel="manifest" href="/manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -65,7 +65,7 @@
             font-style: italic;
         }
 
-        .add-task-btn, .reset-default-btn, .report-btn {
+        .add-task-btn, .reset-default-btn, .report-btn, .settings-btn {
             display: inline-block;
             margin: 10px 8px;
             padding: 12px 24px;
@@ -84,7 +84,7 @@
             box-shadow: 0 0 15px rgba(255, 177, 0, 0.4);
         }
 
-        .add-task-btn::after, .reset-default-btn::after, .report-btn::after {
+        .add-task-btn::after, .reset-default-btn::after, .report-btn::after, .settings-btn::after {
             content: '';
             position: absolute;
             top: 0;
@@ -95,27 +95,27 @@
             transition: left 0.5s ease;
         }
 
-        .add-task-btn:hover::after, .reset-default-btn:hover::after, .report-btn:hover::after {
+        .add-task-btn:hover::after, .reset-default-btn:hover::after, .report-btn:hover::after, .settings-btn:hover::after {
             left: 100%;
         }
 
-        .add-task-btn:hover, .reset-default-btn:hover, .report-btn:hover {
+        .add-task-btn:hover, .reset-default-btn:hover, .report-btn:hover, .settings-btn:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 20px rgba(255, 177, 0, 0.6);
             background: #FFD700;
         }
 
-        .reset-default-btn, .report-btn {
+        .reset-default-btn, .report-btn, .settings-btn {
             background: #3A3A3A;
             color: #E5E5E5;
         }
 
-        .reset-default-btn:hover, .report-btn:hover {
+        .reset-default-btn:hover, .report-btn:hover, .settings-btn:hover {
             box-shadow: 0 8px 20px rgba(255, 177, 0, 0.4);
             background: #5A5A5A;
         }
 
-        .task-form, .modal {
+        .task-form, .modal, .install-prompt {
             display: none;
             margin: 20px auto;
             width: 100%;
@@ -124,28 +124,26 @@
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 6px 25px rgba(255, 177, 0, 0.2);
-            position: relative;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             z-index: 1000;
             animation: fadeInForm 0.5s ease;
             border: 1px solid #FFB100;
         }
 
         @keyframes fadeInForm {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
 
-        .modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(1);
+        .modal, .install-prompt {
             max-width: 90%;
             width: 320px;
-            transition: transform 0.3s ease, opacity 0.3s ease;
         }
 
-        .modal-error {
+        .modal-error, .permission-error {
             color: #B00020;
             font-size: clamp(12px, 3vw, 14px);
             text-align: center;
@@ -153,13 +151,29 @@
             display: none;
         }
 
-        .task-form h3, .modal h3 {
+        .task-form h3, .modal h3, .install-prompt h3 {
             color: #FFB100;
             text-align: center;
             margin-bottom: 15px;
             font-size: clamp(22px, 5vw, 24px);
             font-weight: 700;
             text-transform: uppercase;
+        }
+
+        .install-prompt .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #E5E5E5;
+            font-size: 18px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .install-prompt .close-btn:hover {
+            color: #FFB100;
         }
 
         .task-form label, .modal label {
@@ -170,7 +184,7 @@
             font-weight: 600;
         }
 
-        .task-form input, .task-form select, .modal input {
+        .task-form input, .task-form select, .modal input, .modal select {
             width: 100%;
             margin: 6px 0 12px;
             padding: 10px;
@@ -182,7 +196,7 @@
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .task-form input:focus, .task-form select:focus, .modal input:focus {
+        .task-form input:focus, .task-form select:focus, .modal input:focus, .modal select:focus {
             border-color: #FFB100;
             box-shadow: 0 0 10px rgba(255, 177, 0, 0.3);
             outline: none;
@@ -196,14 +210,14 @@
             background-size: 14px;
         }
 
-        .task-form .form-buttons, .modal .modal-buttons {
+        .task-form .form-buttons, .modal .modal-buttons, .install-prompt .install-buttons {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
             justify-content: center;
         }
 
-        .task-form button, .modal button {
+        .task-form button, .modal button, .install-prompt button {
             flex: 1;
             min-width: 90px;
             max-width: 130px;
@@ -225,7 +239,7 @@
             color: #E5E5E5;
         }
 
-        .task-form button:hover, .modal button:hover {
+        .task-form button:hover, .modal button:hover, .install-prompt button:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 15px rgba(255, 177, 0, 0.5);
         }
@@ -607,28 +621,28 @@
                 width: 95%;
             }
 
-            .add-task-btn, .reset-default-btn, .report-btn {
+            .add-task-btn, .reset-default-btn, .report-btn, .settings-btn {
                 padding: 10px 20px;
                 font-size: clamp(14px, 4vw, 16px);
             }
 
-            .task-form, .modal {
+            .task-form, .modal, .install-prompt {
                 padding: 15px;
                 width: 100%;
                 max-width: 100%;
             }
 
-            .task-form input, .task-form select, .modal input {
+            .task-form input, .task-form select, .modal input, .modal select {
                 padding: 8px;
                 font-size: clamp(13px, 3.5vw, 15px);
             }
 
-            .task-form .form-buttons, .modal .modal-buttons {
+            .task-form .form-buttons, .modal .modal-buttons, .install-prompt .install-buttons {
                 flex-direction: column;
                 gap: 8px;
             }
 
-            .task-form button, .modal button {
+            .task-form button, .modal button, .install-prompt button {
                 max-width: 100%;
                 padding: 10px;
                 font-size: clamp(12px, 3vw, 14px);
@@ -686,7 +700,7 @@
                 font-size: clamp(12px, 3.5vw, 14px);
             }
 
-            .task-form h3, .modal h3 {
+            .task-form h3, .modal h3, .install-prompt h3 {
                 font-size: clamp(20px, 5vw, 22px);
             }
 
@@ -697,11 +711,24 @@
     </style>
 </head>
 <body>
+    <div class="install-prompt" id="installPrompt">
+        <button class="close-btn" id="closeInstallPrompt" aria-label="Close install prompt">✕</button>
+        <h3>Install S580 Routine</h3>
+        <p style="color: #E5E5E5; font-size: clamp(14px, 3vw, 16px); text-align: center;">
+            Install the app for a better experience, including offline access and notifications!
+        </p>
+        <div class="install-buttons">
+            <button id="installBtn">✅ Install</button>
+            <button class="cancel-btn" id="dismissInstallBtn">❌ Not Now</button>
+        </div>
+    </div>
+
     <div class="container">
         <div style="text-align: center;">
             <button class="add-task-btn" id="showFormBtn">➕ Add My Own Custom Task</button>
             <button class="reset-default-btn" id="resetDefaultBtn">🔄 Reset to Default</button>
             <button class="report-btn" id="showReportBtn">📊 View Report</button>
+            <button class="settings-btn" id="showSettingsBtn">⚙️ Settings</button>
         </div>
 
         <div class="task-form" id="taskForm">
@@ -737,6 +764,19 @@
             <div class="modal-buttons">
                 <button id="modalConfirmBtn" disabled>✅ Confirm</button>
                 <button class="modal-cancel-btn" id="modalCancelBtn">❌ Cancel</button>
+            </div>
+        </div>
+
+        <div class="modal" id="settingsModal">
+            <h3>Notification Settings</h3>
+            <p class="permission-error" id="permissionError">Enable notifications personally in browser settings.</p>
+            <label><input type="checkbox" id="enableReminders"> Enable Task Reminders</label>
+            <p>Reminders fire 10 minutes before each task.</p>
+            <label for="userName">Your Name (Optional)</label>
+            <input type="text" id="userName" placeholder="Your Name" aria-label="Your name for notifications">
+            <div class="modal-buttons">
+                <button id="saveSettingsBtn">✅ Save</button>
+                <button class="modal-cancel-btn" id="cancelSettingsBtn">❌ Cancel</button>
             </div>
         </div>
 
@@ -798,6 +838,7 @@
         const showFormBtn = document.getElementById('showFormBtn');
         const resetDefaultBtn = document.getElementById('resetDefaultBtn');
         const showReportBtn = document.getElementById('showReportBtn');
+        const showSettingsBtn = document.getElementById('showSettingsBtn');
         const taskForm = document.getElementById('taskForm');
         const addTaskBtn = document.getElementById('addTaskBtn');
         const clearFormBtn = document.getElementById('clearFormBtn');
@@ -807,19 +848,28 @@
         const modalCancelBtn = document.getElementById('modalCancelBtn');
         const modalError = document.getElementById('modalError');
         const lateReasonInput = document.getElementById('lateReason');
+        const settingsModal = document.getElementById('settingsModal');
+        const enableReminders = document.getElementById('enableReminders');
+        const userNameInput = document.getElementById('userName');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
+        const permissionError = document.getElementById('permissionError');
         const statsPanel = document.getElementById('statsPanel');
         const chartError = document.getElementById('chartError');
+        const installPrompt = document.getElementById('installPrompt');
+        const installBtn = document.getElementById('installBtn');
+        const dismissInstallBtn = document.getElementById('dismissInstallBtn');
+        const closeInstallPrompt = document.getElementById('closeInstallPrompt');
         let statsChart = null;
 
         let confettiActive = false;
         let confettiAnimation;
-        let dvdActive = false;
-        let dvdInterval;
         let taskCounter = 0;
         let tasks = [];
         let hasCustomTasks = localStorage.getItem('hasCustomTasks') === 'true';
         let lateTaskIndex = null;
         let lastRenderHash = '';
+        let deferredPrompt = null;
 
         const defaultTasks = [
             { startTime: '06:00', endTime: '06:30', name: 'Morning Nature Walk/Virtual 🌳', category: 'Health', priority: 'Medium', id: 'task1', checked: false, isLate: false },
@@ -851,11 +901,33 @@
             }
             tasks = sortTasksByTime(tasks);
             renderTasks();
+            syncTasksWithServiceWorker();
+        }
+
+        function syncTasksWithServiceWorker() {
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    type: 'SYNC_TASKS',
+                    tasks: tasks.map(t => ({ id: t.id, startTime: t.startTime, name: t.name, priority: t.priority })),
+                    userName: localStorage.getItem('userName') || 'you',
+                    enableReminders: localStorage.getItem('enableReminders') === 'true'
+                });
+            }
         }
 
         function renderTasks() {
             const now = new Date();
-            const taskHash = JSON.stringify(tasks.map(t => ({ id: t.id, checked: t.checked, isLate: t.isLate, expired: isTaskExpired(t, now) })));
+            const taskHash = JSON.stringify(tasks.map(t => ({
+                id: t.id,
+                startTime: t.startTime,
+                endTime: t.endTime,
+                name: t.name,
+                category: t.category,
+                priority: t.priority,
+                checked: t.checked,
+                isLate: t.isLate,
+                expired: isTaskExpired(t, now)
+            })));
             if (taskHash === lastRenderHash) return;
             lastRenderHash = taskHash;
 
@@ -898,7 +970,6 @@
             const endDate = new Date(now);
             endDate.setHours(hours, minutes, 0, 0);
             const gracePeriod = 15 * 60 * 1000;
-            console.log(`isTaskExpired: task=${task.name}, now=${now}, endDate=${endDate}, expired=${now > new Date(endDate.getTime() + gracePeriod)}`);
             return now > new Date(endDate.getTime() + gracePeriod);
         }
 
@@ -906,6 +977,7 @@
             localStorage.setItem('customTasks', JSON.stringify(tasks));
             localStorage.setItem('hasCustomTasks', hasCustomTasks);
             saveDailyData();
+            syncTasksWithServiceWorker();
         }
 
         function sortTasksByTime(tasks) {
@@ -928,12 +1000,13 @@
         }
 
         showFormBtn.addEventListener('click', () => {
-            taskForm.style.display = taskForm.style.display === 'none' ? 'block' : 'none';
+            taskForm.style.display = 'block';
             document.getElementById('editTaskIndex').value = '';
             document.getElementById('addTaskBtn').textContent = '✅ Save Task';
             taskForm.querySelector('h3').textContent = 'Create New Task';
             clearForm();
             taskForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            taskForm.focus();
         });
 
         function clearForm() {
@@ -996,6 +1069,7 @@
 
                 tasks = sortTasksByTime(tasks);
                 saveTasks();
+                lastRenderHash = '';
                 renderTasks();
                 taskForm.style.display = 'none';
                 clearForm();
@@ -1020,6 +1094,49 @@
                 saveTasks();
                 renderTasks();
             }
+        });
+
+        showSettingsBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'block';
+            enableReminders.checked = localStorage.getItem('enableReminders') === 'true';
+            userNameInput.value = localStorage.getItem('userName') || '';
+            permissionError.style.display = localStorage.getItem('notificationPermission') === 'denied' ? 'block' : 'none';
+            settingsModal.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        saveSettingsBtn.addEventListener('click', () => {
+            const wasEnabled = localStorage.getItem('enableReminders') === 'true';
+            const enableRemindersValue = enableReminders.checked;
+            const userName = userNameInput.value.trim() || 'you';
+            localStorage.setItem('enableReminders', enableRemindersValue);
+            localStorage.setItem('userName', userName);
+
+            if (enableRemindersValue && !wasEnabled) {
+                Notification.requestPermission().then(permission => {
+                    localStorage.setItem('notificationPermission', permission);
+                    if (permission === 'denied') {
+                        permissionError.style.display = 'block';
+                        enableReminders.checked = false;
+                        localStorage.setItem('enableReminders', 'false');
+                    } else {
+                        permissionError.style.display = 'none';
+                        syncTasksWithServiceWorker();
+                    }
+                });
+            } else if (!enableRemindersValue && wasEnabled) {
+                syncTasksWithServiceWorker();
+            } else if (userName !== (localStorage.getItem('userName') || 'you')) {
+                syncTasksWithServiceWorker();
+            }
+
+            settingsModal.style.display = 'none';
+        });
+
+        cancelSettingsBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'none';
+            userNameInput.value = localStorage.getItem('userName') || '';
+            enableReminders.checked = localStorage.getItem('enableReminders') === 'true';
+            permissionError.style.display = 'none';
         });
 
         function attachTaskActions() {
@@ -1055,7 +1172,6 @@
             document.querySelectorAll('.complete-late-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     lateTaskIndex = parseInt(btn.getAttribute('data-index'));
-                    console.log('Complete Late clicked, lateTaskIndex:', lateTaskIndex, 'task:', tasks[lateTaskIndex]);
                     lateTaskModal.style.display = 'block';
                     lateReasonInput.value = '';
                     modalConfirmBtn.disabled = true;
@@ -1070,21 +1186,16 @@
         });
 
         modalConfirmBtn.addEventListener('click', () => {
-            console.log('Confirm Late clicked, lateTaskIndex:', lateTaskIndex, 'tasks:', tasks);
             if (lateReasonInput.value.trim() && lateTaskIndex !== null && lateTaskIndex >= 0 && lateTaskIndex < tasks.length) {
                 try {
                     const task = tasks[lateTaskIndex];
                     task.checked = true;
                     task.isLate = true;
                     localStorage.setItem(task.id, 'true');
-                    console.log('Task marked late:', task);
                     const checkbox = document.getElementById(task.id);
                     if (checkbox) {
                         checkbox.checked = true;
                         checkbox.disabled = false;
-                        console.log('Checkbox updated:', checkbox.id, checkbox.checked);
-                    } else {
-                        console.warn('Checkbox not found for task:', task.id);
                     }
                     saveTasks();
                     lastRenderHash = '';
@@ -1098,7 +1209,6 @@
                     alert('Failed to mark task as late. Please try again.');
                 }
             } else {
-                console.error('Invalid lateTaskIndex or no reason:', lateTaskIndex, lateReasonInput.value);
                 modalError.style.display = 'block';
             }
         });
@@ -1234,7 +1344,6 @@
                 }
             }
 
-            console.log('getWeeklyStats:', { days: days.reverse(), timelyPercentages: timelyPercentages.reverse(), latePercentages: latePercentages.reverse() });
             return {
                 days: days.reverse(),
                 timelyPercentages: timelyPercentages.reverse(),
@@ -1273,7 +1382,6 @@
             chartError.style.display = 'none';
 
             if (statsChart) {
-                console.log('Destroying previous chart');
                 statsChart.destroy();
                 statsChart = null;
             }
@@ -1284,7 +1392,6 @@
             const ctx = chartCanvas.getContext('2d');
             ctx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
             try {
-                console.log('Rendering chart with data:', stats.days, stats.timelyPercentages, stats.latePercentages);
                 const isMobile = window.innerWidth <= 600;
                 statsChart = new Chart(ctx, {
                     type: 'bar',
@@ -1387,7 +1494,6 @@
                         }
                     }
                 });
-                console.log('Chart rendered successfully');
             } catch (error) {
                 console.error('Error rendering chart:', error);
                 chartError.style.display = 'block';
@@ -1399,218 +1505,168 @@
             confettiActive = true;
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            const colors = ['#FFB100', '#FFD700', '#FFFFFF', '#B00020'];
             const confetti = [];
-            for (let i = 0; i < 150; i++) {
+            const confettiCount = 200;
+            for (let i = 0; i < confettiCount; i++) {
                 confetti.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height - canvas.height,
-                    size: Math.random() * 8 + 2,
-                    color: Math.random() < 0.5 ? '#FFB100' : '#FFD700',
-                    speed: Math.random() * 3 + 2
+                    r: Math.random() * 4 + 4,
+                    d: Math.random() * confettiCount + 2,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    tilt: Math.random() * 10 - 10,
+                    tiltAngleIncremental: Math.random() * 0.07 + 0.05,
+                    tiltAngle: 0
                 });
             }
-            function draw() {
+
+            function drawConfetti() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                confetti.forEach(c => {
-                    ctx.fillStyle = c.color;
-                    ctx.fillRect(c.x, c.y, c.size, c.size);
-                    c.y += c.speed;
-                    if (c.y > canvas.height) c.y = -10;
+                confetti.forEach((p, i) => {
+                    p.tiltAngle += p.tiltAngleIncremental;
+                    p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+                    p.tilt = Math.sin(p.tiltAngle - i / 3) * 15;
+                    if (p.y > canvas.height + 20) {
+                        confetti.splice(i, 1);
+                        i--;
+                        return;
+                    }
+                    ctx.beginPath();
+                    ctx.lineWidth = p.r;
+                    ctx.strokeStyle = p.color;
+                    ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+                    ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+                    ctx.stroke();
                 });
-                confettiAnimation = requestAnimationFrame(draw);
-            }
-            draw();
-            setTimeout(() => {
-                cancelAnimationFrame(confettiAnimation);
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                confettiActive = false;
-            }, 60000);
-        }
-
-        function startDVDMessage() {
-            if (dvdActive) return;
-            dvdActive = true;
-            congratsText.style.display = 'inline-block';
-            const textWidth = congratsText.offsetWidth;
-            const textHeight = congratsText.offsetHeight;
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
-            const padding = 10;
-            const maxX = windowWidth - textWidth - padding;
-            const maxY = windowHeight - textHeight - padding;
-            let x = padding + Math.random() * (maxX - padding);
-            let y = padding + Math.random() * (maxY - padding);
-            let dx = 2;
-            let dy = 2;
-
-            console.log('startDVDMessage: Initial', {
-                textWidth,
-                textHeight,
-                windowWidth,
-                windowHeight,
-                maxX,
-                maxY,
-                x,
-                y
-            });
-
-            if (textWidth >= windowWidth || textWidth <= 0) {
-                console.warn('Text width out of bounds or invalid:', textWidth);
-                congratsText.style.display = 'none';
-                dvdActive = false;
-                return;
+                if (confetti.length <= 0) {
+                    confettiActive = false;
+                    canvas.style.display = 'none';
+                    cancelAnimationFrame(confettiAnimation);
+                    return;
+                }
+                confettiAnimation = requestAnimationFrame(drawConfetti);
             }
 
-            congratsText.style.left = x + 'px';
-            congratsText.style.top = y + 'px';
-
-            dvdInterval = setInterval(() => {
-                x += dx;
-                y += dy;
-
-                if (x <= padding) {
-                    x = padding;
-                    dx = Math.abs(dx);
-                } else if (x >= maxX) {
-                    x = maxX;
-                    dx = -Math.abs(dx);
-                }
-                if (y <= padding) {
-                    y = padding;
-                    dy = Math.abs(dy);
-                } else if (y >= maxY) {
-                    y = maxY;
-                    dy = -Math.abs(dy);
-                }
-
-                x = Math.max(padding, Math.min(x, maxX));
-                y = Math.max(padding, Math.min(y, maxY));
-
-                congratsText.style.left = x + 'px';
-                congratsText.style.top = y + 'px';
-
-                console.log('startDVDMessage: Moving', {
-                    x,
-                    y,
-                    dx,
-                    dy,
-                    maxX,
-                    maxY,
-                    textWidth: congratsText.offsetWidth
-                });
-            }, 16);
-
+            canvas.style.display = 'block';
+            congratsText.style.display = 'block';
+            congratsText.style.left = `${window.innerWidth / 2}px`;
+            congratsText.style.top = `${window.innerHeight / 2}px`;
+            try {
+                successSound.play().catch(error => console.error('Error playing sound:', error));
+            } catch (error) {
+                console.error('Audio error:', error);
+            }
+            drawConfetti();
             setTimeout(() => {
-                clearInterval(dvdInterval);
                 congratsText.style.display = 'none';
-                dvdActive = false;
-                console.log('startDVDMessage: Stopped');
-            }, 60000);
-        }
-
-        function stopEffects() {
-            cancelAnimationFrame(confettiAnimation);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            confettiActive = false;
-            clearInterval(dvdInterval);
-            congratsText.style.display = 'none';
-            dvdActive = false;
+                if (!confettiActive) canvas.style.display = 'none';
+            }, 5000);
         }
 
         function updateProgress() {
-            const boxes = document.querySelectorAll('input[type="checkbox"]');
-            const total = boxes.length;
-            const checked = Array.from(boxes).filter(box => box.checked).length;
-            const percent = total ? Math.round((checked / total) * 100) : 0;
-            document.getElementById('progressBar').style.width = percent + '%';
-            document.getElementById('progressText').innerText = percent + '% Completed';
-            if (percent === 100 && !confettiActive && !dvdActive) {
+            const completed = tasks.filter(task => task.checked).length;
+            const total = tasks.length;
+            const percentage = total ? Math.round((completed / total) * 100) : 0;
+            document.getElementById('progressBar').style.width = `${percentage}%`;
+            document.getElementById('progressText').textContent = `${percentage}% Completed`;
+            if (percentage === 100 && completed > 0) {
                 fireConfetti();
-                startDVDMessage();
-            } else {
-                stopEffects();
             }
-            saveDailyData();
-            if (statsPanel.classList.contains('active')) renderStats();
         }
 
         function initializeCheckboxes() {
-            today = new Date().toDateString();
-            const now = new Date();
-            if (today !== lastCheckDate) {
-                tasks.forEach(task => {
-                    if (!task.isLate) {
-                        task.checked = false;
-                        localStorage.setItem(task.id, 'false');
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    const index = tasks.findIndex(task => task.id === checkbox.id);
+                    if (index !== -1) {
+                        tasks[index].checked = checkbox.checked;
+                        localStorage.setItem(checkbox.id, checkbox.checked);
+                        saveTasks();
+                        lastRenderHash = '';
+                        renderTasks();
                     }
                 });
-                localStorage.setItem('lastCheckDate', today);
-                saveTasks();
-            }
-            document.querySelectorAll('input[type="checkbox"]').forEach(box => {
-                const saved = localStorage.getItem(box.id);
-                const task = tasks.find(t => t.id === box.id);
-                if (saved && task) {
-                    box.checked = saved === 'true';
-                    task.checked = box.checked;
+                const savedState = localStorage.getItem(checkbox.id);
+                if (savedState === 'true') {
+                    checkbox.checked = true;
+                    const index = tasks.findIndex(task => task.id === checkbox.id);
+                    if (index !== -1) tasks[index].checked = true;
                 }
-                box.removeEventListener('change', handleCheckboxChange);
-                box.addEventListener('change', (event) => {
-                    const task = tasks.find(t => t.id === event.target.id);
-                    if (task && !isTaskExpired(task, now) && !task.isLate) {
-                        handleCheckboxChange(event);
-                    } else if (task && !task.isLate) {
-                        event.target.checked = false;
-                    }
-                });
             });
         }
 
-        function handleCheckboxChange(event) {
-            const task = tasks.find(t => t.id === event.target.id);
-            if (task) {
-                task.checked = event.target.checked;
-                task.isLate = false;
-                localStorage.setItem(event.target.id, event.target.checked);
-                localStorage.setItem('lastCheckDate', today);
+        function checkDateChange() {
+            const currentDate = new Date().toDateString();
+            if (lastCheckDate !== currentDate) {
+                tasks.forEach(task => {
+                    task.checked = false;
+                    task.isLate = false;
+                    localStorage.removeItem(task.id);
+                });
+                lastCheckDate = currentDate;
+                localStorage.setItem('lastCheckDate', currentDate);
                 saveTasks();
-                updateProgress();
+                lastRenderHash = '';
+                renderTasks();
             }
         }
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(err => console.error('Service Worker registration failed:', err));
+                navigator.serviceWorker.register('/sw.js').then(reg => {
+                    console.log('Service Worker registered:', reg);
+                }).catch(err => {
+                    console.error('Service Worker registration failed:', err);
+                });
             });
         }
 
-        loadTasks();
-
-        setInterval(() => {
-            const now = new Date();
-            const newToday = new Date().toDateString();
-            if (newToday !== today) {
-                today = newToday;
-                initializeCheckboxes();
-                lastRenderHash = '';
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (localStorage.getItem('installPromptDismissed') !== 'true') {
+                installPrompt.style.display = 'block';
             }
-            const anyExpired = tasks.some(task => isTaskExpired(task, now) !== document.getElementById(task.id)?.disabled);
-            if (anyExpired) renderTasks();
-        }, 5 * 60 * 1000);
+        });
 
-        window.addEventListener('load', () => {
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js failed to load');
-                chartError.style.display = 'block';
+        installBtn.addEventListener('click', () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(choiceResult => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                    installPrompt.style.display = 'none';
+                });
             }
+        });
+
+        dismissInstallBtn.addEventListener('click', () => {
+            localStorage.setItem('installPromptDismissed', 'true');
+            installPrompt.style.display = 'none';
+        });
+
+        closeInstallPrompt.addEventListener('click', () => {
+            localStorage.setItem('installPromptDismissed', 'true');
+            installPrompt.style.display = 'none';
         });
 
         window.addEventListener('resize', () => {
-            if (dvdActive) {
-                clearInterval(dvdInterval);
-                startDVDMessage();
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            if (statsChart) {
+                statsChart.canvas.width = statsChart.canvas.parentElement.offsetWidth;
+                statsChart.canvas.height = window.innerWidth <= 600 ? 250 : 350;
+                statsChart.update();
             }
         });
+
+        setInterval(checkDateChange, 60000);
+        loadTasks();
     </script>
 </body>
 </html>
