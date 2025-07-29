@@ -10,705 +10,931 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif;
-        }
-
-        body {
-            background: #0A0A0A;
-            color: #E5E5E5;
-            font-size: 16px;
-            line-height: 1.6;
-            padding: 20px 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            background: #0A0A0A;
-            padding: 15px 0;
-            text-align: center;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(255, 177, 0, 0.2);
-            border-bottom: 2px solid #FFB100;
-            animation: slideInHeader 0.5s ease-out;
-        }
-
-        @keyframes slideInHeader {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        header h1 {
-            font-size: clamp(30px, 5vw, 42px);
-            font-weight: 900;
-            color: #FFB100;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            text-shadow: 0 2px 5px rgba(255, 177, 0, 0.3);
-        }
-
-        header p {
-            font-size: clamp(14px, 3vw, 16px);
-            color: #A0A0A0;
-            margin-top: 10px;
-            font-style: italic;
-        }
-
-        .add-task-btn, .reset-default-btn, .report-btn, .settings-btn {
-            display: inline-block;
-            margin: 10px 8px;
-            padding: 12px 24px;
-            font-size: clamp(16px, 4vw, 18px);
-            font-weight: 600;
-            background: #FFB100;
-            color: #0A0A0A;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 15px rgba(255, 177, 0, 0.4);
-        }
-
-        .add-task-btn::after, .reset-default-btn::after, .report-btn::after, .settings-btn::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .add-task-btn:hover::after, .reset-default-btn:hover::after, .report-btn:hover::after, .settings-btn:hover::after {
-            left: 100%;
-        }
-
-        .add-task-btn:hover, .reset-default-btn:hover, .report-btn:hover, .settings-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(255, 177, 0, 0.6);
-            background: #FFD700;
-        }
-
-        .reset-default-btn, .report-btn, .settings-btn {
-            background: #3A3A3A;
-            color: #E5E5E5;
-        }
-
-        .reset-default-btn:hover, .report-btn:hover, .settings-btn:hover {
-            box-shadow: 0 8px 20px rgba(255, 177, 0, 0.4);
-            background: #5A5A5A;
-        }
-
-        .task-form, .modal, .install-prompt {
-            display: none;
-            margin: 20px auto;
-            width: 100%;
-            max-width: 500px;
-            background: #0A0A0A;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 6px 25px rgba(255, 177, 0, 0.2);
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1000;
-            animation: fadeInForm 0.5s ease;
-            border: 1px solid #FFB100;
-        }
-
-        @keyframes fadeInForm {
-            from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
-            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-
-        .modal, .install-prompt {
-            max-width: 90%;
-            width: 320px;
-        }
-
-        .modal-error, .permission-error {
-            color: #B00020;
-            font-size: clamp(12px, 3vw, 14px);
-            text-align: center;
-            margin-bottom: 10px;
-            display: none;
-        }
-
-        .task-form h3, .modal h3, .install-prompt h3 {
-            color: #FFB100;
-            text-align: center;
-            margin-bottom: 15px;
-            font-size: clamp(22px, 5vw, 24px);
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .install-prompt .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: #E5E5E5;
-            font-size: 18px;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .install-prompt .close-btn:hover {
-            color: #FFB100;
-        }
-
-        .task-form label, .modal label {
-            display: block;
-            color: #E5E5E5;
-            margin-bottom: 6px;
-            font-size: clamp(13px, 3vw, 15px);
-            font-weight: 600;
-        }
-
-        .task-form input, .task-form select, .modal input, .modal select {
-            width: 100%;
-            margin: 6px 0 12px;
-            padding: 10px;
-            background: #3A3A3A;
-            border: 1px solid #444;
-            border-radius: 8px;
-            color: #E5E5E5;
-            font-size: clamp(14px, 4vw, 16px);
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .task-form input:focus, .task-form select:focus, .modal input:focus, .modal select:focus {
-            border-color: #FFB100;
-            box-shadow: 0 0 10px rgba(255, 177, 0, 0.3);
-            outline: none;
-        }
-
-        .task-form select {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23E5E5E5' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 14px;
-        }
-
-        .task-form .form-buttons, .modal .modal-buttons, .install-prompt .install-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .task-form button, .modal button, .install-prompt button {
-            flex: 1;
-            min-width: 90px;
-            max-width: 130px;
-            padding: 10px;
-            background: #FFB100;
-            color: #0A0A0A;
-            border: none;
-            border-radius: 8px;
-            font-size: clamp(13px, 3vw, 15px);
-            font-weight: 600;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 0 10px rgba(255, 177, 0, 0.3);
-        }
-
-        .task-form .cancel-btn, .task-form .clear-btn, .modal .modal-cancel-btn {
-            background: #3A3A3A;
-            color: #E5E5E5;
-        }
-
-        .task-form button:hover, .modal button:hover, .install-prompt button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(255, 177, 0, 0.5);
-        }
-
-        .modal button:disabled {
-            background: #5A5A5A;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .schedule {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .task {
-            background: #0A0A0A;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(255, 177, 0, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid #FFB100;
-        }
-
-        .task::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: #FFB100;
-            opacity: 0.7;
-        }
-
-        .task:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 12px 30px rgba(255, 177, 0, 0.4);
-        }
-
-        .task.task-added {
-            animation: fadeInTask 0.5s ease;
-        }
-
-        @keyframes fadeInTask {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .task.task-expired {
-            opacity: 0.7;
-            background: #3A3A3A;
-        }
-
-        .task h2 {
-            font-size: clamp(20px, 4vw, 22px);
-            color: #FFB100;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .task p {
-            font-size: clamp(13px, 3vw, 14px);
-            margin-top: 8px;
-            color: #A0A0A0;
-        }
-
-        .task strong {
-            color: #E5E5E5;
-            font-weight: 600;
-        }
-
-        .task .category {
-            display: inline-block;
-            padding: 6px 12px;
-            margin-top: 10px;
-            border-radius: 20px;
-            background: #FFB100;
-            color: #0A0A0A;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: clamp(11px, 2.5vw, 13px);
-        }
-
-        .task .task-actions {
-            margin-top: 10px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .task .edit-btn, .task .delete-btn, .task .complete-late-btn {
-            padding: 8px 12px;
-            background: #FFB100;
-            color: #0A0A0A;
-            border: none;
-            border-radius: 8px;
-            font-size: clamp(13px, 3vw, 14px);
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative;
-            box-shadow: 0 0 10px rgba(255, 177, 0, 0.3);
-        }
-
-        .task .delete-btn {
-            background: #B00020;
-            color: #E5E5E5;
-        }
-
-        .task .complete-late-btn {
-            background: #3A3A3A;
-            color: #E5E5E5;
-        }
-
-        .task .edit-btn:hover, .task .delete-btn:hover, .task .complete-late-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(255, 177, 0, 0.5);
-        }
-
-        .task .complete-late-btn:hover {
-            box-shadow: 0 5px 15px rgba(255, 177, 0, 0.4);
-        }
-
-        .task .complete-late-btn::after {
-            content: 'Mark this task as completed late';
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #3A3A3A;
-            color: #E5E5E5;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            white-space: nowrap;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-            z-index: 10;
-            box-shadow: 0 2px 10px rgba(255, 177, 0, 0.3);
-        }
-
-        .task .complete-late-btn:hover::after {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        input[type="checkbox"]:disabled {
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
-        input[type="checkbox"] {
-            margin-right: 10px;
-            transform: scale(1.3);
-            accent-color: #FFB100;
-        }
-
-        input[type="checkbox"]:checked + label {
-            text-decoration: line-through;
-            color: #A0A0A0;
-        }
-
-        .footer-wrapper {
-            margin-top: auto;
-            padding-bottom: 20px;
-        }
-
-        .progress-container {
-            width: 90%;
-            max-width: 600px;
-            height: 20px;
-            background: #3A3A3A;
-            border-radius: 10px;
-            margin: 0 auto;
-            overflow: hidden;
-            box-shadow: 0 4px 10px rgba(255, 177, 0, 0.2);
-            border: 1px solid #FFB100;
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background: #FFB100;
-            transition: width 0.5s ease;
-            position: relative;
-            box-shadow: inset 0 0 10px rgba(255, 177, 0, 0.5);
-        }
-
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            animation: progressShine 2s infinite;
-        }
-
-        @keyframes progressShine {
-            0% { transform: translateX(-100%); }
-            50% { transform: translateX(100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        #progressText {
-            text-align: center;
-            margin: 10px 0;
-            color: #FFB100;
-            font-weight: 600;
-            font-size: clamp(14px, 3vw, 16px);
-            text-shadow: 0 1px 3px rgba(255, 177, 0, 0.3);
-        }
-
-        .stats-panel {
-            display: none;
-            width: 100%;
-            max-width: 1000px;
-            margin: 20px auto;
-            background: #0A0A0A;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(255, 177, 0, 0.2);
-            transform: translateY(20px);
-            opacity: 0;
-            transition: transform 0.5s ease, opacity 0.5s ease;
-            border: 1px solid #FFB100;
-        }
-
-        .stats-panel.active {
-            display: block;
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .stats-panel h3 {
-            color: #FFB100;
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: clamp(24px, 5vw, 26px);
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 2px 5px rgba(255, 177, 0, 0.3);
-        }
-
-        .stats-section {
-            margin-bottom: 25px;
-            animation: fadeInStats 0.5s ease;
-        }
-
-        @keyframes fadeInStats {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .stats-section h4 {
-            color: #FFB100;
-            font-size: clamp(18px, 4vw, 20px);
-            font-weight: 700;
-            margin-bottom: 12px;
-            border-bottom: 2px solid #FFB100;
-            padding-bottom: 6px;
-        }
-
-        .stats-section p {
-            font-size: clamp(13px, 3vw, 15px);
-            color: #E5E5E5;
-            margin-bottom: 10px;
-        }
-
-        .stats-section ul {
-            list-style: none;
-            padding-left: 15px;
-        }
-
-        .stats-section ul li {
-            font-size: clamp(13px, 3vw, 15px);
-            color: #E5E5E5;
-            margin-bottom: 8px;
-            position: relative;
-            padding-left: 20px;
-        }
-
-        .stats-section ul li::before {
-            content: '•';
-            color: #FFB100;
-            position: absolute;
-            left: 0;
-            font-size: 20px;
-        }
-
-        hr.stats-divider {
-            border: 0;
-            border-top: 1px solid #444;
-            margin: 20px 0;
-        }
-
-        #statsChart {
-            max-width: 100%;
-            max-height: 350px;
-            margin: 20px auto;
-            animation: slideInChart 0.7s ease;
-        }
-
-        @keyframes slideInChart {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        #chartError {
-            display: none;
-            color: #B00020;
-            font-size: clamp(13px, 3vw, 15px);
-            text-align: center;
-            margin: 10px 0;
-        }
-
-        #congratsMessage {
-            position: absolute;
-            font-size: clamp(24px, 4vw, 36px);
-            font-weight: 900;
-            color: #FFB100;
-            text-shadow: 0 0 20px rgba(255, 177, 0, 0.8);
-            pointer-events: none;
-            z-index: 10000;
-            display: none;
-            animation: pulseText 2s infinite;
-            max-width: 90%;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-
-        @keyframes pulseText {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        #confettiCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 998;
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 15px;
-            font-size: clamp(13px, 3vw, 14px);
-            color: #A0A0A0;
-        }
-
-        footer a {
-            color: #FFB100;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        footer a:hover {
-            color: #FFD700;
-            text-decoration: underline;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                width: 95%;
-            }
-
-            .add-task-btn, .reset-default-btn, .report-btn, .settings-btn {
-                padding: 10px 20px;
-                font-size: clamp(14px, 4vw, 16px);
-            }
-
-            .task-form, .modal, .install-prompt {
-                padding: 15px;
-                width: 100%;
-                max-width: 100%;
-            }
-
-            .task-form input, .task-form select, .modal input, .modal select {
-                padding: 8px;
-                font-size: clamp(13px, 3.5vw, 15px);
-            }
-
-            .task-form .form-buttons, .modal .modal-buttons, .install-prompt .install-buttons {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .task-form button, .modal button, .install-prompt button {
-                max-width: 100%;
-                padding: 10px;
-                font-size: clamp(12px, 3vw, 14px);
-            }
-
-            .schedule {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            .task {
-                padding: 15px;
-            }
-
-            .task h2 {
-                font-size: clamp(18px, 4vw, 20px);
-            }
-
-            .task p {
-                font-size: clamp(12px, 3vw, 13px);
-            }
-
-            .task .category {
-                font-size: clamp(10px, 2.5vw, 12px);
-            }
-
-            .task .edit-btn, .task .delete-btn, .task .complete-late-btn {
-                padding: 6px 10px;
-                font-size: clamp(12px, 3vw, 13px);
-            }
-
-            .progress-container, .stats-panel {
-                width: 95%;
-            }
-
-            .progress-container {
-                height: 18px;
-            }
-
-            #progressText, .stats-section p, .stats-section ul li {
-                font-size: clamp(12px, 3vw, 14px);
-            }
-
-            #statsChart {
-                max-height: 250px;
-            }
-        }
-
-        @media (max-width: 400px) {
-            header h1 {
-                font-size: clamp(26px, 6vw, 34px);
-            }
-
-            header p {
-                font-size: clamp(12px, 3.5vw, 14px);
-            }
-
-            .task-form h3, .modal h3, .install-prompt h3 {
-                font-size: clamp(20px, 5vw, 22px);
-            }
-
-            .stats-panel h3 {
-                font-size: clamp(20px, 5vw, 22px);
-            }
-        }
+/* ================================
+   🎨 SECTION 1: CORE LAYOUT & BUTTON BAR
+================================ */
+
+/* ✅ Font Imports */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
+
+/* ✅ Global Reset & Typography */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ✅ Root Theme Variables */
+:root {
+    --bg-dark: #0D0D0F;
+    --bg-card: rgba(25, 25, 30, 0.85);
+    --bg-panel: rgba(30, 30, 35, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --primary: #FFCA28;
+    --primary-light: #FFD740;
+    --primary-dark: #FFB300;
+    --danger: #B00020;
+    --muted: #A0A0A0;
+    --accent-gradient: linear-gradient(135deg, #FFCA28, #FFB300);
+    --radius: 14px;
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    --transition: 0.3s ease;
+}
+
+/* ✅ Body & Overall Layout */
+body {
+    background: var(--bg-dark);
+    color: #E5E5E5;
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ✅ Main Container */
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-top: 0;
+}
+
+/* ✅ Button Bar Styling */
+.container > div:first-child {
+    margin-top: 0;
+    padding-top: 10px;
+    text-align: center;
+}
+
+/* ✅ Buttons */
+.add-task-btn,
+.reset-default-btn,
+.report-btn,
+.settings-btn {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: clamp(15px, 4vw, 17px);
+    padding: 0.8rem 1.6rem;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--accent-gradient);
+    color: #0E0E10;
+    cursor: pointer;
+    transition: transform var(--transition), box-shadow var(--transition);
+    box-shadow: 0 4px 12px rgba(255, 177, 0, 0.25);
+    letter-spacing: 0.5px;
+    margin: 10px 8px 20px;
+    pointer-events: auto;
+    z-index: 100;
+}
+
+/* ✅ Hover Effects for Buttons */
+.add-task-btn:hover,
+.reset-default-btn:hover,
+.report-btn:hover,
+.settings-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(255, 177, 0, 0.4);
+}
+
+/* ✅ Secondary Buttons (Reset, Report, Settings) */
+.reset-default-btn,
+.report-btn,
+.settings-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #E5E5E5;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+.reset-default-btn:hover,
+.report-btn:hover,
+.settings-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+}
+
+/* ================================
+   🎨 SECTION 2: HEADER & TASK CARDS
+================================ */
+
+/* ✅ Header Styling */
+header {
+    background: rgba(14, 14, 16, 0.7);
+    backdrop-filter: blur(16px);
+    padding: 15px 0;
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--glass-border);
+    box-shadow: var(--shadow);
+    z-index: 10;
+    animation: fadeInHeader 0.6s ease;
+}
+
+/* ✅ Header Animations */
+@keyframes fadeInHeader {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+header h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: clamp(28px, 5vw, 38px);
+    background: var(--accent-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    letter-spacing: 1px;
+}
+
+header p {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(14px, 3vw, 16px);
+    color: var(--muted);
+    margin-top: 8px;
+    font-style: italic;
+}
+
+/* ✅ Task Grid Layout */
+.schedule {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.8rem;
+    margin-bottom: 20px;
+    margin-top: 1.5rem;
+}
+
+/* ✅ Task Card Base */
+.task {
+    background: var(--bg-card);
+    backdrop-filter: blur(14px);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: transform var(--transition), box-shadow var(--transition); /* 🔹 Transitions only for hover */
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+}
+
+/* ✅ Task Hover Lift */
+.task:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7);
+}
+
+/* ✅ Expired Task Look */
+.task.task-expired {
+    opacity: 0.7;
+    background: rgba(25, 25, 30, 0.5);
+    border: 1px solid var(--muted);
+}
+
+.task.task-expired h2,
+.task.task-expired p,
+.task.task-expired strong {
+    color: var(--muted);
+}
+
+/* ✅ Category still visible on expired tasks */
+.task.task-expired .category {
+    background: var(--accent-gradient);
+    opacity: 1;
+    color: #0E0E10;
+    border: 1px solid var(--primary-light);
+}
+
+/* ✅ Task Title */
+.task h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(20px, 4vw, 22px);
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+/* ✅ Task Description */
+.task p {
+    font-size: clamp(13px, 3vw, 14px);
+    margin-top: 8px;
+    color: var(--muted);
+}
+
+/* ✅ Strong Text */
+.task strong {
+    color: #E5E5E5;
+    font-weight: 600;
+}
+
+/* ✅ Category Tag */
+.task .category {
+    display: inline-block;
+    padding: 0.35rem 0.8rem;
+    margin-top: 0.5rem;
+    border-radius: 20px;
+    background: var(--accent-gradient);
+    color: #0E0E10;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: clamp(11px, 2.5vw, 13px);
+}
+
+/* ================================
+   🎨 SECTION 3: TASK ACTION BUTTONS & MODALS
+================================ */
+
+/* ✅ Task Action Buttons */
+.task .task-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.task .edit-btn,
+.task .delete-btn,
+.task .complete-late-btn {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    font-size: clamp(13px, 3vw, 14px);
+    font-weight: 600;
+    border-radius: 8px;
+    background: var(--accent-gradient);
+    color: #0E0E10;
+    border: none;
+    cursor: pointer;
+    transition: transform var(--transition), box-shadow var(--transition);
+    box-shadow: 0 4px 12px rgba(255, 177, 0, 0.25);
+    pointer-events: auto;
+}
+
+/* ✅ Delete button - danger red */
+.task .delete-btn {
+    background: var(--danger);
+    color: #E5E5E5;
+}
+.task .delete-btn:hover { background: #ff4f4f; }
+
+/* ✅ “Mark Late” button - subtle look */
+.task .complete-late-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #E5E5E5;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+/* ✅ Hover lift for task action buttons */
+.task .edit-btn:hover,
+.task .delete-btn:hover,
+.task .complete-late-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(255, 177, 0, 0.4);
+}
+
+/* ✅ Tooltip for “Mark Late” */
+.task .complete-late-btn::after {
+    content: 'Mark as Completed Late'; /* 🔹 Shortened text */
+    position: absolute;
+    bottom: 100%;
+    right: 0; /* 🔹 Anchor to right to prevent overflow */
+    transform: none; /* 🔹 Remove centering transform */
+    background: rgba(20, 20, 20, 0.9);
+    color: #E5E5E5;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    max-width: 200px; /* 🔹 Limit width */
+    text-align: right; /* 🔹 Align text to right */
+    overflow-wrap: break-word; /* 🔹 Fallback for overflow */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition), visibility var(--transition);
+    z-index: 10;
+}
+.task .complete-late-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ================================
+   📌 TASK FORM & MODAL STYLES
+================================ */
+
+/* Base Styles for All Popups */
+.task-form,
+.modal,
+.install-prompt {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    background: var(--bg-panel);
+    backdrop-filter: blur(18px);
+    padding: 2rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow);
+    width: 90%;
+    max-width: 600px;
+    z-index: 5000;
+    transition: opacity var(--transition), transform var(--transition);
+}
+
+/* 🔥 Active State — makes it appear */
+.task-form.active,
+.modal.active,
+.install-prompt.active {
+    display: block;
+    animation: fadeInModal 0.35s ease forwards;
+}
+
+/* 🎯 Modal Titles */
+.task-form h3,
+.modal h3,
+.install-prompt h3 {
+    font-family: 'Playfair Display', serif;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: clamp(22px, 5vw, 24px);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Close Button (only install prompt uses it but style unified) */
+.install-prompt .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: #E5E5E5;
+    font-size: 18px;
+    cursor: pointer;
+    transition: color var(--transition);
+}
+
+.install-prompt .close-btn:hover {
+    color: var(--primary-light);
+}
+
+/* 📥 Labels & Inputs */
+.task-form label,
+.modal label {
+    display: block;
+    color: #E5E5E5;
+    margin-bottom: 6px;
+    font-size: clamp(13px, 3vw, 15px);
+    font-weight: 600;
+}
+
+.task-form input,
+.task-form select,
+.modal input,
+.modal select {
+    width: 100%;
+    margin: 6px 0 12px;
+    padding: 0.9rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: #E5E5E5;
+    font-size: clamp(14px, 4vw, 16px);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+/* ✅ Input focus glow */
+.task-form input:focus,
+.task-form select:focus,
+.modal input:focus,
+.modal select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 8px rgba(255, 177, 0, 0.4);
+    outline: none;
+}
+
+/* ⬇ Custom dropdown arrow */
+.task-form select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23E5E5E5' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+}
+
+/* Buttons Row in Modals */
+.task-form .form-buttons,
+.modal .modal-buttons,
+.install-prompt .install-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+/* 🟡 Primary Buttons */
+.task-form button,
+.modal button,
+.install-prompt button {
+    flex: 1;
+    min-width: 90px;
+    max-width: 130px;
+    padding: 0.8rem;
+    background: var(--accent-gradient);
+    color: #0E0E10;
+    border: none;
+    border-radius: 8px;
+    font-size: clamp(13px, 3vw, 15px);
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform var(--transition), box-shadow var(--transition);
+    box-shadow: 0 4px 12px rgba(255, 177, 0, 0.25);
+    pointer-events: auto;
+}
+
+/* ⚪ Secondary Buttons */
+.task-form .cancel-btn,
+.task-form .clear-btn,
+.modal .modal-cancel-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #E5E5E5;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+/* ✨ Hover Effects */
+.task-form button:hover,
+.modal button:hover,
+.install-prompt button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(255, 177, 0, 0.4);
+}
+
+/* ❌ Disabled State */
+.modal button:disabled {
+    background: rgba(255, 255, 255, 0.2);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* 🔔 Error Messages in Modal */
+.modal-error,
+.permission-error {
+    color: var(--danger);
+    font-size: clamp(12px, 3vw, 14px);
+    text-align: center;
+    margin-bottom: 10px;
+    display: none;
+}
+
+/* ================================
+   📌 MODAL FADE-IN ANIMATION
+================================ */
+@keyframes fadeInModal {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* ================================
+   🎉 SECTION 4: PROGRESS BAR, STATS PANEL & CELEBRATION
+================================ */
+
+/* ✅ Progress Bar Container */
+.progress-container {
+    width: 90%;
+    max-width: 600px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50px;
+    margin: 2rem auto;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--glass-border);
+}
+
+/* ✅ Progress Fill */
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-gradient);
+    border-radius: 50px;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+/* ✅ Glossy Shine Animation */
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: progressShine 2s infinite;
+}
+
+@keyframes progressShine {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* ✅ Progress Text */
+#progressText {
+    text-align: center;
+    margin: 10px 0;
+    color: var(--primary);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: clamp(14px, 3vw, 16px);
+}
+
+/* ✅ Stats Panel Container */
+.stats-panel {
+    display: none;
+    width: 100%;
+    max-width: 1000px;
+    margin: 20px auto;
+    background: var(--bg-panel);
+    backdrop-filter: blur(18px);
+    padding: 25px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transform: translateY(20px);
+    opacity: 0;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+    border: 1px solid var(--glass-border);
+}
+
+/* ✅ Show Stats Panel */
+.stats-panel.active {
+    display: block;
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* ✅ Stats Title */
+.stats-panel h3 {
+    font-family: 'Playfair Display', serif;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: clamp(24px, 5vw, 26px);
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+/* ✅ Stats Sections */
+.stats-section {
+    margin-bottom: 25px;
+    animation: fadeInStats 0.5s ease;
+}
+@keyframes fadeInStats {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.stats-section h4 {
+    color: var(--primary);
+    font-size: clamp(18px, 4vw, 20px);
+    font-weight: 700;
+    margin-bottom: 12px;
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 6px;
+}
+.stats-section p {
+    font-size: clamp(13px, 3vw, 15px);
+    color: #E5E5E5;
+    margin-bottom: 10px;
+}
+.stats-section ul {
+    list-style: none;
+    padding-left: 15px;
+}
+.stats-section ul li {
+    font-size: clamp(13px, 3vw, 15px);
+    color: #E5E5E5;
+    margin-bottom: 8px;
+    position: relative;
+    padding-left: 20px;
+}
+.stats-section ul li::before {
+    content: '•';
+    color: var(--primary);
+    position: absolute;
+    left: 0;
+    font-size: 20px;
+}
+
+/* ✅ Divider */
+hr.stats-divider {
+    border: 0;
+    border-top: 1px solid var(--glass-border);
+    margin: 20px 0;
+}
+
+/* ✅ Chart Styling */
+#statsChart {
+    max-width: 100%;
+    max-height: 350px;
+    margin: 20px auto;
+    animation: slideInChart 0.7s ease;
+}
+@keyframes slideInChart {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+#chartError {
+    display: none;
+    color: var(--danger);
+    font-size: clamp(13px, 3vw, 15px);
+    text-align: center;
+    margin: 10px 0;
+}
+
+/* ✅ 🎉 Congrats Message */
+#congratsMessage {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 900;
+    color: var(--primary);
+    text-shadow: 0 0 20px rgba(255, 177, 0, 0.8);
+    pointer-events: none;
+    z-index: 10000;
+    display: none;
+    animation: pulseText 2s infinite;
+    max-width: 90%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+}
+@keyframes pulseText {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.1); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* ✅ 🎉 Confetti Canvas */
+#confettiCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 998;
+}
+
+/* ================================
+   📌 SECTION 5: CHECKBOXES & FOOTER
+================================ */
+
+/* ✅ Notification Toggle in Settings Modal */
+input[type="checkbox"].notification-toggle {
+    appearance: none;
+    width: 40px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    margin: 6px 0 12px;
+    transition: background var(--transition);
+}
+
+input[type="checkbox"].notification-toggle::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #E5E5E5;
+    border-radius: 50%;
+    transition: transform var(--transition);
+}
+
+input[type="checkbox"].notification-toggle:checked {
+    background: var(--primary);
+}
+
+input[type="checkbox"].notification-toggle:checked::before {
+    transform: translateX(20px);
+}
+
+input[type="checkbox"].notification-toggle:disabled {
+    background: rgba(255, 255, 255, 0.2);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* ✅ Task Checkboxes */
+input[type="checkbox"]:not(.notification-toggle) {
+    margin-right: 10px;
+    transform: scale(1.2); /* 🔹 Static scale */
+    accent-color: var(--primary);
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid var(--glass-border);
+    /* 🔹 No transitions on check/uncheck */
+}
+
+input[type="checkbox"]:not(.notification-toggle):hover {
+    transform: scale(1.3);
+    box-shadow: 0 0 8px rgba(255, 177, 0, 0.4);
+    transition: transform var(--transition), box-shadow var(--transition); /* 🔹 Transitions only on hover */
+}
+
+input[type="checkbox"]:not(.notification-toggle):disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+input[type="checkbox"]:not(.notification-toggle):checked + label {
+    text-decoration: line-through;
+    color: var(--muted);
+    /* 🔹 No transition, instant change */
+}
+
+/* ✅ Footer */
+.footer-wrapper {
+    margin-top: auto;
+    padding-bottom: 20px;
+}
+
+footer {
+    text-align: center;
+    margin-top: 15px;
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(13px, 3vw, 14px);
+    color: var(--muted);
+}
+
+footer a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--transition);
+}
+
+footer a:hover {
+    color: var(--primary-light);
+}
+
+/* ================================
+   📱 RESPONSIVE DESIGN
+================================ */
+@media (max-width: 600px) {
+    .container {
+        width: 95%;
+        padding: 1.5rem 0;
+    }
+
+    .add-task-btn,
+    .reset-default-btn,
+    .report-btn,
+    .settings-btn {
+        padding: 0.7rem 1.2rem;
+        font-size: clamp(13px, 3.5vw, 15px);
+        margin: 10px 8px 15px;
+    }
+
+    .task-form,
+    .modal,
+    .install-prompt {
+        padding: 1.5rem;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .task-form input,
+    .task-form select,
+    .modal input,
+    .modal select {
+        padding: 0.7rem;
+        font-size: clamp(13px, 3.5vw, 15px);
+    }
+
+    .task-form .form-buttons,
+    .modal .modal-buttons,
+    .install-prompt .install-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .task-form button,
+    .modal button,
+    .install-prompt button {
+        max-width: 100%;
+        padding: 0.7rem;
+        font-size: clamp(12px, 3vw, 14px);
+    }
+
+    .task .complete-late-btn::after {
+        font-size: 11px; /* 🔹 Smaller font for mobile */
+        padding: 5px 8px; /* 🔹 Reduced padding */
+        max-width: 160px; /* 🔹 Tighter max-width */
+    }
+
+    .schedule {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .task {
+        padding: 1.2rem;
+    }
+
+    .task h2 {
+        font-size: clamp(18px, 4vw, 20px);
+    }
+
+    .task p {
+        font-size: clamp(12px, 3vw, 13px);
+    }
+
+    .task .category {
+        font-size: clamp(10px, 2.5vw, 12px);
+    }
+
+    .task .edit-btn,
+    .task .delete-btn,
+    .task .complete-late-btn {
+        padding: 0.5rem 0.8rem;
+        font-size: clamp(12px, 3vw, 13px);
+    }
+
+    .progress-container,
+    .stats-panel {
+        width: 95%;
+    }
+
+    .progress-container {
+        height: 18px;
+    }
+
+    #progressText,
+    .stats-section p,
+    .stats-section ul li {
+        font-size: clamp(12px, 3vw, 14px);
+    }
+
+    #statsChart {
+        max-height: 250px;
+    }
+}
+
+@media (max-width: 400px) {
+    header {
+        padding: 1rem 0;
+    }
+
+    header h1 {
+        font-size: clamp(24px, 6vw, 32px);
+    }
+
+    header p {
+        font-size: clamp(12px, 3.5vw, 14px);
+    }
+
+    .task-form h3,
+    .modal h3,
+    .install-prompt h3 {
+        font-size: clamp(20px, 5vw, 22px);
+    }
+
+    .stats-panel h3 {
+        font-size: clamp(20px, 5vw, 22px);
+    }
+}
+
+
     </style>
 </head>
 <body>
