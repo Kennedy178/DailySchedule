@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1500,69 +1501,106 @@
             }
         }
 
-        function fireConfetti() {
-            if (confettiActive) return;
-            confettiActive = true;
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            const colors = ['#FFB100', '#FFD700', '#FFFFFF', '#B00020'];
-            const confetti = [];
-            const confettiCount = 200;
-            for (let i = 0; i < confettiCount; i++) {
-                confetti.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height - canvas.height,
-                    r: Math.random() * 4 + 4,
-                    d: Math.random() * confettiCount + 2,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    tilt: Math.random() * 10 - 10,
-                    tiltAngleIncremental: Math.random() * 0.07 + 0.05,
-                    tiltAngle: 0
-                });
-            }
+       // fireConfetti() 
+function fireConfetti() {
+    if (confettiActive) return;
+    confettiActive = true;
+    const startTime = Date.now();
+    const duration = 60000; // 60 seconds
+    
+    // Reset and show elements
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.display = 'block';
+    congratsText.style.display = 'block';
+    
+    // DVD-style movement variables
+    let xPos = Math.random() * (window.innerWidth - 200);
+    let yPos = Math.random() * (window.innerHeight - 100);
+    let xSpeed = 2;
+    let ySpeed = 2;
+    
+ 
 
-            function drawConfetti() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                confetti.forEach((p, i) => {
-                    p.tiltAngle += p.tiltAngleIncremental;
-                    p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
-                    p.tilt = Math.sin(p.tiltAngle - i / 3) * 15;
-                    if (p.y > canvas.height + 20) {
-                        confetti.splice(i, 1);
-                        i--;
-                        return;
-                    }
-                    ctx.beginPath();
-                    ctx.lineWidth = p.r;
-                    ctx.strokeStyle = p.color;
-                    ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
-                    ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
-                    ctx.stroke();
-                });
-                if (confetti.length <= 0) {
-                    confettiActive = false;
-                    canvas.style.display = 'none';
-                    cancelAnimationFrame(confettiAnimation);
-                    return;
-                }
-                confettiAnimation = requestAnimationFrame(drawConfetti);
-            }
+    const colors = ['#FFB100', '#FFD700', '#FFFFFF', '#B00020'];
+    const confetti = [];
+    const confettiCount = 200;
+    
+    // Initialize confetti particles
+    for (let i = 0; i < confettiCount; i++) {
+        confetti.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            r: Math.random() * 4 + 4,
+            d: Math.random() * confettiCount + 2,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            tilt: Math.random() * 10 - 10,
+            tiltAngleIncremental: Math.random() * 0.07 + 0.05,
+            tiltAngle: 0
+        });
+    }
 
-            canvas.style.display = 'block';
-            congratsText.style.display = 'block';
-            congratsText.style.left = `${window.innerWidth / 2}px`;
-            congratsText.style.top = `${window.innerHeight / 2}px`;
-            try {
-                successSound.play().catch(error => console.error('Error playing sound:', error));
-            } catch (error) {
-                console.error('Audio error:', error);
-            }
-            drawConfetti();
-            setTimeout(() => {
-                congratsText.style.display = 'none';
-                if (!confettiActive) canvas.style.display = 'none';
-            }, 5000);
+    function animate() {
+        const currentTime = Date.now();
+        const elapsed = currentTime - startTime;
+        
+        if (elapsed >= duration) {
+            // Clean up after 60 seconds
+            confettiActive = false;
+            canvas.style.display = 'none';
+            congratsText.style.display = 'none';
+            cancelAnimationFrame(confettiAnimation);
+            return;
         }
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Update and draw confetti
+        confetti.forEach((p, i) => {
+            p.tiltAngle += p.tiltAngleIncremental;
+            p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+            p.tilt = Math.sin(p.tiltAngle - i / 3) * 15;
+            
+            // Recycle particles that fall off screen
+            if (p.y > canvas.height) {
+                p.y = -20;
+                p.x = Math.random() * canvas.width;
+            }
+            
+            ctx.beginPath();
+            ctx.lineWidth = p.r;
+            ctx.strokeStyle = p.color;
+            ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+            ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+            ctx.stroke();
+        });
+
+        // Update DVD-style message position
+        xPos += xSpeed;
+        yPos += ySpeed;
+        
+        // Bounce off edges
+        if (xPos + congratsText.offsetWidth > window.innerWidth || xPos < 0) {
+            xSpeed = -xSpeed;
+            congratsText.style.color = colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        if (yPos + congratsText.offsetHeight > window.innerHeight || yPos < 0) {
+            ySpeed = -ySpeed;
+            congratsText.style.color = colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        // Apply new position
+        congratsText.style.left = `${xPos}px`;
+        congratsText.style.top = `${yPos}px`;
+        congratsText.style.transform = `translate(-50%, -50%)`;
+
+        confettiAnimation = requestAnimationFrame(animate);
+    }
+
+    animate();
+}
 
         function updateProgress() {
             const completed = tasks.filter(task => task.checked).length;
