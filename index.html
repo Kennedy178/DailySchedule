@@ -758,31 +758,53 @@ hr.stats-divider {
     margin: 10px 0;
 }
 
-/* ✅ 🎉 Congrats Message */
+/* ✅ 🎉 Congrats Message - Smooth Snake Light + Rave Jitter */
 #congratsMessage {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: 'Playfair Display', serif;
+    position: absolute;
     font-size: clamp(24px, 4vw, 36px);
     font-weight: 900;
-    color: var(--primary);
-    text-shadow: 0 0 20px rgba(255, 177, 0, 0.8);
+    color: #FFB100;
     pointer-events: none;
     z-index: 10000;
     display: none;
-    animation: pulseText 2s infinite;
     max-width: 90%;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
+
+    /* 🎇 Multiple animations: smoother snake + jitter */
+    animation: snakeLight 1.8s ease-in-out infinite, textJitter 0.12s ease-in-out infinite;
 }
-@keyframes pulseText {
-    0% { transform: translate(-50%, -50%) scale(1); }
-    50% { transform: translate(-50%, -50%) scale(1.1); }
-    100% { transform: translate(-50%, -50%) scale(1); }
+
+/* ✅ Snake-like light (smooth but fast) */
+@keyframes snakeLight {
+    0% { 
+        background: linear-gradient(90deg, transparent 0%, #FFEA8A 10%, #FFB100 20%, transparent 30%);
+        background-size: 200% 100%;
+        -webkit-background-clip: text;
+        color: transparent;
+        background-position: 0% 0;
+    }
+    50% { 
+        background-position: 100% 0; 
+    }
+    100% { 
+        background-position: 200% 0;
+    }
 }
+
+/* ✅ Softer but quicker jitter for rave vibe */
+@keyframes textJitter {
+    0%   { transform: translate(0, 0); }
+    20%  { transform: translate(0.5px, -0.5px); }
+    40%  { transform: translate(-0.5px, 0.5px); }
+    60%  { transform: translate(0.5px, 0.5px); }
+    80%  { transform: translate(-0.5px, -0.5px); }
+    100% { transform: translate(0, 0); }
+}
+
+
+
 
 /* ✅ 🎉 Confetti Canvas */
 #confettiCanvas {
@@ -888,6 +910,89 @@ footer a {
 footer a:hover {
     color: var(--primary-light);
 }
+
+
+.hidden {
+  display: none;
+}
+
+.day-block {
+  margin-bottom: 10px; /* Space between each block */
+}
+
+.summary-line {
+  cursor: pointer;
+  font-weight: 700;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+.summary-line.missed {
+  color: #FF3B30; /* 🔴 Red for Missed */
+}
+
+.summary-line.late {
+  color: #FFA500; /* 🟠 Orange for Late */
+}
+
+.summary-line:hover {
+  text-decoration: underline;
+}
+
+/* ✅ Consistent bullet alignment */
+#weeklyDetails ul {
+    /* or square */
+  list-style-position: outside;
+  margin-left: 20px;
+  padding-left: 0;
+}
+
+
+#weeklyDetails li {
+  margin: 2px 0;
+  line-height: 1.4em;
+}
+
+/* ✅ Headers for today’s full lists */
+.today-header {
+  font-weight: 700;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+.missed-header {
+  color: #FF3B30; /* red for missed */
+}
+
+.late-header {
+  color: #FFA500; /* orange for late */
+}
+
+/* ✅ Expandable summaries for older days */
+.summary-line {
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 10px;
+  margin-bottom: 2px;
+}
+
+.missed-summary {
+  color: #FF3B30; /* red summary for missed */
+}
+
+.late-summary {
+  color: #FFA500; /* orange summary for late */
+}
+
+/* ✅ Hidden list when collapsed */
+.hidden {
+  display: none;
+}
+
+
+
+
+
 
 /* ================================
    📱 RESPONSIVE DESIGN
@@ -1422,7 +1527,7 @@ footer a:hover {
     const priority = document.getElementById('priority').value;
     const editIndex = document.getElementById('editTaskIndex').value;
 
-    // ✅ Determine category: use custom if selected
+    //  Determine category: use custom if selected
     let category = categorySelect.value;
     if (category === 'Custom') {
         category = customCategoryInput.value.trim();
@@ -1432,7 +1537,7 @@ footer a:hover {
         }
     }
 
-    // ✅ Validation
+    //  Validation
     if (!startTime || !endTime || !taskName || !category || !priority) {
         alert('Please fill in all fields!');
         return;
@@ -1443,7 +1548,7 @@ footer a:hover {
         return;
     }
 
-    // ✅ Build the task object
+    //  Build the task object
     const task = {
         startTime,
         endTime,
@@ -1457,7 +1562,7 @@ footer a:hover {
 
     try {
         if (editIndex === '') {
-            // ➕ Add new task
+            //  Add new task
             if (!hasCustomTasks) {
                 tasks = [];
                 hasCustomTasks = true;
@@ -1474,7 +1579,7 @@ footer a:hover {
         lastRenderHash = '';
         renderTasks();
 
-        // ✅ Hide form and clear inputs
+        //  Hide form and clear inputs
         taskForm.style.display = 'none';
         clearForm();
         categorySelect.value = '';
@@ -1558,7 +1663,7 @@ footer a:hover {
             document.getElementById('endTime').value = task.endTime;
             document.getElementById('taskName').value = task.name;
 
-            // ✅ Handle category for dropdown + custom
+            //  Handle category for dropdown + custom
             const categorySelect = document.getElementById('category');
             const customCategoryInput = document.getElementById('custom-category');
 
@@ -1577,7 +1682,7 @@ footer a:hover {
             document.getElementById('priority').value = task.priority;
             document.getElementById('editTaskIndex').value = index;
 
-            // ✅ Show form in edit mode
+            // Show form in edit mode
             taskForm.style.display = 'block';
             document.getElementById('addTaskBtn').textContent = '💾 Update Task';
             taskForm.querySelector('h3').textContent = 'Edit Task';
@@ -1676,119 +1781,185 @@ footer a:hover {
         }
 
         function getWeeklyStats() {
-            today = new Date().toDateString();
-            const now = new Date();
-            const days = [];
-            const timelyPercentages = [];
-            const latePercentages = [];
-            let hundredPercentDays = 0;
-            let currentStreak = 0;
-            let longestStreak = 0;
-            let tempStreak = 0;
-            let totalTasks = 0;
-            let completedTasks = 0;
-            let missedTasks = [];
-            let lateTasks = [];
+    today = new Date().toDateString();
+    const now = new Date();
+    const days = [];
+    const timelyPercentages = [];
+    const latePercentages = [];
+    let hundredPercentDays = 0;
+    let currentStreak = 0;
+    let longestStreak = 0;
+    let tempStreak = 0;
+    let totalTasks = 0;
+    let completedTasks = 0;
 
-            const todayKey = `tasks_${today}`;
-            const todayCompletionKey = `completion_${today}`;
-            const todayTimelyKey = `timely_${today}`;
-            const todayLateKey = `late_${today}`;
-            const todayTasks = localStorage.getItem(todayKey);
-            const todayPercentage = parseInt(localStorage.getItem(todayCompletionKey) || '0');
-            const todayTimely = parseInt(localStorage.getItem(todayTimelyKey) || '0');
-            const todayLate = parseInt(localStorage.getItem(todayLateKey) || '0');
-            days.push(now.toLocaleDateString('en-US', { weekday: 'short' }));
-            timelyPercentages.push(todayTasks ? Math.round((todayTimely / JSON.parse(todayTasks).length) * 100) : 0);
-            latePercentages.push(todayTasks ? Math.round((todayLate / JSON.parse(todayTasks).length) * 100) : 0);
+    // ✅ CHANGE HERE → Instead of flat arrays, use grouped objects
+    let missedTasksByDay = {};
+    let lateTasksByDay = {};
 
-            if (todayPercentage === 100) {
-                hundredPercentDays++;
-                tempStreak++;
-                currentStreak = tempStreak;
-                longestStreak = tempStreak;
+    function addTaskToDay(obj, day, taskName) {
+        if (!obj[day]) obj[day] = [];
+        obj[day].push(taskName);
+    }
+
+    // ✅ Helper to get short day name
+    function getDayName(date) {
+        return date.toLocaleDateString('en-US', { weekday: 'short' });
+    }
+
+    // Handle today first
+    const todayKey = `tasks_${today}`;
+    const todayCompletionKey = `completion_${today}`;
+    const todayTimelyKey = `timely_${today}`;
+    const todayLateKey = `late_${today}`;
+    const todayTasks = localStorage.getItem(todayKey);
+    const todayPercentage = parseInt(localStorage.getItem(todayCompletionKey) || '0');
+    const todayTimely = parseInt(localStorage.getItem(todayTimelyKey) || '0');
+    const todayLate = parseInt(localStorage.getItem(todayLateKey) || '0');
+    const todayName = getDayName(now);
+
+    days.push(todayName);
+    timelyPercentages.push(todayTasks ? Math.round((todayTimely / JSON.parse(todayTasks).length) * 100) : 0);
+    latePercentages.push(todayTasks ? Math.round((todayLate / JSON.parse(todayTasks).length) * 100) : 0);
+
+    if (todayPercentage === 100) {
+        hundredPercentDays++;
+        tempStreak++;
+        currentStreak = tempStreak;
+        longestStreak = tempStreak;
+    }
+
+    if (todayTasks) {
+        const dailyTasks = JSON.parse(todayTasks);
+        totalTasks += dailyTasks.length;
+        completedTasks += dailyTasks.filter(task => task.checked).length;
+        dailyTasks.forEach(task => {
+            if (!task.checked && isTaskExpired(task, now)) {
+                addTaskToDay(missedTasksByDay, todayName, task.name);
+            } else if (task.isLate) {
+                addTaskToDay(lateTasksByDay, todayName, task.name);
             }
+        });
+    }
 
-            if (todayTasks) {
-                const dailyTasks = JSON.parse(todayTasks);
-                totalTasks += dailyTasks.length;
-                completedTasks += dailyTasks.filter(task => task.checked).length;
-                dailyTasks.forEach(task => {
-                    if (!task.checked && isTaskExpired(task, now)) {
-                        missedTasks.push(`${task.name} on ${now.toLocaleDateString('en-US', { weekday: 'short' })}`);
-                    } else if (task.isLate) {
-                        lateTasks.push(`${task.name} on ${now.toLocaleDateString('en-US', { weekday: 'short' })}`);
-                    }
-                });
-            }
+    // ✅ Handle past 6 days
+    for (let i = 1; i < 7; i++) {
+        const date = new Date(now);
+        date.setDate(now.getDate() - i);
+        const dateKey = `tasks_${date.toDateString()}`;
+        const completionKey = `completion_${date.toDateString()}`;
+        const timelyKey = `timely_${date.toDateString()}`;
+        const lateKey = `late_${date.toDateString()}`;
+        const tasksData = localStorage.getItem(dateKey);
+        const percentage = parseInt(localStorage.getItem(completionKey) || '0');
+        const timely = parseInt(localStorage.getItem(timelyKey) || '0');
+        const late = parseInt(localStorage.getItem(lateKey) || '0');
+        const dayName = getDayName(date);
 
-            for (let i = 1; i < 7; i++) {
-                const date = new Date(now);
-                date.setDate(now.getDate() - i);
-                const dateKey = `tasks_${date.toDateString()}`;
-                const completionKey = `completion_${date.toDateString()}`;
-                const timelyKey = `timely_${date.toDateString()}`;
-                const lateKey = `late_${date.toDateString()}`;
-                const tasksData = localStorage.getItem(dateKey);
-                const percentage = parseInt(localStorage.getItem(completionKey) || '0');
-                const timely = parseInt(localStorage.getItem(timelyKey) || '0');
-                const late = parseInt(localStorage.getItem(lateKey) || '0');
-                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-                days.push(dayName);
-                timelyPercentages.push(tasksData ? Math.round((timely / JSON.parse(tasksData).length) * 100) : 0);
-                latePercentages.push(tasksData ? Math.round((late / JSON.parse(tasksData).length) * 100) : 0);
+        days.push(dayName);
+        timelyPercentages.push(tasksData ? Math.round((timely / JSON.parse(tasksData).length) * 100) : 0);
+        latePercentages.push(tasksData ? Math.round((late / JSON.parse(tasksData).length) * 100) : 0);
 
-                if (percentage === 100) {
-                    hundredPercentDays++;
-                    tempStreak++;
-                    longestStreak = Math.max(longestStreak, tempStreak);
-                } else {
-                    tempStreak = 0;
-                }
-
-                if (tasksData) {
-                    const dailyTasks = JSON.parse(tasksData);
-                    totalTasks += dailyTasks.length;
-                    completedTasks += dailyTasks.filter(task => task.checked).length;
-                    dailyTasks.forEach(task => {
-                        if (!task.checked && isTaskExpired(task, new Date(date))) {
-                            missedTasks.push(`${task.name} on ${dayName}`);
-                        } else if (task.isLate) {
-                            lateTasks.push(`${task.name} on ${dayName}`);
-                        }
-                    });
-                }
-            }
-
-            return {
-                days: days.reverse(),
-                timelyPercentages: timelyPercentages.reverse(),
-                latePercentages: latePercentages.reverse(),
-                hundredPercentDays,
-                currentStreak,
-                longestStreak,
-                totalTasks,
-                completedTasks,
-                missedTasks,
-                lateTasks
-            };
+        if (percentage === 100) {
+            hundredPercentDays++;
+            tempStreak++;
+            longestStreak = Math.max(longestStreak, tempStreak);
+        } else {
+            tempStreak = 0;
         }
 
+        if (tasksData) {
+            const dailyTasks = JSON.parse(tasksData);
+            totalTasks += dailyTasks.length;
+            completedTasks += dailyTasks.filter(task => task.checked).length;
+            dailyTasks.forEach(task => {
+                if (!task.checked && isTaskExpired(task, new Date(date))) {
+                    addTaskToDay(missedTasksByDay, dayName, task.name);
+                } else if (task.isLate) {
+                    addTaskToDay(lateTasksByDay, dayName, task.name);
+                }
+            });
+        }
+    }
+
+    return {
+        days: days.reverse(),
+        timelyPercentages: timelyPercentages.reverse(),
+        latePercentages: latePercentages.reverse(),
+        hundredPercentDays,
+        currentStreak,
+        longestStreak,
+        totalTasks,
+        completedTasks,
+        missedTasksByDay,
+        lateTasksByDay
+    };
+}
+
+
         function renderStats() {
-            today = new Date().toDateString();
-            const stats = getWeeklyStats();
-            const summaryText = `
-                <strong>${stats.completedTasks}/${stats.totalTasks} tasks completed (${Math.round((stats.completedTasks / stats.totalTasks) * 100) || 0}%)</strong>
-                <br>100% Days: ${stats.hundredPercentDays}
-                <br>Current Streak: ${stats.currentStreak} day${stats.currentStreak !== 1 ? 's' : ''}
-                <br>Longest Streak: ${stats.longestStreak} day${stats.longestStreak !== 1 ? 's' : ''}
-            `;
-            const detailsText = `
-                ${stats.missedTasks.length ? `<strong>Missed Tasks:</strong><ul>${stats.missedTasks.map(task => `<li>${task}</li>`).join('')}</ul>` : ''}
-                ${stats.lateTasks.length ? `<strong>Late Tasks:</strong><ul>${stats.lateTasks.map(task => `<li>${task}</li>`).join('')}</ul>` : ''}
-            `;
-            document.getElementById('weeklySummary').innerHTML = summaryText;
-            document.getElementById('weeklyDetails').innerHTML = detailsText;
+    today = new Date().toDateString();
+    const stats = getWeeklyStats();
+    const todayName = new Date().toLocaleDateString('en-US', { weekday: 'short' });
+
+    // ✅ Build summary block
+    const summaryText = `
+        <strong>${stats.completedTasks}/${stats.totalTasks} tasks completed (${Math.round((stats.completedTasks / stats.totalTasks) * 100) || 0}%)</strong>
+        <br>100% Days: ${stats.hundredPercentDays}
+        <br>Current Streak: ${stats.currentStreak} day${stats.currentStreak !== 1 ? 's' : ''}
+        <br>Longest Streak: ${stats.longestStreak} day${stats.longestStreak !== 1 ? 's' : ''}
+    `;
+
+    // ✅ Build details section
+    let detailsHTML = "";
+
+    // ➡️ Missed Tasks
+    Object.keys(stats.missedTasksByDay).forEach(day => {
+        const tasks = stats.missedTasksByDay[day];
+        if (day === todayName) {
+            // Show FULL missed list for today
+            detailsHTML += `<div class="today-header missed-header">Missed Today:</div>
+                <ul>${tasks.map(t => `<li>${t}</li>`).join('')}</ul>`;
+        } else {
+            // Show summary for previous days
+            detailsHTML += `<div class="summary-line missed-summary" data-day="${day}" data-type="missed">
+                ⚠️ Missed ${tasks.length} task${tasks.length > 1 ? 's' : ''} on ${day}
+            </div>
+            <ul class="hidden" id="missed-${day}">${tasks.map(t => `<li>${t}</li>`).join('')}</ul>`;
+        }
+    });
+
+    // ➡️ Late Tasks
+    Object.keys(stats.lateTasksByDay).forEach(day => {
+        const tasks = stats.lateTasksByDay[day];
+        if (day === todayName) {
+            // Show FULL late list for today
+            detailsHTML += `<div class="today-header late-header">Late Today:</div>
+                <ul>${tasks.map(t => `<li>${t}</li>`).join('')}</ul>`;
+        } else {
+            // Show summary for previous days
+            detailsHTML += `<div class="summary-line late-summary" data-day="${day}" data-type="late">
+                🕑 ${tasks.length} Late task${tasks.length > 1 ? 's' : ''} on ${day}
+            </div>
+            <ul class="hidden" id="late-${day}">${tasks.map(t => `<li>${t}</li>`).join('')}</ul>`;
+        }
+    });
+
+    // ✅ Inject into DOM
+    document.getElementById('weeklySummary').innerHTML = summaryText;
+    document.getElementById('weeklyDetails').innerHTML = detailsHTML;
+
+    // ✅ Add click listeners to expand summaries
+    document.querySelectorAll('.summary-line').forEach(line => {
+        line.addEventListener('click', () => {
+            const day = line.dataset.day;
+            const type = line.dataset.type;
+            document.getElementById(`${type}-${day}`).classList.toggle('hidden');
+        });
+    });
+
+
+
 
             if (typeof Chart === 'undefined') {
                 console.error('Chart.js not loaded');
