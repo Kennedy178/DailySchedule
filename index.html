@@ -8,6 +8,7 @@
     <link rel="icon" href="/favicon-32x32.png" type="image/png">
     <link rel="manifest" href="/manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
 /* ================================
@@ -25,6 +26,7 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    color: #E5E5E5; /* Restored original text color */
 }
 
 /* ✅ Root Theme Variables */
@@ -179,7 +181,7 @@ header p {
     padding: 1.5rem;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    transition: transform var(--transition), box-shadow var(--transition); /* 🔹 Transitions only for hover */
+    transition: transform var(--transition), box-shadow var(--transition);
     position: relative;
     overflow: hidden;
     border: 1px solid var(--glass-border);
@@ -302,20 +304,20 @@ header p {
 
 /* ✅ Tooltip for “Mark Late” */
 .task .complete-late-btn::after {
-    content: 'Mark as Completed Late'; /* 🔹 Shortened text */
+    content: 'Mark as Completed Late';
     position: absolute;
     bottom: 100%;
-    right: 0; /* 🔹 Anchor to right to prevent overflow */
-    transform: none; /* 🔹 Remove centering transform */
+    right: 0;
+    transform: none;
     background: rgba(20, 20, 20, 0.9);
     color: #E5E5E5;
     padding: 6px 10px;
     border-radius: 6px;
     font-size: 12px;
     white-space: nowrap;
-    max-width: 200px; /* 🔹 Limit width */
-    text-align: right; /* 🔹 Align text to right */
-    overflow-wrap: break-word; /* 🔹 Fallback for overflow */
+    max-width: 200px;
+    text-align: right;
+    overflow-wrap: break-word;
     opacity: 0;
     visibility: hidden;
     transition: opacity var(--transition), visibility var(--transition);
@@ -398,40 +400,120 @@ header p {
     margin-bottom: 6px;
     font-size: clamp(13px, 3vw, 15px);
     font-weight: 600;
+    font-family: 'Inter', sans-serif;
 }
 
 .task-form input,
+.task-form textarea,
 .task-form select,
 .modal input,
+.modal textarea,
 .modal select {
     width: 100%;
     margin: 6px 0 12px;
     padding: 0.9rem;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.05); /* Restored original background */
     border: 1px solid var(--glass-border);
     border-radius: 8px;
-    color: #E5E5E5;
+    color: #E5E5E5; /* Restored original text color */
     font-size: clamp(14px, 4vw, 16px);
+    font-family: 'Inter', sans-serif;
     transition: border-color var(--transition), box-shadow var(--transition);
 }
 
 /* ✅ Input focus glow */
 .task-form input:focus,
+.task-form textarea:focus,
 .task-form select:focus,
 .modal input:focus,
+.modal textarea:focus,
 .modal select:focus {
     border-color: var(--primary);
     box-shadow: 0 0 8px rgba(255, 177, 0, 0.4);
     outline: none;
 }
 
-/* ⬇ Custom dropdown arrow */
-.task-form select {
+/* ✅ Category and Priority Dropdowns */
+.task-form select,
+.modal select {
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23E5E5E5' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23E5E5E5' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); /* Restored original arrow color */
     background-repeat: no-repeat;
     background-position: right 12px center;
     background-size: 14px;
+}
+
+/* ✅ Dropdown Options */
+.task-form select option,
+.modal select option {
+    color: #E5E5E5;
+    background: var(--bg-dark);
+    font-family: 'Inter', sans-serif;
+}
+
+/* ✅ Custom Category Input */
+.task-form input#custom-category,
+.modal input#edit-custom-category {
+    display: none;
+    margin-top: 8px;
+    font-family: 'Inter', sans-serif;
+}
+
+/* ✅ Show Custom Input when visible */
+.task-form input#custom-category.visible,
+.modal input#edit-custom-category.visible {
+    display: block;
+}
+
+/* ✅ Emoji Input Wrapper */
+.emoji-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.emoji-input-wrapper input,
+.emoji-input-wrapper textarea {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+}
+
+/* ✅ Emoji Button */
+.emoji-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.emoji-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 8px rgba(255, 177, 0, 0.4);
+}
+
+/* ✅ Emoji Picker */
+emoji-picker {
+    display: none;
+    position: absolute;
+    z-index: 5100;
+    background: var(--bg-panel);
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    max-width: 300px;
+    width: 90%;
+    margin-top: 4px;
+}
+
+emoji-picker.active {
+    display: block;
 }
 
 /* Buttons Row in Modals */
@@ -463,6 +545,7 @@ header p {
     transition: transform var(--transition), box-shadow var(--transition);
     box-shadow: 0 4px 12px rgba(255, 177, 0, 0.25);
     pointer-events: auto;
+    font-family: 'Inter', sans-serif;
 }
 
 /* ⚪ Secondary Buttons */
@@ -473,6 +556,7 @@ header p {
     color: #E5E5E5;
     border: 1px solid var(--glass-border);
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+    font-family: 'Inter', sans-serif;
 }
 
 /* ✨ Hover Effects */
@@ -499,6 +583,7 @@ header p {
     text-align: center;
     margin-bottom: 10px;
     display: none;
+    font-family: 'Inter', sans-serif;
 }
 
 /* ================================
@@ -756,19 +841,18 @@ input[type="checkbox"].notification-toggle:disabled {
 /* ✅ Task Checkboxes */
 input[type="checkbox"]:not(.notification-toggle) {
     margin-right: 10px;
-    transform: scale(1.2); /* 🔹 Static scale */
+    transform: scale(1.2);
     accent-color: var(--primary);
     width: 16px;
     height: 16px;
     border-radius: 4px;
     border: 1px solid var(--glass-border);
-    /* 🔹 No transitions on check/uncheck */
 }
 
 input[type="checkbox"]:not(.notification-toggle):hover {
     transform: scale(1.3);
     box-shadow: 0 0 8px rgba(255, 177, 0, 0.4);
-    transition: transform var(--transition), box-shadow var(--transition); /* 🔹 Transitions only on hover */
+    transition: transform var(--transition), box-shadow var(--transition);
 }
 
 input[type="checkbox"]:not(.notification-toggle):disabled {
@@ -779,7 +863,6 @@ input[type="checkbox"]:not(.notification-toggle):disabled {
 input[type="checkbox"]:not(.notification-toggle):checked + label {
     text-decoration: line-through;
     color: var(--muted);
-    /* 🔹 No transition, instant change */
 }
 
 /* ✅ Footer */
@@ -833,8 +916,10 @@ footer a:hover {
     }
 
     .task-form input,
+    .task-form textarea,
     .task-form select,
     .modal input,
+    .modal textarea,
     .modal select {
         padding: 0.7rem;
         font-size: clamp(13px, 3.5vw, 15px);
@@ -856,9 +941,22 @@ footer a:hover {
     }
 
     .task .complete-late-btn::after {
-        font-size: 11px; /* 🔹 Smaller font for mobile */
-        padding: 5px 8px; /* 🔹 Reduced padding */
-        max-width: 160px; /* 🔹 Tighter max-width */
+        font-size: 11px;
+        padding: 5px 8px;
+        max-width: 160px;
+    }
+
+    .emoji-input-wrapper {
+        gap: 6px;
+    }
+
+    .emoji-btn {
+        padding: 6px;
+        font-size: 14px;
+    }
+
+    emoji-picker {
+        max-width: 280px;
     }
 
     .schedule {
@@ -933,8 +1031,6 @@ footer a:hover {
         font-size: clamp(20px, 5vw, 22px);
     }
 }
-
-
     </style>
 </head>
 <body>
@@ -958,31 +1054,95 @@ footer a:hover {
             <button class="settings-btn" id="showSettingsBtn">⚙️ Settings</button>
         </div>
 
-        <div class="task-form" id="taskForm">
-            <h3>Create New Task</h3>
-            <input type="hidden" id="editTaskIndex">
-            <label for="startTime">Start Time</label>
-            <input type="time" id="startTime" aria-label="Task start time">
-            <label for="endTime">End Time</label>
-            <input type="time" id="endTime" aria-label="Task end time">
-            <label for="taskName">Task Name</label>
+       <!-- Task Form (Add Task) -->
+    <div class="task-form" id="taskForm">
+        <h3>Create New Task</h3>
+        <input type="hidden" id="editTaskIndex">
+        <label for="startTime">Start Time</label>
+        <input type="time" id="startTime" aria-label="Task start time">
+        <label for="endTime">End Time</label>
+        <input type="time" id="endTime" aria-label="Task end time">
+        <label for="taskName">Task Name</label>
+        <div class="emoji-input-wrapper">
             <input type="text" id="taskName" placeholder="e.g., Morning Walk" aria-label="Task name">
-            <label for="category">Category</label>
-            <input type="text" id="category" placeholder="e.g., Health" aria-label="Task category">
-            <label for="priority">Priority</label>
-            <select id="priority" aria-label="Task priority">
-                <option value="">Select Priority</option>
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-            </select>
-            <div class="form-buttons">
-                <button id="addTaskBtn">✅ Save Task</button>
-                <button class="clear-btn" id="clearFormBtn">🧹 Clear Form</button>
-                <button class="cancel-btn" id="cancelFormBtn">❌ Cancel</button>
-            </div>
+            <button type="button" class="emoji-btn">😊</button>
         </div>
+        <emoji-picker class="emoji-picker"></emoji-picker>
+        <label for="category">Category</label>
+        <select id="category" aria-label="Task category" required>
+            <option value="" disabled selected>Select Category</option>
+            <option value="Health">Health</option>
+            <option value="Fitness">Fitness</option>
+            <option value="Routine">Routine</option>
+            <option value="Learning">Learning</option>
+            <option value="Project">Project</option>
+            <option value="Leisure">Leisure</option>
+            <option value="Personal Growth">Personal Growth</option>
+            <option value="General">General</option>
+            <option value="Professional">Professional</option>
+            <option value="Finance">Finance</option>
+            <option value="Custom">Custom</option>
+        </select>
+        <input type="text" id="custom-category" placeholder="Enter custom category" aria-label="Custom task category" style="display: none;">
+        <label for="priority">Priority</label>
+        <select id="priority" aria-label="Task priority">
+            <option value="">Select Priority</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+        </select>
+        <div class="form-buttons">
+            <button id="addTaskBtn">✅ Save Task</button>
+            <button class="clear-btn" id="clearFormBtn">🧹 Clear Form</button>
+            <button class="cancel-btn" id="cancelFormBtn">❌ Cancel</button>
+        </div>
+    </div>
 
+    <!-- Edit Task Modal -->
+    <div class="modal" id="edit-task-modal">
+        <h3>Edit Task</h3>
+        <input type="hidden" id="editTaskIndex">
+        <label for="edit-startTime">Start Time</label>
+        <input type="time" id="edit-startTime" aria-label="Task start time">
+        <label for="edit-endTime">End Time</label>
+        <input type="time" id="edit-endTime" aria-label="Task end time">
+        <label for="edit-taskName">Task Name</label>
+        <div class="emoji-input-wrapper">
+            <input type="text" id="edit-taskName" placeholder="e.g., Morning Walk" aria-label="Task name">
+            <button type="button" class="emoji-btn">😊</button>
+        </div>
+        <emoji-picker class="emoji-picker"></emoji-picker>
+        <label for="edit-category">Category</label>
+        <select id="edit-category" aria-label="Task category" required>
+            <option value="" disabled selected>Select Category</option>
+            <option value="Health">Health</option>
+            <option value="Fitness">Fitness</option>
+            <option value="Routine">Routine</option>
+            <option value="Learning">Learning</option>
+            <option value="Project">Project</option>
+            <option value="Leisure">Leisure</option>
+            <option value="Personal Growth">Personal Growth</option>
+            <option value="General">General</option>
+            <option value="Professional">Professional</option>
+            <option value="Finance">Finance</option>
+            <option value="Custom">Custom</option>
+        </select>
+        <input type="text" id="edit-custom-category" placeholder="Enter custom category" aria-label="Custom task category" style="display: none;">
+        <label for="edit-priority">Priority</label>
+        <select id="edit-priority" aria-label="Task priority">
+            <option value="">Select Priority</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+        </select>
+        <div class="modal-buttons">
+            <button id="saveEditBtn">✅ Save Task</button>
+            <button class="modal-cancel-btn" id="cancelEditBtn">❌ Cancel</button>
+        </div>
+    </div>
+
+    <!-- Emoji JavaScript -->
+    <script src="/emoji.js"></script>
         <div class="modal" id="lateTaskModal">
             <h3>Complete Task Late</h3>
             <p class="modal-error" id="modalError">Please enter a reason.</p>
@@ -1254,57 +1414,79 @@ footer a:hover {
         });
 
         addTaskBtn.addEventListener('click', () => {
-            const startTime = document.getElementById('startTime').value;
-            const endTime = document.getElementById('endTime').value;
-            const taskName = document.getElementById('taskName').value.trim();
-            const category = document.getElementById('category').value.trim();
-            const priority = document.getElementById('priority').value;
-            const editIndex = document.getElementById('editTaskIndex').value;
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const taskName = document.getElementById('taskName').value.trim();
+    const categorySelect = document.getElementById('category');
+    const customCategoryInput = document.getElementById('custom-category');
+    const priority = document.getElementById('priority').value;
+    const editIndex = document.getElementById('editTaskIndex').value;
 
-            if (!startTime || !endTime || !taskName || !category || !priority) {
-                alert('Please fill in all fields!');
-                return;
+    // ✅ Determine category: use custom if selected
+    let category = categorySelect.value;
+    if (category === 'Custom') {
+        category = customCategoryInput.value.trim();
+        if (!category) {
+            alert('Please type your custom category before saving.');
+            return;
+        }
+    }
+
+    // ✅ Validation
+    if (!startTime || !endTime || !taskName || !category || !priority) {
+        alert('Please fill in all fields!');
+        return;
+    }
+
+    if (!isValidTimeRange(startTime, endTime)) {
+        alert('End time must be after start time.');
+        return;
+    }
+
+    // ✅ Build the task object
+    const task = {
+        startTime,
+        endTime,
+        name: taskName,
+        category,
+        priority,
+        checked: false,
+        isLate: false,
+        id: editIndex !== '' ? tasks[parseInt(editIndex)].id : `customTask${taskCounter++}`
+    };
+
+    try {
+        if (editIndex === '') {
+            // ➕ Add new task
+            if (!hasCustomTasks) {
+                tasks = [];
+                hasCustomTasks = true;
+                localStorage.setItem('hasCustomTasks', 'true');
             }
+            tasks.push(task);
+        } else {
+            // ✏️ Edit existing task
+            tasks[parseInt(editIndex)] = task;
+        }
 
-            if (!isValidTimeRange(startTime, endTime)) {
-                alert('End time must be after start time.');
-                return;
-            }
+        tasks = sortTasksByTime(tasks);
+        saveTasks();
+        lastRenderHash = '';
+        renderTasks();
 
-            const task = {
-                startTime,
-                endTime,
-                name: taskName,
-                category,
-                priority,
-                checked: false,
-                isLate: false,
-                id: editIndex !== '' ? tasks[parseInt(editIndex)].id : `customTask${taskCounter++}`
-            };
+        // ✅ Hide form and clear inputs
+        taskForm.style.display = 'none';
+        clearForm();
+        categorySelect.value = '';
+        customCategoryInput.value = '';
+        customCategoryInput.style.display = 'none';
 
-            try {
-                if (editIndex === '') {
-                    if (!hasCustomTasks) {
-                        tasks = [];
-                        hasCustomTasks = true;
-                        localStorage.setItem('hasCustomTasks', 'true');
-                    }
-                    tasks.push(task);
-                } else {
-                    tasks[parseInt(editIndex)] = task;
-                }
+    } catch (error) {
+        console.error('Error saving task:', error);
+        alert('Failed to save task. Please try again.');
+    }
+});
 
-                tasks = sortTasksByTime(tasks);
-                saveTasks();
-                lastRenderHash = '';
-                renderTasks();
-                taskForm.style.display = 'none';
-                clearForm();
-            } catch (error) {
-                console.error('Error saving task:', error);
-                alert('Failed to save task. Please try again.');
-            }
-        });
 
         resetDefaultBtn.addEventListener('click', () => {
             if (confirm('Reset to default schedule? All custom tasks will be cleared.')) {
@@ -1367,34 +1549,41 @@ footer a:hover {
         });
 
         function attachTaskActions() {
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const index = parseInt(btn.getAttribute('data-index'));
-                    const task = tasks[index];
-                    document.getElementById('startTime').value = task.startTime;
-                    document.getElementById('endTime').value = task.endTime;
-                    document.getElementById('taskName').value = task.name;
-                    document.getElementById('category').value = task.category;
-                    document.getElementById('priority').value = task.priority;
-                    document.getElementById('editTaskIndex').value = index;
-                    taskForm.style.display = 'block';
-                    document.getElementById('addTaskBtn').textContent = '💾 Update Task';
-                    taskForm.querySelector('h3').textContent = 'Edit Task';
-                    taskForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                });
-            });
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const index = parseInt(btn.getAttribute('data-index'));
+            const task = tasks[index];
 
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const index = parseInt(btn.getAttribute('data-index'));
-                    if (confirm('Delete this task?')) {
-                        tasks.splice(index, 1);
-                        tasks = sortTasksByTime(tasks);
-                        saveTasks();
-                        renderTasks();
-                    }
-                });
-            });
+            document.getElementById('startTime').value = task.startTime;
+            document.getElementById('endTime').value = task.endTime;
+            document.getElementById('taskName').value = task.name;
+
+            // ✅ Handle category for dropdown + custom
+            const categorySelect = document.getElementById('category');
+            const customCategoryInput = document.getElementById('custom-category');
+
+            if ([...categorySelect.options].some(opt => opt.value === task.category)) {
+                // If task category exists in dropdown, select it
+                categorySelect.value = task.category;
+                customCategoryInput.style.display = 'none';
+                customCategoryInput.value = '';
+            } else {
+                // Otherwise set dropdown to Custom and show input
+                categorySelect.value = 'Custom';
+                customCategoryInput.style.display = 'block';
+                customCategoryInput.value = task.category;
+            }
+
+            document.getElementById('priority').value = task.priority;
+            document.getElementById('editTaskIndex').value = index;
+
+            // ✅ Show form in edit mode
+            taskForm.style.display = 'block';
+            document.getElementById('addTaskBtn').textContent = '💾 Update Task';
+            taskForm.querySelector('h3').textContent = 'Edit Task';
+            taskForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
 
             document.querySelectorAll('.complete-late-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
