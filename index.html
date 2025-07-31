@@ -1511,24 +1511,91 @@ footer a:hover {
     }
 
     function syncTasksWithServiceWorker() {
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            const syncTasks = tasks.filter(task => !task.checked && !isTaskExpired(task, new Date())).map(t => ({
-                id: t.id,
-                startTime: t.startTime,
-                name: t.name,
-                priority: t.priority
-            }));
-            console.log('Syncing tasks with service worker:', syncTasks.map(t => t.name));
-            navigator.serviceWorker.controller.postMessage({
-                type: 'SYNC_TASKS',
-                tasks: syncTasks,
-                userName,
-                enableReminders
-            });
-        } else {
-            console.warn('Service worker not available for task sync');
-        }
+    if (!('serviceWorker' in navigator)) {
+        console.warn('Service worker not supported by browser');
+        return;
     }
+    if (navigator.serviceWorker.controller) {
+        const syncTasks = tasks.filter(task => !task.checked && !isTaskExpired(task, new Date())).map(t => ({
+            id: t.id,
+            startTime: t.startTime,
+            name: t.name,
+            priority: t.priority
+        }));
+        console.log('Syncing tasks with service worker:', syncTasks.map(t => t.name));
+        navigator.serviceWorker.controller.postMessage({
+            type: 'SYNC_TASKS',
+            tasks: syncTasks,
+            userName,
+            enableReminders
+        });
+    } else {
+        console.warn('Service worker controller not available, checking registration');
+        navigator.serviceWorker.getRegistration('/sw.js').then(reg => {
+            if (reg && reg.active) {
+                console.log('Service worker found, syncing tasks');
+                navigator.serviceWorker.controller = reg.active;
+                const syncTasks = tasks.filter(task => !task.checked && !isTaskExpired(task, new Date())).map(t => ({
+                    id: t.id,
+                    startTime: t.startTime,
+                    name: t.name,
+                    priority: t.priority
+                }));
+                reg.active.postMessage({
+                    type: 'SYNC_TASKS',
+                    tasks: syncTasks,
+                    userName,
+                    enableReminders
+                });
+            } else {
+                console.warn('No active service worker, registering /sw.js');
+                navigator.serviceWorker.register('/sw.js').then(reg => {
+                    console.log('Service worker registered:', reg);
+                }).catch(err => {
+                    console.error('Service worker registration failed:', err);
+                    showToast('Service worker failed to register. Notifications may not work.');
+                });
+            }
+        }).catch(err => {
+            console.error('Error checking service worker registration:', err);
+        });
+    }
+}
+
+// Updated Service Worker Registration
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+            console.log('Service Worker registered:', reg);
+            if (reg.active) {
+                console.log('Service worker active, syncing tasks');
+                syncTasksWithServiceWorker();
+            }
+            if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    localStorage.setItem('notificationPermission', permission);
+                    console.log('Initial notification permission:', permission);
+                    if (permission === 'denied') {
+                        permissionError.style.display = 'block';
+                        enableRemindersInput.checked = false;
+                        enableReminders = false;
+                        localStorage.setItem('enableReminders', 'false');
+                        showToast('Notifications blocked. Enable in browser settings.');
+                    }
+                    syncTasksWithServiceWorker();
+                    checkNotifications();
+                });
+            } else {
+                console.log('Notification permission on load:', Notification.permission);
+                syncTasksWithServiceWorker();
+                checkNotifications();
+            }
+        }).catch(err => {
+            console.error('Service Worker registration failed:', err);
+            showToast('Service worker failed to register. Notifications may not work.');
+        });
+    });
+}
 
     function triggerNotification(task) {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller && enableReminders && isTaskStartingSoon(task, new Date())) {
