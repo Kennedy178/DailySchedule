@@ -1531,17 +1531,17 @@ footer a:hover {
     }
 
     function triggerNotification(task) {
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller && enableReminders && isTaskStartingSoon(task, new Date())) {
-            console.log(`Triggering notification for task "${task.name}" at ${task.startTime}`);
-            navigator.serviceWorker.controller.postMessage({
-                type: 'TRIGGER_NOTIFICATION',
-                task: { id: task.id, startTime: task.startTime, name: t.name, priority: t.priority },
-                userName
-            });
-        } else {
-            console.log(`Notification skipped for task "${task.name}": serviceWorker=${!!navigator.serviceWorker.controller}, enableReminders=${enableReminders}, startingSoon=${isTaskStartingSoon(task, new Date())}`);
-        }
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller && enableReminders && isTaskStartingSoon(task, new Date())) {
+        console.log(`Triggering notification for task "${task.name}" at ${task.startTime}`);
+        navigator.serviceWorker.controller.postMessage({
+            type: 'TRIGGER_NOTIFICATION',
+            task: { id: task.id, startTime: task.startTime, name: task.name, priority: task.priority },
+            userName
+        });
+    } else {
+        console.log(`Notification skipped for task "${task.name}": serviceWorker=${!!navigator.serviceWorker.controller}, enableReminders=${enableReminders}, startingSoon=${isTaskStartingSoon(task, new Date())}`);
     }
+}
 
     function checkNotifications() {
         console.log('Checking notifications for tasks:', tasks.map(t => t.name));
