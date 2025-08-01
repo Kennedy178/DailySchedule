@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mercedes S580 2025 Routine</title>
+    <title>GetItDone</title>
     <link rel="icon" href="/favicon-32x32.png" type="image/png">
     <link rel="manifest" href="/manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -473,12 +473,29 @@ header p {
     align-items: center;
     gap: 8px;
     width: 100%;
+    max-width: 600px; /* Prevent excessive stretching */
+    position: relative; /* Container for absolute positioning of emoji-picker */
+    margin: 0 auto; /* Center the wrapper */
 }
 
 .emoji-input-wrapper input,
 .emoji-input-wrapper textarea {
     flex: 1;
     font-family: 'Inter', sans-serif;
+    padding: 0.9rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: #E5E5E5;
+    font-size: clamp(14px, 4vw, 16px);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.emoji-input-wrapper input:focus,
+.emoji-input-wrapper textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 8px rgba(255, 177, 0, 0.4);
+    outline: none;
 }
 
 /* ✅ Emoji Button */
@@ -501,15 +518,18 @@ header p {
 emoji-picker {
     display: none;
     position: absolute;
+    top: 100%;
+    left: 0;
     z-index: 5100;
     background: var(--bg-panel);
     backdrop-filter: blur(18px);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
+    width: 100%;
     max-width: 300px;
-    width: 90%;
     margin-top: 4px;
+    overflow: hidden; /* Prevent content from spilling out */
 }
 
 emoji-picker.active {
@@ -1063,8 +1083,10 @@ footer a:hover {
         max-width: 160px;
     }
 
+    @media (max-width: 768px) {
     .emoji-input-wrapper {
         gap: 6px;
+        max-width: 100%; /* Allow full width on mobile if needed */
     }
 
     .emoji-btn {
@@ -1074,7 +1096,11 @@ footer a:hover {
 
     emoji-picker {
         max-width: 280px;
+        width: 90%; /* Ensure it fits mobile screens */
+        left: 50%;
+        transform: translateX(-50%); /* Center the picker */
     }
+}
 
     .schedule {
         grid-template-columns: 1fr;
