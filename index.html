@@ -1292,7 +1292,7 @@ footer a:hover {
         border: none;
         border-radius: var(--radius);
         cursor: pointer;
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, filter 0.3s ease;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, filter 0.3s ease;
         font-family: 'Inter', sans-serif;
         background: var(--accent-gradient);
         color: #0E0E10;
@@ -1306,38 +1306,65 @@ footer a:hover {
 
     .button-container .add-task-btn:hover,
     .button-container .add-task-btn:focus {
-        transform: translateY(-3px);
+        transform: translateY(-3px) rotateX(5deg);
         box-shadow: 0 6px 20px rgba(255, 177, 0, 0.5);
-        filter: drop-shadow(0 0 8px rgba(255, 202, 40, 0.4)); /* Subtle glow effect */
+        filter: brightness(1.1) drop-shadow(0 0 12px rgba(255, 202, 40, 0.6));
+        animation: pulseGlow 1.5s infinite alternate;
     }
 
     .button-container .add-task-btn:focus {
         outline: none;
-        box-shadow: 0 0 0 3px rgba(255, 202, 40, 0.6); /* Enhanced focus ring */
+        box-shadow: 0 0 0 3px rgba(255, 202, 40, 0.7);
     }
 
     .button-container .add-task-btn:active {
-        transform: translateY(0) scale(0.98); /* Spring-like press effect */
+        transform: translateY(0) scale(0.98) rotateX(0deg);
         box-shadow: 0 2px 8px rgba(255, 177, 0, 0.3);
     }
 
-    /* Ripple Effect on Touch */
+    /* Multi-Wave Ripple Effect */
+    .add-task-btn::before,
     .add-task-btn::after {
         content: '';
         position: absolute;
         border-radius: 50%;
-        width: 5px;
-        height: 5px;
         background: rgba(255, 255, 255, 0.5);
         opacity: 0;
-        transform: scale(1);
         pointer-events: none;
-        transition: transform 0.6s ease-out, opacity 0.8s ease-out;
+    }
+
+    .add-task-btn::before {
+        width: 5px;
+        height: 5px;
+        transition: transform 0.5s ease-out, opacity 0.7s ease-out;
+    }
+
+    .add-task-btn::after {
+        width: 10px;
+        height: 10px;
+        transition: transform 0.7s ease-out, opacity 0.9s ease-out;
+    }
+
+    .add-task-btn:active::before {
+        transform: scale(20);
+        opacity: 0.6;
     }
 
     .add-task-btn:active::after {
         transform: scale(30);
-        opacity: 0;
+        opacity: 0.4;
+    }
+
+    /* Sparkle Effect */
+    .add-task-btn:hover::after {
+        content: '✨';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        font-size: 16px;
+        color: #FFD740;
+        animation: sparkle 1s infinite alternate;
     }
 
     /* SECONDARY DROPDOWN BUTTON */
@@ -1351,7 +1378,7 @@ footer a:hover {
         border: none;
         border-radius: var(--radius);
         cursor: pointer;
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, filter 0.3s ease, background 0.3s ease;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, filter 0.3s ease, background 0.3s ease;
         font-family: 'Inter', sans-serif;
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.22));
         color: #E5E5E5;
@@ -1368,39 +1395,64 @@ footer a:hover {
 
     .more-options-btn:hover,
     .more-options-btn:focus {
-        transform: translateY(-3px);
+        transform: translateY(-3px) rotateX(5deg);
         box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25);
-        filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.3)); /* Subtle glow */
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.35));
+        filter: brightness(1.1) drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
+        animation: pulseGlow 1.5s infinite alternate;
     }
 
     .more-options-btn:focus {
         outline: none;
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5); /* Enhanced focus ring */
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.6);
     }
 
     .more-options-btn:active {
-        transform: translateY(0) scale(0.98); /* Spring-like press effect */
+        transform: translateY(0) scale(0.98) rotateX(0deg);
         box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
     }
 
-    /* Ripple Effect on Touch */
+    /* Multi-Wave Ripple Effect */
+    .more-options-btn::before,
     .more-options-btn::after {
         content: '';
         position: absolute;
         border-radius: 50%;
-        width: 5px;
-        height: 5px;
         background: rgba(255, 255, 255, 0.4);
         opacity: 0;
-        transform: scale(1);
         pointer-events: none;
-        transition: transform 0.6s ease-out, opacity 0.8s ease-out;
+    }
+
+    .more-options-btn::before {
+        width: 5px;
+        height: 5px;
+        transition: transform 0.5s ease-out, opacity 0.7s ease-out;
+    }
+
+    .more-options-btn::after {
+        width: 10px;
+        height: 10px;
+        transition: transform 0.7s ease-out, opacity 0.9s ease-out;
+    }
+
+    .more-options-btn:active::before {
+        transform: scale(20);
+        opacity: 0.6;
     }
 
     .more-options-btn:active::after {
-        transform: scale(25);
-        opacity: 0;
+        transform: scale(30);
+        opacity: 0.4;
+    }
+
+    .more-options-btn:hover::after {
+        content: '✨';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        font-size: 16px;
+        color: #E5E5E5;
+        animation: sparkle 1s infinite alternate;
     }
 
     /* DROPDOWN MENU */
@@ -1420,9 +1472,9 @@ footer a:hover {
         left: 50%;
         transform: translateX(-50%);
         z-index: 2000;
-        max-height: 200px; /* Scrollable if too many items */
+        max-height: 200px;
         overflow-y: auto;
-        animation: fadeInDrop 0.2s ease-out; /* Smooth fade-in */
+        animation: cascadeReveal 0.3s ease-out;
     }
 
     .mobile-dropdown.active .dropdown-content {
@@ -1441,7 +1493,7 @@ footer a:hover {
         text-align: center;
         border-radius: 8px;
         cursor: pointer;
-        transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
         width: auto;
         min-width: 180px;
         align-self: center;
@@ -1451,12 +1503,13 @@ footer a:hover {
 
     .dropdown-content button:hover {
         background: rgba(255, 255, 255, 0.15);
-        transform: translateY(-2px);
+        transform: translateY(-2px) rotateZ(2deg);
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        filter: brightness(1.1);
     }
 
     .dropdown-content button:active {
-        transform: translateY(0) scale(0.98);
+        transform: translateY(0) scale(0.98) rotateZ(0deg);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 
@@ -1467,23 +1520,59 @@ footer a:hover {
         margin-top: 0.2rem;
     }
 
-    /* ACCESSIBILITY FOCUS (keyboard navigation friendly) */
+    /* ACCESSIBILITY FOCUS */
     .dropdown-content button:focus {
         outline: 2px solid rgba(255, 200, 50, 0.9);
         outline-offset: 2px;
         box-shadow: 0 0 5px rgba(255, 200, 50, 0.6);
+        filter: brightness(1.2);
+    }
+
+    /* Preview on Hover */
+    .dropdown-content button:hover::after {
+        content: attr(data-preview) ' →';
+        position: absolute;
+        right: 10px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .dropdown-content button:hover::after {
+        opacity: 1;
     }
 }
 
 /* Animations */
-@keyframes fadeInDrop {
+@keyframes pulseGlow {
+    from {
+        filter: brightness(1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+    }
+    to {
+        filter: brightness(1.2) drop-shadow(0 0 16px rgba(255, 255, 255, 0.6));
+    }
+}
+
+@keyframes sparkle {
+    from {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0.8;
+    }
+    to {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0;
+    }
+}
+
+@keyframes cascadeReveal {
     from {
         opacity: 0;
-        transform: translate(-50%, -5px);
+        transform: translate(-50%, -10px) rotateX(10deg);
     }
     to {
         opacity: 1;
-        transform: translate(-50%, 0);
+        transform: translate(-50%, 0) rotateX(0deg);
     }
 }
     </style>
