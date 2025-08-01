@@ -11,14 +11,14 @@
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
-/* ================================
-   🎨 SECTION 1: CORE LAYOUT & BUTTON BAR
-================================ */
+/* 
+    SECTION 1: CORE LAYOUT & BUTTON BAR
+ */
 
-/* ✅ Font Imports */
+/*  Font Imports */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
 
-/* ✅ Global Reset & Typography */
+/*  Global Reset & Typography */
 * {
     margin: 0;
     padding: 0;
@@ -29,7 +29,7 @@
     color: #E5E5E5; /* Restored original text color */
 }
 
-/* ✅ Root Theme Variables */
+/*  Root Theme Variables */
 :root {
     --bg-dark: #0D0D0F;
     --bg-card: rgba(25, 25, 30, 0.85);
@@ -46,7 +46,7 @@
     --transition: 0.3s ease;
 }
 
-/* ✅ Body & Overall Layout */
+/*  Body & Overall Layout */
 body {
     background: var(--bg-dark);
     color: #E5E5E5;
@@ -60,7 +60,7 @@ body {
     overflow-x: hidden;
 }
 
-/* ✅ Main Container */
+/*  Main Container */
 .container {
     width: 90%;
     max-width: 1200px;
@@ -68,14 +68,14 @@ body {
     padding-top: 0;
 }
 
-/* ✅ Button Bar Styling */
+/*  Button Bar Styling */
 .container > div:first-child {
     margin-top: 0;
     padding-top: 10px;
     text-align: center;
 }
 
-/* ✅ Buttons */
+/*  Buttons */
 .button-container .add-task-btn,
 .button-container .desktop-buttons .reset-default-btn,
 .button-container .desktop-buttons .report-btn,
@@ -97,7 +97,7 @@ body {
     z-index: 100;
 }
 
-/* ✅ Hover Effects for Buttons */
+/*  Hover Effects for Buttons */
 .button-container .add-task-btn:hover,
 .button-container .desktop-buttons .reset-default-btn:hover,
 .button-container .desktop-buttons .report-btn:hover,
@@ -106,7 +106,7 @@ body {
     box-shadow: 0 6px 20px rgba(255, 177, 0, 0.4);
 }
 
-/* ✅ Secondary Buttons (Reset, Report, Settings) */
+/*  Secondary Buttons (Reset, Report, Settings) */
 .button-container .desktop-buttons .reset-default-btn,
 .button-container .desktop-buttons .report-btn,
 .button-container .desktop-buttons .settings-btn {
@@ -123,11 +123,11 @@ body {
     box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
 }
 
-/* ================================
-   🎨 SECTION 2: HEADER & TASK CARDS
-================================ */
+/* 
+    SECTION 2: HEADER & TASK CARDS
+*/
 
-/* ✅ Header Styling */
+/*  Header Styling */
 header {
     background: rgba(14, 14, 16, 0.7);
     backdrop-filter: blur(16px);
@@ -140,7 +140,7 @@ header {
     animation: fadeInHeader 0.6s ease;
 }
 
-/* ✅ Header Animations */
+/*  Header Animations */
 @keyframes fadeInHeader {
     from { transform: translateY(-20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
@@ -165,7 +165,7 @@ header p {
     font-style: italic;
 }
 
-/* ✅ Task Grid Layout */
+/*  Task Grid Layout */
 .schedule {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -174,7 +174,7 @@ header p {
     margin-top: 1.5rem;
 }
 
-/* ✅ Task Card Base */
+/*  Task Card Base */
 .task {
     background: var(--bg-card);
     backdrop-filter: blur(14px);
@@ -187,13 +187,13 @@ header p {
     border: 1px solid var(--glass-border);
 }
 
-/* ✅ Task Hover Lift */
+/*  Task Hover Lift */
 .task:hover {
     transform: translateY(-6px);
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7);
 }
 
-/* ✅ Expired Task Look */
+/*  Expired Task Look */
 .task.task-expired {
     opacity: 0.7;
     background: rgba(25, 25, 30, 0.5);
@@ -206,7 +206,7 @@ header p {
     color: var(--muted);
 }
 
-/* ✅ Category still visible on expired tasks */
+/*  Category still visible on expired tasks */
 .task.task-expired .category {
     background: var(--accent-gradient);
     opacity: 1;
@@ -214,7 +214,7 @@ header p {
     border: 1px solid var(--primary-light);
 }
 
-/* ✅ Task Title */
+/*  Task Title */
 .task h2 {
     font-family: 'Playfair Display', serif;
     font-size: clamp(20px, 4vw, 22px);
@@ -223,20 +223,20 @@ header p {
     font-weight: 700;
 }
 
-/* ✅ Task Description */
+/*  Task Description */
 .task p {
     font-size: clamp(13px, 3vw, 14px);
     margin-top: 8px;
     color: var(--muted);
 }
 
-/* ✅ Strong Text */
+/*  Strong Text */
 .task strong {
     color: #E5E5E5;
     font-weight: 600;
 }
 
-/* ✅ Category Tag */
+/*  Category Tag */
 .task .category {
     display: inline-block;
     padding: 0.35rem 0.8rem;
