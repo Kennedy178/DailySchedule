@@ -1,6 +1,6 @@
 {
-    "name": "Mercedes S580 2025 Routine",
-    "short_name": "S580 Routine",
+    "name": "GetItDone",
+    "short_name": "DoIt",
     "description": "A daily routine planner for productivity and growth, inspired by the Mercedes S580 2025.",
     "start_url": "/index.html",
     "display": "standalone",

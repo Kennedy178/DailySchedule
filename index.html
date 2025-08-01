@@ -250,11 +250,11 @@ header p {
     font-size: clamp(11px, 2.5vw, 13px);
 }
 
-/* ================================
-   🎨 SECTION 3: TASK ACTION BUTTONS & MODALS
-================================ */
+/* 
+    SECTION 3: TASK ACTION BUTTONS & MODALS
+*/
 
-/* ✅ Task Action Buttons */
+/*  Task Action Buttons */
 .task .task-actions {
     margin-top: 1rem;
     display: flex;
@@ -279,14 +279,14 @@ header p {
     pointer-events: auto;
 }
 
-/* ✅ Delete button - danger red */
+/*  Delete button - danger red */
 .task .delete-btn {
     background: var(--danger);
     color: #E5E5E5;
 }
 .task .delete-btn:hover { background: #ff4f4f; }
 
-/* ✅ “Mark Late” button - subtle look */
+/*  “Mark Late” button - subtle look */
 .task .complete-late-btn {
     background: rgba(255, 255, 255, 0.08);
     color: #E5E5E5;
@@ -328,9 +328,9 @@ header p {
     visibility: visible;
 }
 
-/* ================================
+/* 
     TASK FORM & MODAL STYLES
-================================ */
+ */
 
 /* Base Styles for All Popups */
 .task-form,
@@ -392,7 +392,7 @@ header p {
     color: var(--primary-light);
 }
 
-/* 📥 Labels & Inputs */
+/*  Labels & Inputs */
 .task-form label,
 .modal label {
     display: block;
@@ -421,7 +421,7 @@ header p {
     transition: border-color var(--transition), box-shadow var(--transition);
 }
 
-/* ✅ Input focus glow */
+/*  Input focus glow */
 .task-form input:focus,
 .task-form textarea:focus,
 .task-form select:focus,
@@ -433,7 +433,7 @@ header p {
     outline: none;
 }
 
-/* ✅ Category and Priority Dropdowns */
+/*  Category and Priority Dropdowns */
 .task-form select,
 .modal select {
     appearance: none;
@@ -445,7 +445,7 @@ header p {
     background-size: 14px;
 }
 
-/* ✅ Dropdown Options */
+/*  Dropdown Options */
 .task-form select option,
 .modal select option {
     color: #E5E5E5;
@@ -453,7 +453,7 @@ header p {
     font-family: 'Inter', sans-serif;
 }
 
-/* ✅ Custom Category Input */
+/*  Custom Category Input */
 .task-form input#custom-category,
 .modal input#edit-custom-category {
     display: none;
@@ -461,13 +461,13 @@ header p {
     font-family: 'Inter', sans-serif;
 }
 
-/* ✅ Show Custom Input when visible */
+/*  Show Custom Input when visible */
 .task-form input#custom-category.visible,
 .modal input#edit-custom-category.visible {
     display: block;
 }
 
-/* ✅ Emoji Input Wrapper */
+/*  Emoji Input Wrapper */
 .emoji-input-wrapper {
     display: flex;
     align-items: center;
@@ -498,7 +498,7 @@ header p {
     outline: none;
 }
 
-/* ✅ Emoji Button */
+/*  Emoji Button */
 .emoji-btn {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid var(--glass-border);
@@ -514,7 +514,7 @@ header p {
     box-shadow: 0 0 8px rgba(255, 177, 0, 0.4);
 }
 
-/* ✅ Emoji Picker */
+/*  Emoji Picker */
 emoji-picker {
     display: none;
     position: absolute;
@@ -546,7 +546,7 @@ emoji-picker.active {
     justify-content: center;
 }
 
-/* 🟡 Primary Buttons */
+/*  Primary Buttons */
 .task-form button,
 .modal button,
 .install-prompt button {
@@ -595,7 +595,7 @@ emoji-picker.active {
     box-shadow: none;
 }
 
-/* 🔔 Error Messages in Modal */
+/*  Error Messages in Modal */
 .modal-error,
 .permission-error {
     color: var(--danger);
@@ -606,9 +606,9 @@ emoji-picker.active {
     font-family: 'Inter', sans-serif;
 }
 
-/* ================================
-   📌 MODAL FADE-IN ANIMATION
-================================ */
+/* 
+    MODAL FADE-IN ANIMATION
+ */
 @keyframes fadeInModal {
     from {
         opacity: 0;
@@ -637,7 +637,7 @@ emoji-picker.active {
     border: 1px solid var(--glass-border);
 }
 
-/* ✅ Progress Fill */
+/*  Progress Fill */
 .progress-bar {
     height: 100%;
     width: 0%;
@@ -647,7 +647,7 @@ emoji-picker.active {
     position: relative;
 }
 
-/* ✅ Glossy Shine Animation */
+/*  Glossy Shine Animation */
 .progress-bar::after {
     content: '';
     position: absolute;
@@ -665,7 +665,7 @@ emoji-picker.active {
     100% { transform: translateX(100%); }
 }
 
-/* ✅ Progress Text */
+/*  Progress Text */
 #progressText {
     text-align: center;
     margin: 10px 0;
@@ -675,7 +675,7 @@ emoji-picker.active {
     font-size: clamp(14px, 3vw, 16px);
 }
 
-/* ✅ Stats Panel Container */
+/*  Stats Panel Container */
 .stats-panel {
     display: none;
     width: 100%;
@@ -692,14 +692,14 @@ emoji-picker.active {
     border: 1px solid var(--glass-border);
 }
 
-/* ✅ Show Stats Panel */
+/*  Show Stats Panel */
 .stats-panel.active {
     display: block;
     transform: translateY(0);
     opacity: 1;
 }
 
-/* ✅ Stats Title */
+/*  Stats Title */
 .stats-panel h3 {
     font-family: 'Playfair Display', serif;
     color: var(--primary);
@@ -710,7 +710,7 @@ emoji-picker.active {
     text-transform: uppercase;
 }
 
-/* ✅ Stats Sections */
+/*  Stats Sections */
 .stats-section {
     margin-bottom: 25px;
     animation: fadeInStats 0.5s ease;
@@ -752,14 +752,14 @@ emoji-picker.active {
     font-size: 20px;
 }
 
-/* ✅ Divider */
+/*  Divider */
 hr.stats-divider {
     border: 0;
     border-top: 1px solid var(--glass-border);
     margin: 20px 0;
 }
 
-/* ✅ Chart Styling */
+/*  Chart Styling */
 #statsChart {
     max-width: 100%;
     max-height: 350px;
@@ -778,7 +778,7 @@ hr.stats-divider {
     margin: 10px 0;
 }
 
-/* ✅ 🎉 Congrats Message - Smooth Snake Light + Rave Jitter */
+/*  Congrats Message - Smooth Snake Light + Rave Jitter */
 #congratsMessage {
     position: fixed;          /* 👈 FIXED instead of absolute */
     top: 50%;                 /* Center vertically */
@@ -799,7 +799,7 @@ hr.stats-divider {
     animation: snakeLight 1.8s ease-in-out infinite, textJitter 0.12s ease-in-out infinite;
 }
 
-/* ✅ Snake-like light (smooth but fast) */
+/*  Snake-like light (smooth but fast) */
 @keyframes snakeLight {
     0% { 
         background: linear-gradient(90deg, transparent 0%, #FFEA8A 10%, #FFB100 20%, transparent 30%);
@@ -816,7 +816,7 @@ hr.stats-divider {
     }
 }
 
-/* ✅ Softer but quicker jitter for rave vibe */
+/*  Softer but quicker jitter for rave vibe */
 @keyframes textJitter {
     0%   { transform: translate(0, 0); }
     20%  { transform: translate(0.5px, -0.5px); }
@@ -826,7 +826,7 @@ hr.stats-divider {
     100% { transform: translate(0, 0); }
 }
 
-/* ✅ 🎉 Confetti Canvas */
+/*  Confetti Canvas */
 #confettiCanvas {
     position: fixed;
     top: 0;
@@ -837,11 +837,11 @@ hr.stats-divider {
     z-index: 998;
 }
 
-/* ================================
-   📌 SECTION 5: CHECKBOXES & FOOTER
-================================ */
+/* 
+    SECTION 5: CHECKBOXES & FOOTER
+ */
 
-/* ✅ Notification Toggle in Settings Modal */
+/*  Notification Toggle in Settings Modal */
 input[type="checkbox"].notification-toggle {
     appearance: none;
     width: 40px;
@@ -880,7 +880,7 @@ input[type="checkbox"].notification-toggle:disabled {
     opacity: 0.5;
 }
 
-/* ✅ Task Checkboxes */
+/*  Task Checkboxes */
 input[type="checkbox"]:not(.notification-toggle) {
     margin-right: 10px;
     transform: scale(1.2);
@@ -907,7 +907,7 @@ input[type="checkbox"]:not(.notification-toggle):checked + label {
     color: var(--muted);
 }
 
-/* ✅ Footer */
+/*  Footer */
 .footer-wrapper {
     margin-top: auto;
     padding-bottom: 20px;
@@ -958,7 +958,7 @@ footer a:hover {
   text-decoration: underline;
 }
 
-/* ✅ Consistent bullet alignment */
+/*  Consistent bullet alignment */
 #weeklyDetails ul {
     /* or square */
   list-style-position: outside;
@@ -971,7 +971,7 @@ footer a:hover {
   line-height: 1.4em;
 }
 
-/* ✅ Headers for today’s full lists */
+/*  Headers for today’s full lists */
 .today-header {
   font-weight: 700;
   margin-top: 12px;
@@ -986,7 +986,7 @@ footer a:hover {
   color: #FFA500; /* orange for late */
 }
 
-/* ✅ Expandable summaries for older days */
+/*  Expandable summaries for older days */
 .summary-line {
   cursor: pointer;
   font-weight: 600;
@@ -1007,16 +1007,16 @@ footer a:hover {
   display: none;
 }
 
-/* ================================
-   📱 RESPONSIVE DESIGN
-================================ */
+/* 
+    RESPONSIVE DESIGN
+ */
 @media (max-width: 600px) {
     .container {
         width: 95%;
         padding: 20px 0 1.5rem; /* Added 20px top padding for space from roof to first button */
     }
 
-    /* ✅ Button Bar Styling for Mobile */
+    /*  Button Bar Styling for Mobile */
     .container > div:first-child {
         margin-top: 0;
         padding-top: 0;
@@ -1027,7 +1027,7 @@ footer a:hover {
         gap: 15px; /* Space between buttons */
     }
 
-    /* ✅ Space from last button to header */
+    /*  Space from last button to header */
     .container > div:first-child + * {
         margin-top: 20px; /* Matches top padding, space from last button to header */
     }
@@ -1083,9 +1083,9 @@ footer a:hover {
         max-width: 160px;
     }
 
-    /* ================================
-   📱 RESPONSIVE DESIGN
-================================ */
+    /* 
+    RESPONSIVE DESIGN
+ */
 @media (max-width: 768px) {
     .emoji-btn {
         display: none; /* Hide only the emoji button on mobile */
@@ -1165,9 +1165,9 @@ footer a:hover {
     }
 }
 
-/* ================================
-   📱 MOBILE DROPDOWN STYLES
-================================ */
+/* ====
+    MOBILE DROPDOWN STYLES
+===== */
 
 /* Button Container */
 .button-container {
