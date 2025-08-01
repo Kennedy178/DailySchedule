@@ -76,10 +76,10 @@ body {
 }
 
 /* ✅ Buttons */
-.add-task-btn,
-.reset-default-btn,
-.report-btn,
-.settings-btn {
+.button-container .add-task-btn,
+.button-container .desktop-buttons .reset-default-btn,
+.button-container .desktop-buttons .report-btn,
+.button-container .desktop-buttons .settings-btn {
     font-family: 'Inter', sans-serif;
     font-weight: 600;
     font-size: clamp(15px, 4vw, 17px);
@@ -98,27 +98,27 @@ body {
 }
 
 /* ✅ Hover Effects for Buttons */
-.add-task-btn:hover,
-.reset-default-btn:hover,
-.report-btn:hover,
-.settings-btn:hover {
+.button-container .add-task-btn:hover,
+.button-container .desktop-buttons .reset-default-btn:hover,
+.button-container .desktop-buttons .report-btn:hover,
+.button-container .desktop-buttons .settings-btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(255, 177, 0, 0.4);
 }
 
 /* ✅ Secondary Buttons (Reset, Report, Settings) */
-.reset-default-btn,
-.report-btn,
-.settings-btn {
+.button-container .desktop-buttons .reset-default-btn,
+.button-container .desktop-buttons .report-btn,
+.button-container .desktop-buttons .settings-btn {
     background: rgba(255, 255, 255, 0.08);
     color: #E5E5E5;
     border: 1px solid var(--glass-border);
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
 }
 
-.reset-default-btn:hover,
-.report-btn:hover,
-.settings-btn:hover {
+.button-container .desktop-buttons .reset-default-btn:hover,
+.button-container .desktop-buttons .report-btn:hover,
+.button-container .desktop-buttons .settings-btn:hover {
     background: rgba(255, 255, 255, 0.15);
     box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
 }
@@ -192,7 +192,6 @@ header p {
     transform: translateY(-6px);
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7);
 }
-
 
 /* ✅ Expired Task Look */
 .task.task-expired {
@@ -587,8 +586,6 @@ emoji-picker.active {
     font-family: 'Inter', sans-serif;
 }
 
-
-
 /* ================================
    📌 MODAL FADE-IN ANIMATION
 ================================ */
@@ -809,9 +806,6 @@ hr.stats-divider {
     100% { transform: translate(0, 0); }
 }
 
-
-
-
 /* ✅ 🎉 Confetti Canvas */
 #confettiCanvas {
     position: fixed;
@@ -917,7 +911,6 @@ footer a:hover {
     color: var(--primary-light);
 }
 
-
 .hidden {
   display: none;
 }
@@ -952,7 +945,6 @@ footer a:hover {
   margin-left: 20px;
   padding-left: 0;
 }
-
 
 #weeklyDetails li {
   margin: 2px 0;
@@ -995,18 +987,29 @@ footer a:hover {
   display: none;
 }
 
-
-
-
-
-
 /* ================================
    📱 RESPONSIVE DESIGN
 ================================ */
 @media (max-width: 600px) {
     .container {
         width: 95%;
-        padding: 1.5rem 0;
+        padding: 20px 0 1.5rem; /* Added 20px top padding for space from roof to first button */
+    }
+
+    /* ✅ Button Bar Styling for Mobile */
+    .container > div:first-child {
+        margin-top: 0;
+        padding-top: 0;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px; /* Space between buttons */
+    }
+
+    /* ✅ Space from last button to header */
+    .container > div:first-child + * {
+        margin-top: 20px; /* Matches top padding, space from last button to header */
     }
 
     .add-task-btn,
@@ -1015,7 +1018,10 @@ footer a:hover {
     .settings-btn {
         padding: 0.7rem 1.2rem;
         font-size: clamp(13px, 3.5vw, 15px);
-        margin: 10px 8px 15px;
+        margin: 0;
+        min-width: 200px;
+        width: 90%;
+        box-sizing: border-box;
     }
 
     .task-form,
@@ -1142,6 +1148,152 @@ footer a:hover {
         font-size: clamp(20px, 5vw, 22px);
     }
 }
+
+/* ================================
+   📱 MOBILE DROPDOWN STYLES
+================================ */
+
+/* Button Container */
+.button-container {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+/* Desktop Buttons - Visible by default */
+.desktop-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Mobile Dropdown - Hidden by default */
+.mobile-dropdown {
+    display: none;
+    position: relative;
+}
+
+.more-options-btn {
+    padding: 0.7rem 1.2rem;
+    font-size: clamp(13px, 3.5vw, 15px);
+    margin: 0;
+    width: 90%;
+    min-width: 200px;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.08);
+    color: #E5E5E5;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: transform var(--transition), box-shadow var(--transition);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.more-options-btn:hover,
+.more-options-btn:focus {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.more-options-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 250px;
+    background: var(--bg-panel);
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-top: 5px;
+    z-index: 2000; /* High z-index to stay above header */
+    list-style: none;
+    padding: 0;
+    overflow: visible;
+}
+
+.dropdown-content button {
+    display: block;
+    width: 100%;
+    padding: 0.7rem 1rem;
+    font-size: clamp(13px, 3vw, 14px);
+    border: none;
+    background: none;
+    color: #E5E5E5;
+    text-align: left;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.dropdown-content button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-dropdown.active .dropdown-content {
+    display: block;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    .desktop-buttons {
+        display: none;
+    }
+
+    .mobile-dropdown {
+        display: block;
+    }
+
+    .button-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .button-container .add-task-btn {
+        padding: 0.7rem 1.2rem;
+        font-size: clamp(13px, 3.5vw, 15px);
+        margin: 0;
+        width: 90%;
+        max-width: 300px;
+        box-sizing: border-box;
+        border: none;
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: transform var(--transition), box-shadow var(--transition);
+        font-family: 'Inter', sans-serif;
+        background: var(--accent-gradient);
+        color: #0E0E10;
+        box-shadow: 0 4px 12px rgba(255, 177, 0, 0.25);
+    }
+
+    .button-container .add-task-btn:hover,
+    .button-container .add-task-btn:focus {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(255, 177, 0, 0.4);
+    }
+
+    .button-container .add-task-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(255, 177, 0, 0.3);
+    }
+}
+
     </style>
 </head>
 <body>
@@ -1158,12 +1310,26 @@ footer a:hover {
     </div>
 
     <div class="container">
-        <div style="text-align: center;">
-            <button class="add-task-btn" id="showFormBtn">➕ Add My Own Custom Task</button>
-            <button class="reset-default-btn" id="resetDefaultBtn">🔄 Reset to Default</button>
-            <button class="report-btn" id="showReportBtn">📊 View Report</button>
-            <button class="settings-btn" id="showSettingsBtn">⚙️ Settings</button>
+        <div class="button-container">
+    <button class="add-task-btn" id="showFormBtn">➕ Add My Own Custom Task</button>
+    
+    <!-- Desktop buttons (hidden on mobile) -->
+    <div class="desktop-buttons">
+        <button class="reset-default-btn" id="resetDefaultBtn">🔄 Reset to Default</button>
+        <button class="report-btn" id="showReportBtn">📊 View Report</button>
+        <button class="settings-btn" id="showSettingsBtn">⚙️ Settings</button>
+    </div>
+    
+    <!-- Mobile dropdown (hidden on desktop) -->
+    <div class="mobile-dropdown">
+        <button class="more-options-btn">More Options ▼</button>
+        <div class="dropdown-content">
+            <button class="reset-default-btn" id="mobileResetDefaultBtn">🔄 Reset to Default</button>
+            <button class="report-btn" id="mobileShowReportBtn">📊 View Report</button>
+            <button class="settings-btn" id="mobileShowSettingsBtn">⚙️ Settings</button>
         </div>
+    </div>
+</div>
 
        <!-- Task Form (Add Task) -->
     <div class="task-form" id="taskForm">
@@ -2708,7 +2874,10 @@ if ('serviceWorker' in navigator) {
         });
     }
 
-    // Window Resize Handling
+
+
+    
+        // Window Resize Handling
     window.addEventListener('resize', () => {
         if (isCelebrating) {
             canvas.width = window.innerWidth;
@@ -2720,10 +2889,49 @@ if ('serviceWorker' in navigator) {
         }
     });
 
+    // Mobile dropdown functionality - NEW CODE STARTS HERE
+    const moreOptionsBtn = document.querySelector('.more-options-btn');
+    const mobileDropdown = document.querySelector('.mobile-dropdown');
+
+    // Only add these event listeners if the mobile dropdown exists (mobile view)
+    if (moreOptionsBtn && mobileDropdown) {
+        // Toggle dropdown
+        moreOptionsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mobileDropdown.classList.toggle('active');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (mobileDropdown.classList.contains('active') && 
+                !e.target.closest('.mobile-dropdown')) {
+                mobileDropdown.classList.remove('active');
+            }
+        });
+
+        // Connect mobile buttons to same functionality as desktop buttons
+        document.getElementById('mobileResetDefaultBtn')?.addEventListener('click', () => {
+            document.getElementById('resetDefaultBtn').click();
+            mobileDropdown.classList.remove('active');
+        });
+
+        document.getElementById('mobileShowReportBtn')?.addEventListener('click', () => {
+            document.getElementById('showReportBtn').click();
+            mobileDropdown.classList.remove('active');
+        });
+
+        document.getElementById('mobileShowSettingsBtn')?.addEventListener('click', () => {
+            document.getElementById('showSettingsBtn').click();
+            mobileDropdown.classList.remove('active');
+        });
+    }
+    // NEW CODE ENDS HERE
+
     // Initialize App
     loadTasks();
     setInterval(checkDateChange, 30000);
     setInterval(checkNotifications, 30000); // Check notifications every 30 seconds
+</script>
 </script>
 </body>
 </html>
