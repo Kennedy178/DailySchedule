@@ -1296,6 +1296,7 @@ footer a:hover {
         background: var(--accent-gradient);
         color: #0E0E10;
         box-shadow: 0 4px 12px rgba(255, 177, 0, 0.25);
+        text-align: center; /* Ensure text is centered */
     }
 
     .button-container .add-task-btn:hover,
@@ -1307,6 +1308,81 @@ footer a:hover {
     .button-container .add-task-btn:active {
         transform: translateY(0);
         box-shadow: 0 2px 8px rgba(255, 177, 0, 0.3);
+    }
+
+    .more-options-btn {
+        padding: 0.7rem 1.2rem;
+        font-size: clamp(13px, 3.5vw, 15px);
+        margin: 0;
+        width: 90%;
+        max-width: 300px;
+        box-sizing: border-box;
+        border: none;
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: transform var(--transition), box-shadow var(--transition);
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.2));
+        color: #E5E5E5;
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+        text-align: center; /* Center the text and arrow */
+        display: flex;
+        justify-content: center; /* Center horizontally */
+        align-items: center; /* Center vertically */
+        position: relative;
+        overflow: hidden;
+    }
+
+    .more-options-btn:hover,
+    .more-options-btn:focus {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.3));
+    }
+
+    .more-options-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+    }
+
+    .dropdown-content {
+        width: 90%;
+        max-width: 300px;
+        background: var(--bg-panel);
+        backdrop-filter: blur(18px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        margin-top: 5px;
+        padding: 0.5rem 0;
+        display: none;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2000;
+    }
+
+    .mobile-dropdown.active .dropdown-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .dropdown-content button {
+        padding: 0.7rem 1.2rem;
+        font-size: clamp(13px, 3vw, 14px);
+        border: none;
+        background: none;
+        color: #E5E5E5;
+        text-align: left;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background var(--transition);
+        width: 100%;
+    }
+
+    .dropdown-content button:hover {
+        background: rgba(255, 255, 255, 0.1);
     }
 }
 
