@@ -473,9 +473,9 @@ header p {
     align-items: center;
     gap: 8px;
     width: 100%;
-    max-width: 600px; /* Prevent excessive stretching */
-    position: relative; /* Container for absolute positioning of emoji-picker */
-    margin: 0 auto; /* Center the wrapper */
+    max-width: 600px;
+    position: relative;
+    margin: 0 auto;
 }
 
 .emoji-input-wrapper input,
@@ -529,7 +529,7 @@ emoji-picker {
     width: 100%;
     max-width: 300px;
     margin-top: 4px;
-    overflow: hidden; /* Prevent content from spilling out */
+    overflow: hidden;
 }
 
 emoji-picker.active {
@@ -1083,22 +1083,12 @@ footer a:hover {
         max-width: 160px;
     }
 
-    @media (max-width: 768px) {
-    .emoji-input-wrapper {
-        gap: 6px;
-        max-width: 100%; /* Allow full width on mobile if needed */
-    }
-
+    /* ================================
+   📱 RESPONSIVE DESIGN
+================================ */
+@media (max-width: 768px) {
     .emoji-btn {
-        padding: 6px;
-        font-size: 14px;
-    }
-
-    emoji-picker {
-        max-width: 280px;
-        width: 90%; /* Ensure it fits mobile screens */
-        left: 50%;
-        transform: translateX(-50%); /* Center the picker */
+        display: none; /* Hide only the emoji button on mobile */
     }
 }
 
@@ -2951,13 +2941,12 @@ if ('serviceWorker' in navigator) {
             mobileDropdown.classList.remove('active');
         });
     }
-    // NEW CODE ENDS HERE
+   
 
     // Initialize App
     loadTasks();
     setInterval(checkDateChange, 30000);
     setInterval(checkNotifications, 30000); // Check notifications every 30 seconds
-</script>
 </script>
 </body>
 </html>
