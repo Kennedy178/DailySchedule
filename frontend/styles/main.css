@@ -56,6 +56,7 @@ body {
 }
 
 /*  Button Bar Styling */
+
 .container > div:first-child {
     margin-top: 0;
     padding-top: 10px;
@@ -408,7 +409,7 @@ header p {
     transition: border-color var(--transition), box-shadow var(--transition);
 }
 
-/*  Input focus glow */
+/*  Input focus-- glow */
 .task-form input:focus,
 .task-form textarea:focus,
 .task-form select:focus,

@@ -987,7 +987,7 @@ if ('serviceWorker' in navigator) {
     const priority = document.getElementById('priority').value;
     const editIndex = document.getElementById('editTaskIndex').value;
 
-    // Stricter time format validation
+    // Stricter time format  validation
     const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
     if (!startTime || !endTime || !taskName || !category || !priority) {
         showToast('Please fill in all fields!');
@@ -1295,7 +1295,7 @@ if ('serviceWorker' in navigator) {
         });
     }
 
-    // Emoji Picker Initialization
+    // Emoji Picker Initialization   
     const emojiPickers = document.querySelectorAll('emoji-picker');
     const emojiButtons = document.querySelectorAll('.emoji-btn');
     const taskNameInputs = [document.getElementById('taskName'), document.getElementById('edit-taskName')];
