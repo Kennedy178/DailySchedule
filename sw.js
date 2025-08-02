@@ -43,7 +43,8 @@ self.addEventListener('message', event => {
         const notificationId = `task-${task.id}-${task.startTime}`;
         if (!lastNotificationTimes.has(notificationId) || (now - lastNotificationTimes.get(notificationId)) > 15 * 60 * 1000) {
             self.registration.showNotification('Task Reminder', {
-                body: `Hey, ${event.data.userName}! ${task.name} is starting in 10 minutes—let’s do this! Priority: ${task.priority}`,
+                body: `Hey, ${event.data.userName}! ${task.name} is starting in 10 minutes—let’s do this!😊💪
+ Priority: ${task.priority}`,
                 icon: '/icon-192x192.png',
                 vibrate: [200, 100, 200],
                 actions: [{ action: 'open', title: 'Open App' }],
