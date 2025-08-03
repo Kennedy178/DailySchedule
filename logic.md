@@ -16,6 +16,8 @@ getitdone/
 │   ├── scripts/
 │   │   ├── app.js                     # Phase 1 – Initial task UI logic (will later integrate Supabase in Phase 5)
 │   │   ├── db.js                      # Phase 2 – Replaces localStorage with IndexedDB + offline queue logic
+    |   ├── auth.js                    #  Google OAuth login/logout (Supabase client)
+    |   ├── sync.js                    # Offline queue & sync with backend
 │   │   └── notifications.js           # Phase 6 – Push/local notification handling (FCM + local)
 │   │
 │   └── icons/
