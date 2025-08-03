@@ -1,1 +1,16 @@
 /zextras
+/backend/.env
+ztest.html
+/.venv
+
+# Python cache & build
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment & secrets
+.env
+
+# Logs
+*.log
