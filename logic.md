@@ -1,41 +1,30 @@
-
-# logic.md
-
-│
+# GetItDone File Structure
 
 getitdone/
 │
 ├── frontend/                          # Frontend (PWA)
-│   ├── index.html                     # Phase 1 – Created when separating files (base UI structure)
-│   ├── manifest.json                  # Phase 1 – Added when making app installable as a PWA
-│   ├── sw.js                          # Phase 2 → Updated later in Phase 6 (local caching first, then push handling)
-│   │
-│   ├── styles/
-│   │   └── main.css                   # Phase 1 – Separated from HTML (UI styling, responsive layout)
-│   │
-│   ├── scripts/
-│   │   ├── app.js                     # Phase 1 – Initial task UI logic (will later integrate Supabase in Phase 5)
-│   │   ├── db.js                      # Phase 2 – Replaces localStorage with IndexedDB + offline queue logic
-    |   ├── auth.js                    #  Google OAuth login/logout (Supabase client)
-    |   ├── sync.js                    # Offline queue & sync with backend
-│   │   └── notifications.js           # Phase 6 – Push/local notification handling (FCM + local)
-│   │
-│   └── icons/
-│       ├── favicon-32x32.png          # Phase 1 – Added for branding & PWA
-│       ├── icon-192x192.png           # Phase 1 – Required PWA icon size
-│       └── icon-512x512.png           # Phase 1 – Required PWA icon size
+│   ├── index.html                     # Main HTML file (app structure)
+│   ├── manifest.json                  # PWA manifest (app metadata, icons)
+│   ├── sw.js                          # Service worker (caching, push/local notifications)
+│   ├── styles/                        # Styling
+│   │   └── main.css                   # Main stylesheet (responsive UI)
+│   ├── scripts/                       # JavaScript logic
+│   │   ├── app.js                     # Core UI, task logic, Supabase client
+│   │   ├── db.js                      # IndexedDB operations (offline storage, queue)
+│   │   └── notifications.js           # Push/local notification handling
+│   └── icons/                         # App icons (PWA + favicon)
+│       ├── favicon-32x32.png          # Favicon
+│       ├── icon-192x192.png           # PWA icon (192x192)
+│       └── icon-512x512.png           # PWA icon (512x512)
 │
 ├── backend/                           # FastAPI backend
-│   ├── main.py                        # Phase 4 – FastAPI entry point (routing, middleware, app setup)
-│   ├── requirements.txt               # Phase 4 – Python dependencies (FastAPI, Supabase client, APScheduler)
-│   │
-│   ├── routes/
-│   │   └── tasks.py                   # Phase 4 – CRUD API for tasks + auth token verification
-│   │
-│   ├── utils/
-│   │   ├── supabase_client.py         # Phase 4 – Connect FastAPI to Supabase DB
-│   │   └── notifications.py           # Phase 6 – APScheduler + FCM push notification logic
-│   │
-│   └── .env                           # Phase 4 – Added for Supabase keys, later expanded in Phase 6 for FCM keys
+│   ├── main.py                        # FastAPI entry point (app setup, routes)
+│   ├── requirements.txt               # Python dependencies (FastAPI, Supabase, APScheduler, etc.)
+│   ├── routes/                        # API endpoints
+│   │   └── tasks.py                   # Task CRUD and auth verification
+│   ├── utils/                         # Utility functions
+│   │   ├── supabase_client.py         # Supabase connection
+│   │   └── notifications.py           # APScheduler for FCM push notifications
+│   └── .env                           # Environment variables (Supabase/FCM keys)
 │
-└── README.md                          # Phase 1 – Project overview; updated at each major phase for documentation
+└── README.md                          # Project overview, setup, deployment instructions
