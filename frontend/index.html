@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,11 +8,59 @@
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles/main.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/idb@7/build/umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-    
 </head>
 <body>
+   <!-- Authentication section (shown when not logged in) -->
+<div id="authSection">
+    <div class="auth-card">
+        <h2>Welcome to GetItDone</h2>
+        <p>Organize your day, boost productivity, and conquer your goals!</p>
+        <form id="authForm" method="post" action="/login">
+            <label for="email">Email</label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Enter your email"
+                autocomplete="email"
+                aria-label="Email address"
+                required
+            >
+            
+            <label for="password">Password</label>
+            <div class="password-input-container">
+    <input
+        type="password"
+        id="password"
+        name="password"
+        placeholder="Enter your password"
+        autocomplete="current-password"
+        aria-label="Password"
+        required
+    >
+    <button type="button" id="togglePassword" class="password-toggle" 
+            aria-label="Show password" onclick="togglePasswordVisibility()">
+        <span class="material-icons">visibility_off</span>
+    </button>
+</div>
+            
+            <button type="submit" id="authBtn">Sign In</button>
+            <p id="authToggle">
+                Don't have an account? <a href="#" id="toggleAuth">Sign Up</a>
+            </p>
+            <p><a href="#" id="forgotPassword">Forgot Password?</a></p>
+            <p id="authError" style="display: none;"></p>
+        </form>
+
+        <button id="guestBtn">Continue as Guest (some features unavailable)</button>
+    </div>
+</div>
     <div class="install-prompt" id="installPrompt">
         <button class="close-btn" id="closeInstallPrompt" aria-label="Close install prompt">✕</button>
         <h3>Install App</h3>
@@ -28,114 +75,115 @@
 
     <div class="container">
         <div class="button-container">
-    <button class="add-task-btn" id="showFormBtn">➕ Add My Own Custom Task</button>
-    
-    <!-- Desktop buttons (hidden on mobile) -->
-    <div class="desktop-buttons">
-        <button class="reset-default-btn" id="resetDefaultBtn">🔄 Reset to Default</button>
-        <button class="report-btn" id="showReportBtn">📊 View Report</button>
-        <button class="settings-btn" id="showSettingsBtn">⚙️ Settings</button>
-    </div>
-    
-    <!-- Mobile dropdown (hidden on desktop) -->
-    <div class="mobile-dropdown">
-        <button class="more-options-btn">More Options ▼</button>
-        <div class="dropdown-content">
-            <button class="reset-default-btn" id="mobileResetDefaultBtn">🔄 Reset to Default</button>
-            <button class="report-btn" id="mobileShowReportBtn">📊 View Report</button>
-            <button class="settings-btn" id="mobileShowSettingsBtn">⚙️ Settings</button>
+            <button class="add-task-btn" id="showFormBtn">➕ Add My Own Custom Task</button>
+            <div class="desktop-buttons">
+                <button class="reset-default-btn" id="resetDefaultBtn">🔄 Reset to Default</button>
+                <button class="report-btn" id="showReportBtn">📊 View Report</button>
+                <button class="settings-btn" id="showSettingsBtn">⚙️ Settings</button>
+            </div>
+            <!-- Mobile dropdown (hidden on desktop) -->
+            <div class="mobile-dropdown">
+                <button class="more-options-btn">More Options ▼</button>
+                <div class="dropdown-content">
+                    <button class="reset-default-btn" id="mobileResetDefaultBtn">🔄 Reset to Default</button>
+                    <button class="report-btn" id="mobileShowReportBtn">📊 View Report</button>
+                    <button class="settings-btn" id="mobileShowSettingsBtn">⚙️ Settings</button>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
-       <!-- Task Form (Add Task) -->
-    <div class="task-form" id="taskForm">
-        <h3>Create New Task</h3>
-        <input type="hidden" id="editTaskIndex">
-        <label for="startTime">Start Time</label>
-        <input type="time" id="startTime" aria-label="Task start time">
-        <label for="endTime">End Time</label>
-        <input type="time" id="endTime" aria-label="Task end time">
-        <label for="taskName">Task Name</label>
-        <div class="emoji-input-wrapper">
-            <input type="text" id="taskName" placeholder="e.g., Morning Walk" aria-label="Task name">
-            <button type="button" class="emoji-btn">😊</button>
+        <div id="customTaskBanner" class="banner hidden">
+            <p>Feel free to edit or delete the default tasks. Just add your own — I’ll sort them for you by time.</p>
+            <button id="dismissBannerBtn" aria-label="Dismiss banner">Got it</button>
         </div>
-        <emoji-picker class="emoji-picker"></emoji-picker>
-        <label for="category">Category</label>
-        <select id="category" aria-label="Task category" required>
-            <option value="" disabled selected>Select Category</option>
-            <option value="Health">Health</option>
-            <option value="Fitness">Fitness</option>
-            <option value="Routine">Routine</option>
-            <option value="Learning">Learning</option>
-            <option value="Project">Project</option>
-            <option value="Leisure">Leisure</option>
-            <option value="Personal Growth">Personal Growth</option>
-            <option value="General">General</option>
-            <option value="Professional">Professional</option>
-            <option value="Finance">Finance</option>
-            <option value="Custom">Custom</option>
-        </select>
-        <input type="text" id="custom-category" placeholder="Enter custom category" aria-label="Custom task category" style="display: none;">
-        <label for="priority">Priority</label>
-        <select id="priority" aria-label="Task priority">
-            <option value="">Select Priority</option>
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
-        </select>
-        <div class="form-buttons">
-            <button id="addTaskBtn">✅ Save Task</button>
-            <button class="clear-btn" id="clearFormBtn">🧹 Clear Form</button>
-            <button class="cancel-btn" id="cancelFormBtn">❌ Cancel</button>
-        </div>
-    </div>
 
-    <!-- Edit Task Modal -->
-    <div class="modal" id="edit-task-modal">
-        <h3>Edit Task</h3>
-        <input type="hidden" id="editTaskIndex">
-        <label for="edit-startTime">Start Time</label>
-        <input type="time" id="edit-startTime" aria-label="Task start time">
-        <label for="edit-endTime">End Time</label>
-        <input type="time" id="edit-endTime" aria-label="Task end time">
-        <label for="edit-taskName">Task Name</label>
-        <div class="emoji-input-wrapper">
-            <input type="text" id="edit-taskName" placeholder="e.g., Morning Walk" aria-label="Task name">
-            <button type="button" class="emoji-btn">😊</button>
+        <!-- Task Form (Add Task) -->
+        <div class="task-form" id="taskForm">
+            <h3>Create New Task</h3>
+            <input type="hidden" id="editTaskIndex">
+            <label for="startTime">Start Time</label>
+            <input type="time" id="startTime" aria-label="Task start time">
+            <label for="endTime">End Time</label>
+            <input type="time" id="endTime" aria-label="Task end time">
+            <label for="taskName">Task Name</label>
+            <div class="emoji-input-wrapper">
+                <input type="text" id="taskName" placeholder="e.g., Morning Walk" aria-label="Task name">
+                <button type="button" class="emoji-btn">😊</button>
+            </div>
+            <emoji-picker class="emoji-picker"></emoji-picker>
+            <label for="category">Category</label>
+            <select id="category" aria-label="Task category" required>
+                <option value="" disabled selected>Select Category</option>
+                <option value="Health">Health</option>
+                <option value="Fitness">Fitness</option>
+                <option value="Routine">Routine</option>
+                <option value="Learning">Learning</option>
+                <option value="Project">Project</option>
+                <option value="Leisure">Leisure</option>
+                <option value="Personal Growth">Personal Growth</option>
+                <option value="General">General</option>
+                <option value="Professional">Professional</option>
+                <option value="Finance">Finance</option>
+                <option value="Custom">Custom</option>
+            </select>
+            <input type="text" id="custom-category" placeholder="Enter custom category" aria-label="Custom task category" style="display: none;">
+            <label for="priority">Priority</label>
+            <select id="priority" aria-label="Task priority">
+                <option value="">Select Priority</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+            </select>
+            <div class="form-buttons">
+                <button id="addTaskBtn">✅ Save Task</button>
+                <button class="clear-btn" id="clearFormBtn">🧹 Clear Form</button>
+                <button class="cancel-btn" id="cancelFormBtn">❌ Cancel</button>
+            </div>
         </div>
-        <emoji-picker class="emoji-picker"></emoji-picker>
-        <label for="edit-category">Category</label>
-        <select id="edit-category" aria-label="Task category" required>
-            <option value="" disabled selected>Select Category</option>
-            <option value="Health">Health</option>
-            <option value="Fitness">Fitness</option>
-            <option value="Routine">Routine</option>
-            <option value="Learning">Learning</option>
-            <option value="Project">Project</option>
-            <option value="Leisure">Leisure</option>
-            <option value="Personal Growth">Personal Growth</option>
-            <option value="General">General</option>
-            <option value="Professional">Professional</option>
-            <option value="Finance">Finance</option>
-            <option value="Custom">Custom</option>
-        </select>
-        <input type="text" id="edit-custom-category" placeholder="Enter custom category" aria-label="Custom task category" style="display: none;">
-        <label for="edit-priority">Priority</label>
-        <select id="edit-priority" aria-label="Task priority">
-            <option value="">Select Priority</option>
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
-        </select>
-        <div class="modal-buttons">
-            <button id="saveEditBtn">✅ Save Task</button>
-            <button class="modal-cancel-btn" id="cancelEditBtn">❌ Cancel</button>
-        </div>
-    </div>
 
-    
+        <!-- Edit Task Modal -->
+        <div class="modal" id="edit-task-modal">
+            <h3>Edit Task</h3>
+            <input type="hidden" id="editTaskIndex">
+            <label for="edit-startTime">Start Time</label>
+            <input type="time" id="edit-startTime" aria-label="Task start time">
+            <label for="edit-endTime">End Time</label>
+            <input type="time" id="edit-endTime" aria-label="Task end time">
+            <label for="edit-taskName">Task Name</label>
+            <div class="emoji-input-wrapper">
+                <input type="text" id="edit-taskName" placeholder="e.g., Morning Walk" aria-label="Task name">
+                <button type="button" class="emoji-btn">😊</button>
+            </div>
+            <emoji-picker class="emoji-picker"></emoji-picker>
+            <label for="edit-category">Category</label>
+            <select id="edit-category" aria-label="Task category" required>
+                <option value="" disabled selected>Select Category</option>
+                <option value="Health">Health</option>
+                <option value="Fitness">Fitness</option>
+                <option value="Routine">Routine</option>
+                <option value="Learning">Learning</option>
+                <option value="Project">Project</option>
+                <option value="Leisure">Leisure</option>
+                <option value="Personal Growth">Personal Growth</option>
+                <option value="General">General</option>
+                <option value="Professional">Professional</option>
+                <option value="Finance">Finance</option>
+                <option value="Custom">Custom</option>
+            </select>
+            <input type="text" id="edit-custom-category" placeholder="Enter custom category" aria-label="Custom task category" style="display: none;">
+            <label for="edit-priority">Priority</label>
+            <select id="edit-priority" aria-label="Task priority">
+                <option value="">Select Priority</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+            </select>
+            <div class="modal-buttons">
+                <button id="saveEditBtn">✅ Save Task</button>
+                <button class="modal-cancel-btn" id="cancelEditBtn">❌ Cancel</button>
+            </div>
+        </div>
+
         <div class="modal" id="lateTaskModal">
             <h3>Complete Task Late</h3>
             <p class="modal-error" id="modalError">Please enter a reason.</p>
@@ -148,16 +196,24 @@
         </div>
 
         <div class="modal" id="settingsModal">
-            <h3>Notification Settings</h3>
+            <h3>Settings</h3>
+            <button id="myAccountBtn">My Account</button>
             <p class="permission-error" id="permissionError">Enable notifications personally in browser settings.</p>
             <label><input type="checkbox" id="enableReminders"> Enable Task Reminders</label>
             <p>Reminders fire 10 minutes before each task.</p>
             <label for="userName">Your Name (Optional)</label>
             <input type="text" id="userName" placeholder="Your Name" aria-label="Your name for notifications">
+            
+            <div id="myAccount" class="dropdown hidden">
+                <p id="accountEmail">Logged in as: Not logged in</p>
+                <p id="accountType">Account Type: Guest</p>
+                <button id="logoutBtn">Log Out</button>
+            </div>
             <div class="modal-buttons">
                 <button id="saveSettingsBtn">✅ Save</button>
                 <button class="modal-cancel-btn" id="cancelSettingsBtn">❌ Cancel</button>
             </div>
+            
         </div>
 
         <header>
@@ -165,45 +221,88 @@
             <p class="tagline">"Success is the sum of small efforts, repeated day in and day out." – Robert Collier</p>
         </header>
 
-        <div class="schedule" id="scheduleContainer"></div>
+        <div class="schedule" id="scheduleContainer">
+            <ul id="taskList"></ul>
+        </div>
 
         <header>
             <p class="tagline">"The strength to conquer tomorrow lies in the relentless drive to master today." – Jordan B. Peterson</p>
         </header>
-    </div>
 
-    <div class="footer-wrapper">
-        <div class="progress-container">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
-        <p id="progressText">0% Completed</p>
-        <div class="stats-panel" id="statsPanel">
-            <h3>Weekly Report</h3>
-            <div class="stats-section">
-                <h4>Summary</h4>
-                <p id="weeklySummary"></p>
-                <hr class="stats-divider">
-                <p id="weeklyDetails"></p>
+        <div class="footer-wrapper">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
             </div>
-            <div class="stats-section">
-                <h4>Completion Trend</h4>
-                <p id="chartError">Chart failed to load. Please try refreshing.</p>
-                <canvas id="statsChart"></canvas>
+            <p id="progressText">0% Completed</p>
+            <div class="stats-panel" id="statsPanel">
+                <h3>Weekly Report</h3>
+                <div class="stats-section">
+                    <h4>Summary</h4>
+                    <p id="weeklySummary"></p>
+                    <hr class="stats-divider">
+                    <p id="weeklyDetails"></p>
+                </div>
+                <div class="stats-section">
+                    <h4>Completion Trend</h4>
+                    <p id="chartError">Chart failed to load. Please try refreshing.</p>
+                    <canvas id="statsChart"></canvas>
+                </div>
             </div>
-        </div>
-        <div id="congratsMessage">Congratulations!</div>
-        <canvas id="confettiCanvas"></canvas>
-       
-        <footer>
-            <p>
-                Created by Kennedy |
-                <a href="https://www.linkedin.com/in/kennedy-munene-dsml" target="_blank">LinkedIn</a> |
-                <a href="https://github.com/Kennedy178" target="_blank">GitHub</a> |
-                2025
-            </p>
-        </footer>
-    </div>
+            <div id="congratsMessage">Congratulations!</div>
+            <canvas id="confettiCanvas"></canvas>
 
- <script src="scripts/app.js"></script>
+            
+
+
+            <footer>
+                <p>
+                    Designed and built by  Kennedy |
+                    <a href="https://www.linkedin.com/in/kennedy-munene-dsml" target="_blank">LinkedIn</a> |
+                    <a href="https://github.com/Kennedy178" target="_blank">GitHub</a> |
+                    © 2025 Kennedy
+                </p>
+            </footer>
+        </div>
+
+
+
+
+
+
+<!-- --GLOBAL MODAL-->
+<div id="logoutConfirmModal">
+  <div class="logout-modal-content">
+    <!-- For Authenticated Users -->
+    <div id="authUserLogout">
+      <h3>Confirm Logout</h3>
+      <p>You're about to log out. This will:</p>
+      <ul>
+        <li>Disable offline reminders</li>
+        <li>Stop cross-device syncing</li>
+      </ul>
+      <div class="modal-actions">
+        <button id="confirmLogoutBtn" class="danger-btn">Log Out Anyway</button>
+        <button id="cancelLogoutBtn" class="cancel-btn">Cancel</button>
+      </div>
+    </div>
+    
+    <!-- For Guest Users -->
+    <div id="guestLogoutPrompt" class="guest-logout-message hidden">
+      <h3>Create an Account</h3>
+      <p>You're currently in guest mode. Sign up to:</p>
+      <ul>
+        <li>Sync across devices</li>
+        <li>Enable reminders</li>
+        <li>Backup your tasks</li>
+      </ul>
+      <button id="goToSignupBtn" class="auth-btn">Sign Up Now</button>
+      <p>Already have an account? <a href="#" id="goToLoginLink">Sign In</a></p>
+    </div>
+  </div>
+</div>
+
+    <script type="module" src="scripts/auth.js"></script>
+    <script type="module" src="scripts/app.js"></script>
+    <script type="module" src="scripts/authHandler.js"></script>
 </body>
 </html>
