@@ -1,0 +1,136 @@
+import * as idb from 'https://cdn.jsdelivr.net/npm/idb@7.0.2/+esm';
+
+let dbPromise = idb.openDB('getitdone', 1, {
+    upgrade(db) {
+        if (!db.objectStoreNames.contains('tasks')) {
+            const taskStore = db.createObjectStore('tasks', { keyPath: 'id' });
+            taskStore.createIndex('user_id', 'user_id');
+        }
+        if (!db.objectStoreNames.contains('settings')) {
+            db.createObjectStore('settings', { keyPath: 'key' });
+        }
+    }
+});
+
+/* Add a task to IndexedDB */
+async function addTask(task) {
+    const db = await dbPromise;
+    const tx = db.transaction('tasks', 'readwrite');
+    const store = tx.objectStore('tasks');
+    try {
+        // Check if task ID already exists
+        const existingTask = await store.get(task.id);
+        if (existingTask) {
+            console.log(`Task with ID ${task.id} already exists, skipping add`);
+            await tx.complete;
+            return existingTask;
+        }
+        await store.add(task);
+        await tx.complete;
+        console.log(`Added task to IndexedDB: ${task.name}`);
+        return task;
+    } catch (error) {
+        console.error('Error adding task:', error);
+        await tx.complete; // Ensure transaction completes even on error
+        throw error;
+    }
+}
+
+/* Get all tasks from IndexedDB */
+async function getAllTasks() {
+    const db = await dbPromise;
+    const tx = db.transaction('tasks', 'readonly');
+    const store = tx.objectStore('tasks');
+    try {
+        const tasks = await store.getAll();
+        await tx.complete;
+        return tasks;
+    } catch (error) {
+        console.error('Error getting all tasks:', error);
+        await tx.complete;
+        throw error;
+    }
+}
+
+/* Get a task by ID */
+async function getTaskById(id) {
+    const db = await dbPromise;
+    const tx = db.transaction('tasks', 'readonly');
+    const store = tx.objectStore('tasks');
+    try {
+        const task = await store.get(id);
+        await tx.complete;
+        return task;
+    } catch (error) {
+        console.error('Error getting task by ID:', error);
+        await tx.complete;
+        throw error;
+    }
+}
+
+/* Update a task in IndexedDB */
+async function updateTask(task) {
+    const db = await dbPromise;
+    const tx = db.transaction('tasks', 'readwrite');
+    const store = tx.objectStore('tasks');
+    try {
+        await store.put(task);
+        await tx.complete;
+        console.log(`Updated task in IndexedDB: ${task.name}`);
+        return task;
+    } catch (error) {
+        console.error('Error updating task:', error);
+        await tx.complete;
+        throw error;
+    }
+}
+
+/* Delete a task from IndexedDB */
+async function deleteTask(id) {
+    const db = await dbPromise;
+    const tx = db.transaction('tasks', 'readwrite');
+    const store = tx.objectStore('tasks');
+    try {
+        await store.delete(id);
+        await tx.complete;
+        console.log(`Deleted task from IndexedDB: ${id}`);
+    } catch (error) {
+        console.error('Error deleting task:', error);
+        await tx.complete;
+        throw error;
+    }
+}
+
+/* Set a setting in IndexedDB */
+async function setSetting(key, value) {
+    const db = await dbPromise;
+    const tx = db.transaction('settings', 'readwrite');
+    const store = tx.objectStore('settings');
+    try {
+        await store.put({ key, value });
+        await tx.complete;
+        console.log(`Set setting: ${key}=${value}`);
+    } catch (error) {
+        console.error('Error setting setting:', error);
+        await tx.complete;
+        throw error;
+    }
+}
+
+/* Get a setting from IndexedDB */
+async function getSetting(key) {
+    const db = await dbPromise;
+    const tx = db.transaction('settings', 'readonly');
+    const store = tx.objectStore('settings');
+    try {
+        const setting = await store.get(key);
+        await tx.complete;
+        return setting ? setting.value : null;
+    } catch (error) {
+        console.error('Error getting setting:', error);
+        await tx.complete;
+        throw error;
+    }
+}
+
+export { addTask, getAllTasks, getTaskById, updateTask, deleteTask, setSetting, getSetting };
