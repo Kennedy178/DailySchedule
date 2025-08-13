@@ -31,7 +31,7 @@ async function addTask(task) {
         return task;
     } catch (error) {
         console.error('Error adding task:', error);
-        await tx.complete; // Ensure transaction completes even on error
+        await tx.complete;
         throw error;
     }
 }
@@ -101,6 +101,27 @@ async function deleteTask(id) {
     }
 }
 
+/* Delete all tasks for a user from IndexedDB */
+async function deleteTasksByUserId(userId) {
+    const db = await dbPromise;
+    const tx = db.transaction('tasks', 'readwrite');
+    const store = tx.objectStore('tasks');
+    try {
+        const tasks = await store.getAll();
+        const userTasks = tasks.filter(task => task.user_id === userId && task.user_id !== null);
+        for (const task of userTasks) {
+            await store.delete(task.id);
+            console.log(`Deleted task ${task.id} for user ${userId}`);
+        }
+        await tx.complete;
+        console.log(`Deleted ${userTasks.length} tasks for user ${userId}`);
+    } catch (error) {
+        console.error('Error deleting tasks by user ID:', error);
+        await tx.complete;
+        throw error;
+    }
+}
+
 /* Set a setting in IndexedDB */
 async function setSetting(key, value) {
     const db = await dbPromise;
@@ -133,4 +154,4 @@ async function getSetting(key) {
     }
 }
 
-export { addTask, getAllTasks, getTaskById, updateTask, deleteTask, setSetting, getSetting };
+export { addTask, getAllTasks, getTaskById, updateTask, deleteTask, deleteTasksByUserId, setSetting, getSetting };

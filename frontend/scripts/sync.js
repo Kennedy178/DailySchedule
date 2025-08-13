@@ -223,6 +223,7 @@ async function syncPendingTasks() {
 
 /**
  * Set up Supabase real-time subscriptions for task updates.
+ * Ensures tasks are always sorted before rendering to avoid flicker.
  * @returns {void}
  */
 function setupRealtimeSubscriptions() {
@@ -236,19 +237,24 @@ function setupRealtimeSubscriptions() {
         if (subscription) {
             subscription.unsubscribe();
         }
+
         subscription = supabase
             .channel('tasks')
-            .on('postgres_changes', 
-                { 
-                    event: '*', 
-                    schema: 'public', 
-                    table: 'tasks', 
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'tasks',
                     filter: `user_id=eq.${user.id}`,
-                }, 
+                },
                 async (payload) => {
                     try {
                         const { eventType, new: newData, old: oldData } = payload;
-                        console.log(`Real-time event: ${eventType} for task ${newData?.id || oldData?.id}`, { newData, oldData });
+                        console.log(
+                            `Real-time event: ${eventType} for task ${newData?.id || oldData?.id}`,
+                            { newData, oldData }
+                        );
 
                         if (eventType === 'INSERT' || eventType === 'UPDATE') {
                             const task = {
@@ -265,10 +271,8 @@ function setupRealtimeSubscriptions() {
                                 pending_sync: null,
                             };
 
-                            console.log(`Real-time task data:`, { id: task.id, completed: task.completed, is_late: task.is_late });
-
                             const localTasks = await getAllTasks();
-                            const existingTask = localTasks.find(t => t.id === task.id);
+                            const existingTask = localTasks.find((t) => t.id === task.id);
 
                             if (existingTask) {
                                 await updateTask(task);
@@ -282,18 +286,27 @@ function setupRealtimeSubscriptions() {
                             console.log(`Deleted task ${oldData.id} from IndexedDB`);
                         }
 
-                        // FIXED: Get fresh tasks from IndexedDB and pass them to renderTasks
+                        // 🔹 FIX: Always sort tasks before rendering
                         const freshTasks = await getAllTasks();
-                        const userTasks = freshTasks.filter(t => t.user_id === user.id);
-                        console.log(`Rendering ${userTasks.length} fresh user tasks:`, userTasks.map(t => ({ 
-                            id: t.id, 
-                            name: t.name, 
-                            completed: t.completed, 
-                            is_late: t.is_late 
-                        })));
-                        
-                        await renderTasks(userTasks);
-                        console.log(`Real-time update complete: ${eventType} for task ${newData?.id || oldData?.id}`);
+                        const userTasks = freshTasks.filter((t) => t.user_id === user.id);
+                        const sortedTasks = sortTasksByTime(userTasks);
+
+                        console.log(
+                            `Rendering ${sortedTasks.length} sorted user tasks:`,
+                            sortedTasks.map((t) => ({
+                                id: t.id,
+                                name: t.name,
+                                completed: t.completed,
+                                is_late: t.is_late,
+                            }))
+                        );
+
+                        await renderTasks(sortedTasks);
+                        console.log(
+                            `Real-time update complete: ${eventType} for task ${
+                                newData?.id || oldData?.id
+                            }`
+                        );
                     } catch (error) {
                         console.error('Real-time update failed:', error.message);
                     }
