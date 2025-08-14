@@ -1,5 +1,5 @@
 /* Import db.js CRUD functions */
-import { addTask, getAllTasks, getTaskById, updateTask, deleteTask, setSetting, getSetting,  } from './db.js';
+import { addTask, getAllTasks, getTaskById, updateTask, deleteTask, setSetting, getSetting,markTaskAsPendingDelete  } from './db.js';
 import { isAuthenticated, initAuth, user, } from './authHandler.js';
 import { fetchBackendTasks, cacheBackendTasks, setupRealtimeSubscriptions, syncPendingTasks } from './sync.js';
 import { supabase } from './auth.js';
@@ -1777,47 +1777,60 @@ function attachTaskActions() {
     });
 
     document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const index = parseInt(btn.getAttribute('data-index'));
-            const task = tasks[index];
-            if (confirm(`Delete "${task.name}"?`)) {
-                try {
-                    await deleteTask(task.id);
-                    tasks = tasks.filter(t => t.id !== task.id);
-                    if (tasks.length === 0) {
-                        tasks = defaultTasks.map(task => ({ ...task }));
-                        for (const defaultTask of tasks) {
-                            try {
-                                await addTask(defaultTask);
-                            } catch (error) {
-                                if (error.name === 'ConstraintError') {
-                                    console.log(`Task ${defaultTask.id} already exists, skipping`);
-                                    continue;
-                                }
-                                throw error;
+    btn.addEventListener('click', async () => {
+        const index = parseInt(btn.getAttribute('data-index'));
+        const task = tasks[index];
+
+        if (confirm(`Delete "${task.name}"?`)) {
+            try {
+                // Mark for deletion instead of deleting immediately
+                await markTaskAsPendingDelete(task.id);
+                await syncPendingTasks(); // Push DELETE to Supabase
+
+                // Update local array
+                tasks = tasks.filter(t => t.id !== task.id);
+
+                // If no tasks remain, restore defaults
+                if (tasks.length === 0) {
+                    tasks = defaultTasks.map(task => ({ ...task }));
+                    for (const defaultTask of tasks) {
+                        try {
+                            await addTask(defaultTask);
+                        } catch (error) {
+                            if (error.name === 'ConstraintError') {
+                                console.log(`Task ${defaultTask.id} already exists, skipping`);
+                                continue;
                             }
-                        }
-                        hasCustomTasks = false;
-                        await setSetting('hasCustomTasks', 'false');
-                        await setSetting('firstCustomTaskAdded', 'false');
-                        if (customTaskBanner) {
-                            customTaskBanner.classList.add('hidden');
-                            customTaskBanner.classList.remove('active');
+                            throw error;
                         }
                     }
-                    console.log(`Deleted task "${task.name}", tasks now: [${tasks.map(t => t.name).join(', ')}]`);
-                    await saveDailyData();
-                    lastRenderHash = '';
-                    renderTasks();
-                    await syncTasksWithServiceWorker(); // Sync after deletion
-                    notifiedTasks.delete(task.id); // Clear notification status
-                } catch (error) {
-                    console.error('Error deleting task:', error);
-                    showToast('Failed to delete task. Please try again.');
+                    hasCustomTasks = false;
+                    await setSetting('hasCustomTasks', 'false');
+                    await setSetting('firstCustomTaskAdded', 'false');
+                    if (customTaskBanner) {
+                        customTaskBanner.classList.add('hidden');
+                        customTaskBanner.classList.remove('active');
+                    }
                 }
+
+                console.log(
+                    `Deleted task "${task.name}", tasks now: [${tasks.map(t => t.name).join(', ')}]`
+                );
+
+                await saveDailyData();
+                lastRenderHash = '';
+                renderTasks();
+                await syncTasksWithServiceWorker(); // Still sync with SW after local changes
+                notifiedTasks.delete(task.id); // Clear notification status
+
+            } catch (error) {
+                console.error('Error deleting task:', error);
+                showToast('Failed to delete task. Please try again.');
             }
-        });
+        }
     });
+});
+
 }
 
 /* Emoji picker initialization */

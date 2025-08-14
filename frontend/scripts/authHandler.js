@@ -1,49 +1,95 @@
 import { supabase, signUp, signIn, signOut, getSession, resetPassword } from './auth.js';
-import { 
-    showToast, 
-    renderTasks,
-    showLoading,
-    loadTasks  // Added loadTasks to imports
-} from './app.js';
-import { getAllTasks, updateTask } from './db.js';
+import { showToast, renderTasks, showLoading, loadTasks } from './app.js';
+import { getAllTasks, updateTask, setSetting, getSetting, deleteTasksByUserId } from './db.js';
+import { retrySyncTasks } from './sync.js';
+
 
 /* Initialize global auth variables */
 let user = null;
 let access_token = null;
 let isSignUp = false;
-let isGuest = false; 
+let isGuest = false;
+let hasSelectedMode = null;
 
 /* Initialize auth and UI */
 async function initAuth() {
     try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        
         if (error) throw error;
-        
+
+        // Restore state from storage
         user = session?.user || null;
         access_token = session?.access_token || null;
-        
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' && window.location.pathname.includes('reset-password.html')) {
-                console.log('Ignoring SIGNED_IN on reset-password.html'); // Debug
-                return; // Prevent UI updates during reset
-            }
+        hasSelectedMode = await getSetting('hasSelectedMode') || null;
+
+        // Ensure authenticated mode is valid
+        if (hasSelectedMode === 'authenticated' && !isAuthenticated()) {
+            hasSelectedMode = null;
+            await setSetting('hasSelectedMode', null);
+        }
+
+        // Restore guest flag immediately if stored
+        if (hasSelectedMode === 'guest') {
+            isGuest = true;
+            console.log("Guest restored from hasSelectedMode");
+        }
+
+        // Load tasks according to mode
+        if (hasSelectedMode === 'guest') {
+            await loadTasks('guest');
+        } else if (hasSelectedMode === 'authenticated' && navigator.onLine) {
+            await loadTasks('authenticated');
+        } else if (hasSelectedMode === 'authenticated' && !navigator.onLine) {
+            await loadTasks('authenticated'); // cached only
+            console.log('Offline: Using cached tasks for authenticated user');
+        }
+
+        // Auth state change listener
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log("Auth event:", event);
+
             user = session?.user || null;
             access_token = session?.access_token || null;
-            isGuest = event === 'SIGNED_OUT' && isGuest;
-            updateUI();
-            if (event === 'SIGNED_IN') {
-                loadTasks(); // Update tasks with user_id on login
+
+            if (event === 'SIGNED_IN' && !window.location.pathname.includes('reset-password.html')) {
+                // Authenticated login
+                isGuest = false;
+                hasSelectedMode = 'authenticated';
+                await setSetting('hasSelectedMode', 'authenticated');
+                await deleteTasksByUserId(null); // Delete guest tasks
+                await loadTasks('authenticated');
+                retrySyncTasks(); // Start retry listener
+            } else if (event === 'SIGNED_OUT') {
+                // If mode was guest, keep guest
+                if (hasSelectedMode === 'guest') {
+                    isGuest = true;
+                } else {
+                    isGuest = false;
+                    hasSelectedMode = null;
+                    await setSetting('hasSelectedMode', null);
+                }
+            } else if (event === 'INITIAL_SESSION') {
+                // Refresh handling
+                if (hasSelectedMode === 'guest') {
+                    isGuest = true;
+                } else {
+                    isGuest = false;
+                }
             }
+
+            updateUI();
         });
-        
+
+        // Initial UI render
         updateUI();
         setupEventListeners();
+
     } catch (error) {
         console.error('Init auth error:', error);
         showToast('Error initializing session', 'error');
     }
 }
+
 
 /* Update UI based on auth state using class toggling */
 function updateUI() {
@@ -52,7 +98,7 @@ function updateUI() {
     const myAccount = document.getElementById('myAccount');
 
     // Toggle auth/task UI
-    if (user || isGuest) {
+    if (hasSelectedMode === 'authenticated' || hasSelectedMode === 'guest') {
         authSection.classList.add('hidden');
         appContent.classList.remove('hidden');
     } else {
@@ -61,8 +107,7 @@ function updateUI() {
     }
 
     // Update My Account dropdown
-    updateMyAccount(); // Call this here!
-    renderTasks();
+    updateMyAccount();
 }
 
 /* Update My Account dropdown */
@@ -71,20 +116,23 @@ function updateMyAccount() {
     const accountType = document.getElementById('accountType');
     const logoutBtn = document.getElementById('logoutBtn');
 
-    if (user) {
+    if (hasSelectedMode === 'authenticated' && user) {
         accountEmail.textContent = `Logged in as: ${user.email}`;
         accountType.textContent = 'Account Type: Registered';
-        logoutBtn.style.display = 'block'; // Show logout button
-    } else if (isGuest) {
+        logoutBtn.style.display = 'block';
+    } 
+    else if (hasSelectedMode === 'guest') {
         accountEmail.textContent = 'Logged in as: Guest';
         accountType.textContent = 'Account Type: Guest';
-        logoutBtn.style.display = 'block'; // Allow "logout" from guest mode
-    } else {
+        logoutBtn.style.display = 'block';
+    } 
+    else {
         accountEmail.textContent = 'Not logged in';
         accountType.textContent = 'Account Type: None';
-        logoutBtn.style.display = 'none'; // Hide if not applicable
+        logoutBtn.style.display = 'none';
     }
 }
+
 
 function setupEventListeners() {
     // Get all DOM elements
@@ -124,6 +172,9 @@ function setupEventListeners() {
                 user = data.user;
                 access_token = data.session?.access_token;
                 showToast('Welcome back! Redirecting...');
+                hasSelectedMode = 'authenticated';
+                await setSetting('hasSelectedMode', 'authenticated');
+                await loadTasks('authenticated');
                 updateUI();
             }
         } catch (error) {
@@ -160,7 +211,6 @@ function setupEventListeners() {
         const email = document.getElementById('email').value.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         
-        // Validate email format
         if (!email) {
             showToast('Please enter your email address', 'error');
             return;
@@ -205,10 +255,13 @@ function setupEventListeners() {
     });
 
     // 4. Guest Mode
-    guestBtn?.addEventListener('click', () => {
+    guestBtn?.addEventListener('click', async () => {
         isGuest = true;
         user = null;
         access_token = null;
+        hasSelectedMode = 'guest';
+        await setSetting('hasSelectedMode', 'guest');
+        await loadTasks('guest');
         updateUI();
         showToast('Continuing as guest. Tasks saved locally.');
     });
@@ -263,7 +316,7 @@ function setupEventListeners() {
     }
 
     // New guest mode buttons
-    document.getElementById('goToSignupBtn')?.addEventListener('click', () => {
+    document.getElementById('goToSignupBtn')?.addEventListener('click', async () => {
         document.getElementById('logoutConfirmModal').classList.remove('active');
         document.body.style.overflow = '';
         
@@ -274,10 +327,12 @@ function setupEventListeners() {
         
         document.getElementById('authSection').classList.remove('hidden');
         document.querySelector('.container').classList.add('hidden');
+        hasSelectedMode = null;
+        await setSetting('hasSelectedMode', null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    document.getElementById('goToLoginLink')?.addEventListener('click', (e) => {
+    document.getElementById('goToLoginLink')?.addEventListener('click', async (e) => {
         e.preventDefault();
         document.getElementById('logoutConfirmModal').classList.remove('active');
         document.body.style.overflow = '';
@@ -289,6 +344,8 @@ function setupEventListeners() {
         
         document.getElementById('authSection').classList.remove('hidden');
         document.querySelector('.container').classList.add('hidden');
+        hasSelectedMode = null;
+        await setSetting('hasSelectedMode', null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
@@ -299,6 +356,9 @@ function setupEventListeners() {
             user = null;
             isGuest = false;
             access_token = null;
+            hasSelectedMode = null;
+            await setSetting('hasSelectedMode', null);
+            await setSetting('hasMigratedTasks', null);
             updateUI();
             showToast('Signed out successfully');
         } catch (error) {
@@ -328,7 +388,7 @@ function createAuthError() {
     const authError = document.createElement('p');
     authError.id = 'authError';
     authError.className = 'auth-error';
-    authError.style.display = 'none'; // Use CSS class for visibility
+    authError.style.display = 'none';
     document.querySelector('.auth-card').appendChild(authError);
     return authError;
 }
@@ -339,4 +399,4 @@ function isAuthenticated() {
 }
 
 /* Export functions for app.js */
-export { initAuth, isAuthenticated, user, supabase, access_token};
+export { initAuth, isAuthenticated, user, supabase, access_token };

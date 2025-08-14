@@ -2,13 +2,49 @@ import { user, access_token, isAuthenticated, supabase } from './authHandler.js'
 import { addTask, updateTask, deleteTask, getAllTasks, deleteTasksByUserId, getTaskById } from './db.js';
 import { renderTasks } from './app.js';
 
+// If sortTasksByTime is global, fine. If you import it elsewhere, keep that import.
+// Here we safely fall back to identity to avoid crashes if it's global.
+const safeSort = typeof sortTasksByTime === 'function' ? sortTasksByTime : (arr) => arr;
+
 // Base URL for FastAPI backend (adjust for production)
 const API_BASE_URL = 'http://localhost:8000/tasks';
 
-/**
- * Fetch tasks from FastAPI /tasks endpoint for the logged-in user.
- * @returns {Promise<Array>} Array of tasks or local tasks on failure.
- */
+/* ------------------------------ Sync State ------------------------------ */
+let SYNC_LOCK = false;                         // Mutex for syncPendingTasks
+const inFlightIds = new Set();                 // Task IDs being created/updated/deleted
+const tempToServerId = new Map();              // Map temp-id -> server-id
+
+// Helper: Add/remove to inFlightIds with auto-timeout
+function markInFlight(id, ms = 8000) {
+    if (!id) return;
+    inFlightIds.add(String(id));
+    setTimeout(() => inFlightIds.delete(String(id)), ms);
+}
+function clearInFlight(id) {
+    if (!id) return;
+    inFlightIds.delete(String(id));
+}
+
+// Helper: Retry fetch with exponential backoff
+async function fetchWithRetry(url, options, maxRetries = 3, baseDelay = 1000) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const res = await fetch(url, options);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res;
+        } catch (err) {
+            if (attempt === maxRetries) {
+                console.error(`fetchWithRetry: failed after ${maxRetries} attempts for ${url}`, err);
+                throw err;
+            }
+            const delay = baseDelay * Math.pow(2, attempt - 1);
+            console.log(`fetchWithRetry: attempt ${attempt} failed for ${url}, retrying in ${delay}ms`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+}
+
+/* -------------------------- Backend Fetch / Cache -------------------------- */
 async function fetchBackendTasks() {
     if (!isAuthenticated()) {
         console.warn('Not authenticated, skipping backend task fetch');
@@ -17,7 +53,7 @@ async function fetchBackendTasks() {
 
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 7000);
         const response = await fetch(API_BASE_URL, {
             method: 'GET',
             headers: {
@@ -42,12 +78,7 @@ async function fetchBackendTasks() {
     }
 }
 
-/**
- * Cache backend tasks to IndexedDB, clearing existing user tasks.
- * @param {Array} tasks - Tasks from backend to cache.
- * @returns {Promise<void>}
- */
-// sync.js
+/* -------------------------- Cache from Backend -------------------------- */
 async function cacheBackendTasks(backendTasks) {
     try {
         if (!Array.isArray(backendTasks)) {
@@ -55,7 +86,6 @@ async function cacheBackendTasks(backendTasks) {
             return false;
         }
 
-        // Get all local tasks once
         const localTasks = await getAllTasks();
         const localMap = new Map(localTasks.map(t => [String(t.id), t]));
         const backendIdSet = new Set();
@@ -68,11 +98,18 @@ async function cacheBackendTasks(backendTasks) {
 
             const existing = localMap.get(id);
 
+            // If we have a local "pending delete", do NOT merge backend copy.
+            if (existing?.pending_sync === 'delete') {
+                console.log(`cacheBackendTasks: skip merge for ${id} (pending local delete)`);
+                continue;
+            }
+
             // Merge strategy:
-            // - Use backend values for canonical fields (name, times, etc.)
-            // - For completed/is_late: preserve backend value when provided,
-            //   otherwise fall back to local existing value, otherwise default false.
-            // - Preserve local pending_sync if present (don't clear unsynced local edits).
+            // - Use backend values for canonical fields.
+            // - If local has pending 'create' or 'update', preserve local completed/is_late.
+            const preserveLocalFlags =
+                existing?.pending_sync === 'create' || existing?.pending_sync === 'update';
+
             const merged = {
                 id,
                 user_id: bt.user_id ?? existing?.user_id ?? user?.id ?? null,
@@ -81,10 +118,18 @@ async function cacheBackendTasks(backendTasks) {
                 end_time: bt.end_time,
                 category: bt.category,
                 priority: bt.priority,
-                completed: (typeof bt.completed !== 'undefined') ? bt.completed : (existing?.completed ?? false),
-                is_late: (typeof bt.is_late !== 'undefined') ? bt.is_late : (existing?.is_late ?? false),
+                completed: preserveLocalFlags
+                    ? (existing?.completed ?? false)
+                    : (typeof bt.completed !== 'undefined'
+                        ? bt.completed
+                        : (existing?.completed ?? false)),
+                is_late: preserveLocalFlags
+                    ? (existing?.is_late ?? false)
+                    : (typeof bt.is_late !== 'undefined'
+                        ? bt.is_late
+                        : (existing?.is_late ?? false)),
                 created_at: bt.created_at ?? existing?.created_at ?? new Date().toISOString().split('T')[0],
-                // Keep any local pending_sync (user-driven changes) intact.
+                // Keep any local pending_sync intact so we don't lose unsynced intent.
                 pending_sync: existing?.pending_sync ?? null
             };
 
@@ -95,8 +140,7 @@ async function cacheBackendTasks(backendTasks) {
             }
         }
 
-        // Cleanup: remove local user tasks that aren't on backend and have no pending_sync.
-        // (Don't delete local tasks that are pending sync — user intent must be preserved.)
+        // Cleanup: delete local user tasks that aren't on backend AND have no pending sync.
         const localUserTasks = localTasks.filter(t => t.user_id === user?.id);
         for (const lt of localUserTasks) {
             if (!backendIdSet.has(String(lt.id)) && (lt.pending_sync == null)) {
@@ -113,33 +157,73 @@ async function cacheBackendTasks(backendTasks) {
     }
 }
 
-/**
- * Sync pending tasks (create/update/delete) to FastAPI when online.
- * @returns {Promise<void>}
- */
-// sync.js
+/* ------------------------------ Sync Outbox ------------------------------ */
 async function syncPendingTasks() {
     if (!isAuthenticated() || !navigator.onLine) {
         console.warn('syncPendingTasks: not authenticated or offline — skipping');
         return false;
     }
+    if (SYNC_LOCK) {
+        console.log('syncPendingTasks: already running, skipping');
+        return false;
+    }
+
+    SYNC_LOCK = true;
+    tempToServerId.clear();
 
     try {
-        const allLocal = await getAllTasks();
+        const allLocal = await getAllTasks(true); // Get ALL tasks including pending deletes for sync
         const pending = allLocal.filter(t => t.pending_sync && t.user_id === user?.id);
 
         if (pending.length === 0) {
             console.log('syncPendingTasks: nothing to sync');
+            SYNC_LOCK = false;
             return true;
         }
 
-        console.log('syncPendingTasks: pending:', pending.map(p => ({ id: p.id, op: p.pending_sync, completed: p.completed })));
-
+        // Deduplicate pending tasks by name, start_time, user_id
+        const uniquePending = [];
+        const seenKeys = new Set();
         for (const task of pending) {
+            const key = `${task.name}|${task.start_time}|${task.user_id}`;
+            if (!seenKeys.has(key)) {
+                seenKeys.add(key);
+                uniquePending.push(task);
+            } else {
+                console.log(`syncPendingTasks: removing duplicate task ${task.id}`);
+                await deleteTask(task.id);
+            }
+        }
+
+        // Phase order: creates → updates → deletes (deletes last, in a logical batch)
+        const creates = [];
+        const updates = [];
+        const deletes = [];
+
+        for (const t of uniquePending) {
+            if (t.pending_sync === 'create') creates.push(t);
+            else if (t.pending_sync === 'update') updates.push(t);
+            else if (t.pending_sync === 'delete') deletes.push(t);
+        }
+
+        const baseHeaders = {
+            'Authorization': `Bearer ${access_token}`,
+            'Content-Type': 'application/json'
+        };
+
+        // ---------- Creates ----------
+        for (const task of creates) {
+            const localId = String(task.id);
             try {
+                if (inFlightIds.has(localId)) {
+                    console.log(`syncPendingTasks(create): skip in-flight ${localId}`);
+                    continue;
+                }
+                markInFlight(localId);
+
                 const headers = {
-                    'Authorization': `Bearer ${access_token}`,
-                    'Content-Type': 'application/json'
+                    ...baseHeaders,
+                    'Idempotency-Key': `${localId}:${task.created_at || ''}`
                 };
 
                 const payload = {
@@ -148,87 +232,138 @@ async function syncPendingTasks() {
                     end_time: task.end_time,
                     category: task.category,
                     priority: task.priority,
-                    completed: task.completed,
-                    is_late: task.is_late,
+                    completed: !!task.completed,
+                    is_late: !!task.is_late,
                     created_at: task.created_at,
                     user_id: task.user_id
                 };
 
-                let res, json;
+                const res = await fetchWithRetry(API_BASE_URL, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
 
-                if (task.pending_sync === 'create') {
-                    // create new on backend
-                    res = await fetch(API_BASE_URL, {
-                        method: 'POST',
-                        headers,
-                        body: JSON.stringify(payload)
-                    });
-                    if (!res.ok) throw new Error(`Create failed ${res.status}`);
-                    json = await res.json();
-
-                    // If backend returned a canonical id different from local temp id,
-                    // remove local temp and insert new record with server id (preserve other fields).
-                    const serverId = String(json.id);
-                    if (serverId !== String(task.id)) {
-                        // delete old local record (temp id), then add new one with server id
-                        await deleteTask(task.id);
-                        const newLocal = { ...task, id: serverId, pending_sync: null };
-                        await addTask(newLocal);
-                        console.log(`syncPendingTasks: create mapped local ${task.id} -> server ${serverId}`);
-                    } else {
-                        await updateTask({ ...task, pending_sync: null });
-                        console.log(`syncPendingTasks: created task ${serverId}`);
-                    }
-                } else if (task.pending_sync === 'update') {
-                    // update backend
-                    res = await fetch(`${API_BASE_URL}/${task.id}`, {
-                        method: 'PUT',
-                        headers,
-                        body: JSON.stringify(payload)
-                    });
-                    if (!res.ok) throw new Error(`Update failed ${res.status}`);
+                const serverId = String(json.id);
+                if (serverId !== localId) {
+                    await deleteTask(localId);
+                    const newLocal = { ...task, id: serverId, pending_sync: null };
+                    await addTask(newLocal);
+                    tempToServerId.set(localId, serverId);
+                    console.log(`syncPendingTasks: create mapped local ${localId} -> server ${serverId}`);
+                    markInFlight(serverId);
+                } else {
                     await updateTask({ ...task, pending_sync: null });
-                    console.log(`syncPendingTasks: updated task ${task.id}`);
-                } else if (task.pending_sync === 'delete') {
-                    // delete backend
-                    res = await fetch(`${API_BASE_URL}/${task.id}`, {
-                        method: 'DELETE',
-                        headers
-                    });
-                    if (!res.ok) throw new Error(`Delete failed ${res.status}`);
-                    // remove from local DB too
-                    await deleteTask(task.id);
-                    console.log(`syncPendingTasks: deleted task ${task.id}`);
+                    console.log(`syncPendingTasks: created task ${serverId}`);
                 }
-
-            } catch (taskErr) {
-                console.error(`syncPendingTasks: error for ${task.id}:`, taskErr);
-                // don't throw — continue with other tasks, we'll retry later
+            } catch (err) {
+                console.error(`syncPendingTasks(create): error for ${localId}`, err);
+            } finally {
+                clearInFlight(localId);
             }
         }
 
-        // After syncing pending tasks, optionally re-fetch backend to reconcile differences
-        // (you may want this; uncomment if desired)
-        // const fresh = await fetchBackendTasks();
-        // await cacheBackendTasks(fresh);
+        // ---------- Updates ----------
+        for (const task of updates) {
+            const localId = String(task.id);
+            try {
+                if (inFlightIds.has(localId)) {
+                    console.log(`syncPendingTasks(update): skip in-flight ${localId}`);
+                    continue;
+                }
+                markInFlight(localId);
 
+                const headers = {
+                    ...baseHeaders,
+                    'Idempotency-Key': `${localId}:${task.created_at || ''}`
+                };
+
+                const effectiveId = tempToServerId.get(localId) || localId;
+                const payload = {
+                    name: task.name,
+                    start_time: task.start_time,
+                    end_time: task.end_time,
+                    category: task.category,
+                    priority: task.priority,
+                    completed: !!task.completed,
+                    is_late: !!task.is_late,
+                    created_at: task.created_at,
+                    user_id: task.user_id
+                };
+
+                const res = await fetchWithRetry(`${API_BASE_URL}/${effectiveId}`, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify(payload)
+                });
+                await updateTask({ ...task, id: effectiveId, pending_sync: null });
+                console.log(`syncPendingTasks: updated task ${effectiveId}`);
+                markInFlight(effectiveId);
+            } catch (err) {
+                console.error(`syncPendingTasks(update): error for ${localId}`, err);
+            } finally {
+                clearInFlight(localId);
+            }
+        }
+
+        // ---------- Deletes (logical batch) ----------
+        if (deletes.length) {
+            console.log(`syncPendingTasks: deleting ${deletes.length} tasks in batch`);
+        }
+        const locallyDeleteAfterServer = [];
+        for (const task of deletes) {
+            const localId = String(task.id);
+            try {
+                if (inFlightIds.has(localId)) {
+                    console.log(`syncPendingTasks(delete): skip in-flight ${localId}`);
+                    continue;
+                }
+                markInFlight(localId);
+
+                const headers = {
+                    ...baseHeaders,
+                    'Idempotency-Key': `${localId}:${task.created_at || ''}`
+                };
+
+                const effectiveId = tempToServerId.get(localId) || localId;
+                const res = await fetchWithRetry(`${API_BASE_URL}/${effectiveId}`, {
+                    method: 'DELETE',
+                    headers
+                });
+                locallyDeleteAfterServer.push(effectiveId);
+                console.log(`syncPendingTasks: server delete ok for ${effectiveId}`);
+                markInFlight(effectiveId);
+            } catch (err) {
+                console.error(`syncPendingTasks(delete): error for ${localId}`, err);
+            } finally {
+                clearInFlight(localId);
+            }
+        }
+
+        // Now remove all server-deleted tasks from IndexedDB in one pass.
+        for (const id of locallyDeleteAfterServer) {
+            try {
+                await deleteTask(id);
+                console.log(`syncPendingTasks: local delete ok for ${id}`);
+            } catch (err) {
+                console.error(`syncPendingTasks: local delete failed for ${id}`, err);
+            }
+        }
+
+        SYNC_LOCK = false;
         return true;
     } catch (err) {
         console.error('syncPendingTasks: top-level error', err);
+        SYNC_LOCK = false;
         return false;
     }
 }
 
-
-
-/**
- * Set up Supabase real-time subscriptions for task updates.
- * Ensures tasks are always sorted before rendering to avoid flicker.
- * @returns {void}
- */
+/* -------------------------- Supabase Realtime -------------------------- */
 function setupRealtimeSubscriptions() {
-    if (!isAuthenticated()) {
-        console.warn('Not authenticated, skipping real-time subscriptions');
+    if (!isAuthenticated() || !navigator.onLine) {
+        console.warn('Not authenticated or offline, skipping real-time subscriptions');
         return;
     }
 
@@ -251,10 +386,15 @@ function setupRealtimeSubscriptions() {
                 async (payload) => {
                     try {
                         const { eventType, new: newData, old: oldData } = payload;
-                        console.log(
-                            `Real-time event: ${eventType} for task ${newData?.id || oldData?.id}`,
-                            { newData, oldData }
-                        );
+                        const effectedId = String(newData?.id || oldData?.id);
+
+                        if (inFlightIds.has(effectedId)) {
+                            console.log(`Realtime: ignoring echo for in-flight ${effectedId} (${eventType})`);
+                            clearInFlight(effectedId);
+                            return;
+                        }
+
+                        console.log(`Real-time event: ${eventType} for task ${effectedId}`, { newData, oldData });
 
                         if (eventType === 'INSERT' || eventType === 'UPDATE') {
                             const task = {
@@ -272,11 +412,25 @@ function setupRealtimeSubscriptions() {
                             };
 
                             const localTasks = await getAllTasks();
-                            const existingTask = localTasks.find((t) => t.id === task.id);
+                            let existingTask = localTasks.find((t) => String(t.id) === String(task.id));
+
+                            // Content-based deduplication
+                            if (!existingTask) {
+                                existingTask = localTasks.find(t =>
+                                    t.name === task.name &&
+                                    t.start_time === task.start_time &&
+                                    t.user_id === task.user_id
+                                );
+                            }
 
                             if (existingTask) {
-                                await updateTask(task);
+                                await updateTask({ ...task, pending_sync: existingTask.pending_sync });
                                 console.log(`Updated existing task ${task.id} in IndexedDB`);
+                                if (existingTask.id !== task.id) {
+                                    await deleteTask(existingTask.id);
+                                    tempToServerId.set(String(existingTask.id), String(task.id));
+                                    console.log(`Deleted temp task ${existingTask.id} for server ${task.id}`);
+                                }
                             } else {
                                 await addTask(task);
                                 console.log(`Added new task ${task.id} to IndexedDB`);
@@ -286,27 +440,19 @@ function setupRealtimeSubscriptions() {
                             console.log(`Deleted task ${oldData.id} from IndexedDB`);
                         }
 
-                        // 🔹 FIX: Always sort tasks before rendering
                         const freshTasks = await getAllTasks();
                         const userTasks = freshTasks.filter((t) => t.user_id === user.id);
-                        const sortedTasks = sortTasksByTime(userTasks);
+                        const sortedTasks = safeSort(userTasks);
 
-                        console.log(
-                            `Rendering ${sortedTasks.length} sorted user tasks:`,
-                            sortedTasks.map((t) => ({
-                                id: t.id,
-                                name: t.name,
-                                completed: t.completed,
-                                is_late: t.is_late,
-                            }))
-                        );
+                        console.log(`Rendering ${sortedTasks.length} sorted user tasks:`, sortedTasks.map(t => ({
+                            id: t.id,
+                            name: t.name,
+                            completed: t.completed,
+                            is_late: t.is_late,
+                        })));
 
                         await renderTasks(sortedTasks);
-                        console.log(
-                            `Real-time update complete: ${eventType} for task ${
-                                newData?.id || oldData?.id
-                            }`
-                        );
+                        console.log(`Real-time update complete: ${eventType} for task ${effectedId}`);
                     } catch (error) {
                         console.error('Real-time update failed:', error.message);
                     }
@@ -316,26 +462,24 @@ function setupRealtimeSubscriptions() {
 
         console.log('Real-time subscriptions set up for user', user.id);
 
-        // Clean up subscription on unload
         window.addEventListener('unload', () => {
-            subscription.unsubscribe();
+            try { subscription.unsubscribe(); } catch {}
         });
     } catch (error) {
         console.error('Failed to set up real-time subscriptions:', error.message);
     }
 }
 
-/**
- * Retry sync when back online
- * @returns {void}
- */
+/* ------------------------------ Retry on Online ------------------------------ */
 function retrySyncTasks() {
     window.addEventListener('online', async () => {
         console.log('Network online, retrying sync...');
         try {
+            // Push local changes first to ensure deletes are processed before fetching
+            await syncPendingTasks();
+            // Then fetch and merge backend tasks
             const tasks = await fetchBackendTasks();
             await cacheBackendTasks(tasks);
-            await syncPendingTasks();
             console.log('Retry sync completed');
         } catch (error) {
             console.error('Retry sync failed:', error.message);

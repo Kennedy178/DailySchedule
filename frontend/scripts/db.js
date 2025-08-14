@@ -18,7 +18,6 @@ async function addTask(task) {
     const tx = db.transaction('tasks', 'readwrite');
     const store = tx.objectStore('tasks');
     try {
-        // Check if task ID already exists
         const existingTask = await store.get(task.id);
         if (existingTask) {
             console.log(`Task with ID ${task.id} already exists, skipping add`);
@@ -37,13 +36,18 @@ async function addTask(task) {
 }
 
 /* Get all tasks from IndexedDB */
-async function getAllTasks() {
+async function getAllTasks(includePendingDeletes = false) {
     const db = await dbPromise;
     const tx = db.transaction('tasks', 'readonly');
     const store = tx.objectStore('tasks');
     try {
         const tasks = await store.getAll();
         await tx.complete;
+        
+        // Filter out pending deletes unless explicitly requested
+        if (!includePendingDeletes) {
+            return tasks.filter(task => task.pending_sync !== 'delete');
+        }
         return tasks;
     } catch (error) {
         console.error('Error getting all tasks:', error);
@@ -80,6 +84,28 @@ async function updateTask(task) {
         return task;
     } catch (error) {
         console.error('Error updating task:', error);
+        await tx.complete;
+        throw error;
+    }
+}
+
+/* Mark a task as pending delete in IndexedDB */
+async function markTaskAsPendingDelete(id) {
+    const db = await dbPromise;
+    const tx = db.transaction('tasks', 'readwrite');
+    const store = tx.objectStore('tasks');
+    try {
+        const task = await store.get(id);
+        if (task) {
+            task.pending_sync = 'delete';
+            await store.put(task);
+            console.log(`Marked task ${id} as pending delete`);
+        } else {
+            console.warn(`Task ${id} not found for pending delete`);
+        }
+        await tx.complete;
+    } catch (error) {
+        console.error('Error marking task as pending delete:', error);
         await tx.complete;
         throw error;
     }
@@ -154,4 +180,14 @@ async function getSetting(key) {
     }
 }
 
-export { addTask, getAllTasks, getTaskById, updateTask, deleteTask, deleteTasksByUserId, setSetting, getSetting };
+export { 
+    addTask, 
+    getAllTasks, 
+    getTaskById, 
+    updateTask, 
+    markTaskAsPendingDelete, 
+    deleteTask, 
+    deleteTasksByUserId, 
+    setSetting, 
+    getSetting 
+};
