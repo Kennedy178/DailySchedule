@@ -2,11 +2,9 @@ import { user, access_token, isAuthenticated, supabase } from './authHandler.js'
 import { addTask, updateTask, deleteTask, getAllTasks, deleteTasksByUserId, getTaskById } from './db.js';
 import { renderTasks } from './app.js';
 
-// If sortTasksByTime is global, fine. If you import it elsewhere, keep that import.
-// Here we safely fall back to identity to avoid crashes if it's global.
-const safeSort = typeof sortTasksByTime === 'function' ? sortTasksByTime : (arr) => arr;
 
-// Base URL for FastAPI backend (adjust for production)
+
+// Base URL for FastAPI backend (Will adjust for production)
 const API_BASE_URL = 'http://localhost:8000/tasks';
 
 /* ------------------------------ Sync State ------------------------------ */
@@ -442,7 +440,7 @@ function setupRealtimeSubscriptions() {
 
                         const freshTasks = await getAllTasks();
                         const userTasks = freshTasks.filter((t) => t.user_id === user.id);
-                        const sortedTasks = safeSort(userTasks);
+                        // Tasks are already sorted from getAllTasks()
 
                         console.log(`Rendering ${sortedTasks.length} sorted user tasks:`, sortedTasks.map(t => ({
                             id: t.id,
@@ -451,7 +449,7 @@ function setupRealtimeSubscriptions() {
                             is_late: t.is_late,
                         })));
 
-                        await renderTasks(sortedTasks);
+                        await renderTasks(userTasks);
                         console.log(`Real-time update complete: ${eventType} for task ${effectedId}`);
                     } catch (error) {
                         console.error('Real-time update failed:', error.message);

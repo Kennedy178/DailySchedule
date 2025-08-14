@@ -271,7 +271,7 @@ export async function loadTasks(mode) {
         }
 
         // Sort tasks
-        tasks = sortTasksByTime(tasks);
+        
         console.log('Loaded and sorted tasks:', tasks.map(t => ({
             id: t.id,
             name: t.name,
@@ -301,7 +301,7 @@ export async function loadTasks(mode) {
     } catch (error) {
         console.error('Error loading tasks:', error);
         tasks = (await getAllTasks()).filter(task => mode === 'authenticated' ? task.user_id === user.id : task.user_id === null);
-        tasks = sortTasksByTime(tasks);
+        // Tasks are already sorted from getAllTasks()
 
         if (tasks.length > 0) {
             console.log('Recovered tasks:', tasks.map(t => ({
@@ -322,7 +322,16 @@ export async function loadTasks(mode) {
 // CUSTOM TASK BANNER LOGIC
 async function handleCustomTaskBanner(tasks) {
     const firstCustomTaskAdded = await getSetting('firstCustomTaskAdded');
-    const hasCustomTasks = tasks.some(t => t.user_id === user.id);
+    
+    // Fix: Handle both authenticated and guest modes
+    // Using global hasCustomTasks variable
+    if (isAuthenticated() && user && user.id) {
+        // Authenticated mode: check for user's custom tasks
+        hasCustomTasks = tasks.some(t => t.user_id === user.id);
+    } else {
+        // Guest mode: check for guest tasks (user_id === null)
+        hasCustomTasks = tasks.some(t => t.user_id === null);
+    }
 
     if (!firstCustomTaskAdded && hasCustomTasks && customTaskBanner) {
         console.log('Showing custom task banner for first time custom task');
@@ -384,16 +393,7 @@ async function cleanOldData() {
     }
 }
 
-/* Sort tasks by start time */
-function sortTasksByTime(tasks) {
-    return tasks.sort((a, b) => {
-        const getMinutesSinceMidnight = time => {
-            const [hours, minutes] = time.split(':').map(Number);
-            return hours * 60 + minutes;
-        };
-        return getMinutesSinceMidnight(a.start_time) - getMinutesSinceMidnight(b.start_time);
-    });
-}
+
 
 /* Check if task is expired (with 15-minute grace period) */
 function isTaskExpired(task, now) {
@@ -1295,8 +1295,8 @@ async function checkDateChange() {
                 }
             }
 
-            // CRITICAL: Sort tasks and update global state atomically
-            tasks = sortTasksByTime(resetTasks);
+            // Re-fetch sorted tasks from IndexedDB
+            tasks = await getAllTasks();
             
             console.log('Tasks after reset and sort:', tasks.map(t => ({ 
                 name: t.name, 
@@ -1466,8 +1466,8 @@ addTaskBtn.addEventListener('click', async () => {
         if (editIndex === '') {
             // Save to IndexedDB
             await addTask(task);
-            // Update in-memory
-            tasks.push(task);
+            // Re-fetch sorted tasks from IndexedDB
+            tasks = await getAllTasks();
 
             // Show first custom task banner if needed
             const wasEmpty = tasks.filter(t => !t.id.startsWith('customTask')).length === 1;
@@ -1480,11 +1480,12 @@ addTaskBtn.addEventListener('click', async () => {
             }
         } else {
             await updateTask(task);
-            tasks[parseInt(editIndex)] = task;
+            // Re-fetch sorted tasks from IndexedDB
+            tasks = await getAllTasks();
         }
 
-        // Sort & render
-        tasks = sortTasksByTime(tasks);
+        // Tasks are already sorted from getAllTasks()
+        
         lastRenderHash = ''; 
         await renderTasks(tasks);
 
@@ -1551,7 +1552,7 @@ saveEditBtn.addEventListener('click', async () => {
         await updateTask(task);
         tasks[parseInt(editIndex)] = task;
         console.log(`Saved edited task "${task.name}", tasks now: [${tasks.map(t => t.name).join(', ')}]`);
-        tasks = sortTasksByTime(tasks);
+        //tasks = sortTasksByTime(tasks);
         await saveDailyData();
         lastRenderHash = ''; // Force re-render
         renderTasks();

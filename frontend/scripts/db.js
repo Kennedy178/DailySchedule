@@ -35,7 +35,18 @@ async function addTask(task) {
     }
 }
 
-/* Get all tasks from IndexedDB */
+/* Sort tasks by start time */
+function sortTasksByTime(tasks) {
+    return tasks.sort((a, b) => {
+        const getMinutesSinceMidnight = time => {
+            const [hours, minutes] = time.split(':').map(Number);
+            return hours * 60 + minutes;
+        };
+        return getMinutesSinceMidnight(a.start_time) - getMinutesSinceMidnight(b.start_time);
+    });
+}
+
+/* Get all tasks from IndexedDB - always sorted by start time */
 async function getAllTasks(includePendingDeletes = false) {
     const db = await dbPromise;
     const tx = db.transaction('tasks', 'readonly');
@@ -45,10 +56,13 @@ async function getAllTasks(includePendingDeletes = false) {
         await tx.complete;
         
         // Filter out pending deletes unless explicitly requested
+        let filteredTasks = tasks;
         if (!includePendingDeletes) {
-            return tasks.filter(task => task.pending_sync !== 'delete');
+            filteredTasks = tasks.filter(task => task.pending_sync !== 'delete');
         }
-        return tasks;
+        
+        // Always sort by start time before returning
+        return sortTasksByTime(filteredTasks);
     } catch (error) {
         console.error('Error getting all tasks:', error);
         await tx.complete;
