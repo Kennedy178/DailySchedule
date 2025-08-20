@@ -1,8 +1,12 @@
 /* Import db.js CRUD functions */
+import { DB_NAME, DB_VERSION } from './db.js';
+import * as idb from 'https://cdn.jsdelivr.net/npm/idb@7.0.2/+esm';
 import { addTask, getAllTasks, getTaskById, updateTask, deleteTask, setSetting, getSetting,markTaskAsPendingDelete  } from './db.js';
 import { isAuthenticated, initAuth, user, } from './authHandler.js';
 import { fetchBackendTasks, cacheBackendTasks, setupRealtimeSubscriptions, syncPendingTasks } from './sync.js';
 import { supabase } from './auth.js';
+import { fcmToken, initFCMManager, isTokenRegistered } from './fcm-manager.js';
+import { initOfflineQueue } from './offline-queue.js';
 
 
 /* Initialize global variables */
@@ -170,9 +174,6 @@ function debounce(func, wait) {
  * - Delayed syncTasksWithServiceWorker until after UI is ready
  */
 export async function loadTasks(mode) {
-    
-    
-    
 
     try {
         // Load settings
@@ -382,7 +383,7 @@ async function cleanOldData() {
         const completionKey = `completion_${date.toDateString()}`;
         const timelyKey = `timely_${date.toDateString()}`;
         const lateKey = `late_${date.toDateString()}`;
-        const db = await idb.openDB('getitdone', 1);
+        const db = await idb.openDB(DB_NAME, DB_VERSION);
         const tx = db.transaction('settings', 'readwrite');
         const store = tx.objectStore('settings');
         await store.delete(dateKey);
@@ -424,11 +425,20 @@ function isTaskStartingSoon(task, now) {
 }
 
 /* Sync tasks with service worker */
+// Update your service worker sync function to include authentication and FCM status
+/* Sync tasks with service worker - GUEST USERS ONLY */
 async function syncTasksWithServiceWorker() {
+    // CRITICAL: Only sync for guest users - authenticated users use FCM backend
+    if (isAuthenticated()) {
+        console.log('Authenticated user - skipping local task sync, using FCM backend only');
+        return;
+    }
+    
     if (!('serviceWorker' in navigator)) {
         console.warn('Service worker not supported by browser');
         return;
     }
+    
     try {
         const registration = await navigator.serviceWorker.getRegistration('sw.js');
         if (registration && registration.active) {
@@ -438,105 +448,143 @@ async function syncTasksWithServiceWorker() {
                 name: task.name,
                 priority: task.priority
             }));
-            console.log('Syncing tasks with service worker:', syncTasks.map(t => t.name));
+            
+            console.log('Syncing tasks with service worker for GUEST USER:', syncTasks.map(t => t.name));
+            
             registration.active.postMessage({
                 type: 'SYNC_TASKS',
                 tasks: syncTasks,
                 userName,
-                enableReminders
+                enableReminders,
+                isAuthenticated: false,  // Always false here since we checked above
+                fcmToken: null
             });
         } else {
-            console.warn('No active service worker, registering sw.js');
-            const newRegistration = await navigator.serviceWorker.register('sw.js');
-            console.log('Service worker registered:', newRegistration);
-            if (newRegistration.active) {
-                const syncTasks = tasks.filter(task => !task.completed && !isTaskExpired(task, new Date())).map(task => ({
-                    id: task.id,
-                    startTime: task.start_time,
-                    name: task.name,
-                    priority: task.priority
-                }));
-                console.log('Syncing tasks with new service worker:', syncTasks.map(t => t.name));
-                newRegistration.active.postMessage({
-                    type: 'SYNC_TASKS',
-                    tasks: syncTasks,
-                    userName,
-                    enableReminders
-                });
-            }
+            console.warn('No active service worker available');
         }
     } catch (err) {
         console.error('Error syncing with service worker:', err);
-        showToast('Failed to sync tasks with service worker. Notifications may not work.');
     }
 }
 
-/* Service worker registration */
+/* Service worker registration - Enhanced for FCM */
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {
             const registration = await navigator.serviceWorker.register('sw.js');
             console.log('Service Worker registered:', registration);
+            
+            // Handle notification permissions
             if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-                Notification.requestPermission().then(async permission => {
-                    await setSetting('notificationPermission', permission);
-                    console.log('Initial notification permission:', permission);
-                    if (permission === 'denied') {
-                        document.getElementById('permissionError').style.display = 'block';
-                        document.getElementById('enableRemindersInput').checked = false;
-                        enableReminders = false;
-                        await setSetting('enableReminders', 'false');
-                        showToast('Notifications blocked. Enable in browser settings.');
+                const permission = await Notification.requestPermission();
+                await setSetting('notificationPermission', permission);
+                console.log('Initial notification permission:', permission);
+                
+                if (permission === 'denied') {
+                    const permissionError = document.getElementById('permissionError');
+                    if (permissionError) {
+                        permissionError.style.display = 'block';
                     }
-                    debouncedCheckNotifications();
-                });
-            } else {
-                console.log('Notification permission on load:', Notification.permission);
-                debouncedCheckNotifications();
+                    document.getElementById('enableRemindersInput').checked = false;
+                    enableReminders = false;
+                    await setSetting('enableReminders', 'false');
+                    showToast('Notifications blocked. Enable in browser settings.');
+                }
             }
         } catch (err) {
             console.error('Service Worker registration failed:', err);
-            showToast('Service worker failed to register. Notifications may not work.');
         }
     });
 }
 
-/* Trigger notification */
-function triggerNotification(task) {
-    if ('serviceWorker' in navigator && enableReminders && isTaskStartingSoon(task, new Date()) && !notifiedTasks.has(task.id)) {
-        navigator.serviceWorker.getRegistration('sw.js').then(registration => {
-            if (registration && registration.active) {
-                console.log(`Triggering notification for task "${task.name}" at ${task.start_time}`);
-                registration.active.postMessage({
-                    type: 'TRIGGER_NOTIFICATION',
-                    task: { id: task.id, startTime: task.start_time, name: task.name, priority: task.priority },
-                    userName
-                });
-                notifiedTasks.add(task.id);
-                setTimeout(() => notifiedTasks.delete(task.id), 10 * 60 * 1000);
-            } else {
-                console.warn(`No active service worker for notification of task "${task.name}"`);
-            }
-        }).catch(err => {
-            console.error('Error accessing service worker for notification:', err);
-        });
+
+/* Trigger notification - Route to appropriate handler */
+async function triggerNotification(task) {
+    if (!enableReminders || !isTaskStartingSoon(task, new Date()) || notifiedTasks.has(task.id)) {
+        return;
+    }
+
+    if (isAuthenticated()) {
+        // For authenticated users: FCM backend handles everything
+        console.log(`Authenticated user - FCM backend will handle notification for task "${task.name}"`);
+        
+        // Mark as notified to prevent any local duplicates
+        notifiedTasks.add(task.id);
+        setTimeout(() => notifiedTasks.delete(task.id), 10 * 60 * 1000);
+        return;
     } else {
-        console.log(`Notification skipped for task "${task.name}": serviceWorker=${!!navigator.serviceWorker.controller}, enableReminders=${enableReminders}, startingSoon=${isTaskStartingSoon(task, new Date())}, alreadyNotified=${notifiedTasks.has(task.id)}`);
+        // For guest users: Use local notifications
+        console.log(`Guest user - sending local notification for task: "${task.name}"`);
+        await sendLocalNotification(task);
+        
+        notifiedTasks.add(task.id);
+        setTimeout(() => notifiedTasks.delete(task.id), 10 * 60 * 1000);
     }
 }
 
-/* Check notifications with debouncing */
+
+/* Send local notification via service worker - GUEST USERS ONLY */
+async function sendLocalNotification(task) {
+    try {
+        if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+            console.log(`Local notification not supported for task "${task.name}"`);
+            return false;
+        }
+
+        const permission = Notification.permission;
+        if (permission !== 'granted') {
+            console.log(`Local notification permission denied for task "${task.name}": ${permission}`);
+            return false;
+        }
+
+        const registration = await navigator.serviceWorker.getRegistration('sw.js');
+        if (registration && registration.active) {
+            console.log(`Sending local notification via service worker for task "${task.name}"`);
+            
+            registration.active.postMessage({
+                type: 'TRIGGER_NOTIFICATION',
+                task: { 
+                    id: task.id, 
+                    startTime: task.start_time, 
+                    name: task.name, 
+                    priority: task.priority 
+                },
+                userName
+            });
+            return true;
+        } else {
+            console.warn(`No active service worker for local notification of task "${task.name}"`);
+            return false;
+        }
+    } catch (error) {
+        console.error(`Local notification failed for task "${task.name}":`, error);
+        return false;
+    }
+}
+
+
+/* Check notifications with debouncing - GUEST USERS ONLY */
 const debouncedCheckNotifications = debounce(() => {
     console.log(`checkNotifications called at ${new Date().toISOString()}`);
+    
+    // ABSOLUTE GUARD: No local notifications for authenticated users
+    if (isAuthenticated()) {
+        console.log('AUTHENTICATED USER - FCM backend handles all notifications, completely skipping local checks');
+        return;
+    }
+    
+    console.log('GUEST USER - proceeding with local notification checks');
     console.log('Checking notifications for tasks:', tasks.map(t => t.name));
-    console.log('Notification permission:', Notification.permission);
     console.log('Enable reminders:', enableReminders);
+    
     // Clear notified tasks for completed or expired tasks
     tasks.forEach(task => {
         if (task.completed || isTaskExpired(task, new Date())) {
             notifiedTasks.delete(task.id);
         }
     });
+    
+    // Check each active task for notifications (GUEST USERS ONLY)
     tasks.forEach(task => {
         if (!task.completed && !isTaskExpired(task, new Date())) {
             triggerNotification(task);
@@ -754,7 +802,7 @@ async function clearWeeklyData() {
         const completionKey = `completion_${date.toDateString()}`;
         const timelyKey = `timely_${date.toDateString()}`;
         const lateKey = `late_${date.toDateString()}`;
-        const db = await idb.openDB('getitdone', 1);
+        const db = await idb.openDB(DB_NAME, DB_VERSION);
         const tx = db.transaction('settings', 'readwrite');
         const store = tx.objectStore('settings');
         await store.delete(dateKey);
@@ -1577,7 +1625,7 @@ cancelEditBtn.addEventListener('click', () => {
 resetDefaultBtn.addEventListener('click', async () => {
     if (confirm('Reset to default schedule? All custom tasks will be cleared.')) {
         try {
-            const db = await idb.openDB('getitdone', 1);
+            const db = await idb.openDB(DB_NAME, DB_VERSION);
             const tx = db.transaction('tasks', 'readwrite');
             const store = tx.objectStore('tasks');
             await store.clear();
@@ -1646,12 +1694,43 @@ saveSettingsBtn.addEventListener('click', async () => {
     enableReminders = enableRemindersInput.checked;
 
     try {
+        // Save to IndexedDB (existing functionality - keep this!)
         await setSetting('userName', newUserName);
         await setSetting('enableReminders', enableReminders.toString());
         userName = newUserName;
 
         console.log('Saving settings: enableReminders=', enableReminders, 'userName=', newUserName);
 
+        // NEW: Save to Supabase profiles table if user is authenticated
+        if (isAuthenticated() && user?.id) {
+            try {
+                console.log('Saving user name to profiles table:', newUserName);
+                
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .upsert({ 
+                        id: user.id, // Use user.id from authHandler.js
+                        display_name: newUserName,
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'id'  // Update if exists, insert if not
+                    });
+
+                if (error) {
+                    console.error('Failed to save name to profiles:', error);
+                    // Don't block the rest of settings save - just log the error
+                } else {
+                    console.log('✅ User name saved to profiles table successfully');
+                }
+            } catch (profileError) {
+                console.error('Error updating user profile:', profileError);
+                // Continue with local settings save even if profile save fails
+            }
+        } else {
+            console.log('Guest user - skipping profile save (using local storage only)');
+        }
+
+        // Handle notification permissions (existing logic - unchanged)
         if (enableReminders && !wasEnabled) {
             Notification.requestPermission().then(async permission => {
                 await setSetting('notificationPermission', permission);
@@ -1673,6 +1752,14 @@ saveSettingsBtn.addEventListener('click', async () => {
         }
 
         settingsModal.classList.remove('active');
+        
+        // Optional: Show success message
+        if (isAuthenticated()) {
+            showToast('Settings and profile updated successfully!');
+        } else {
+            showToast('Settings saved successfully!');
+        }
+
     } catch (error) {
         console.error('Error saving settings:', error);
         showToast('Failed to save settings. Please try again.');
@@ -1939,22 +2026,44 @@ window.addEventListener('resize', () => {
 
 
 
+/* Updated init function - Different strategies for auth vs guest */
 async function init() {
-    initGlobalUtils();
-    await initAuth();
+    try {
+        initGlobalUtils();
+        await initAuth();
+        
+        // Initialize the offline queue system
+        await initOfflineQueue();
+        
+        // Initialize FCM manager
+        await initFCMManager();
+        
+        // Load lastResetDate from IndexedDB at startup
+        const savedResetDate = await getSetting('lastResetDate');
+        const currentDate = new Date().toDateString();
 
-    // Load lastResetDate from IndexedDB at startup
-    const savedResetDate = await getSetting('lastResetDate');
-    const currentDate = new Date().toDateString();
+        // If we haven't reset yet today, do it immediately on startup
+        if (savedResetDate !== currentDate) {
+            await checkDateChange();
+        }
 
-    // If we haven't reset yet today, do it immediately on startup
-    if (savedResetDate !== currentDate) {
-        await checkDateChange();
+        // Always schedule daily reset checks
+        setInterval(checkDateChange, 30000);
+
+        // CRITICAL: Different notification strategies based on auth status
+        if (isAuthenticated()) {
+            console.log("Authenticated user: FCM backend handles all notifications");
+            // No local notification polling for authenticated users
+        } else {
+            console.log("Guest user: enabling local notification polling");
+            // Enable local notification checking for guests
+            setInterval(debouncedCheckNotifications, 30000);
+        }
+        
+    } catch (error) {
+        console.error('App initialization failed:', error);
+        showToast('Failed to initialize app completely. Some features may not work.');
     }
-
-    // Then schedule checks every 30 seconds
-    setInterval(checkDateChange, 30000);
-    setInterval(debouncedCheckNotifications, 30000);
 }
 
 init();
