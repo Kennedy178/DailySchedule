@@ -20,6 +20,7 @@ getitdone/
 │   │   ├── auth.js
 │   │   ├── authHandler.js
 │   │   ├── sync.js
+|   |   |── offline-queue.js
 │   │   ├── fcm-config.js
 │   │   ├── fcm-manager.js
 │   │   └── help.js            # FAQ and form logic (success/error messages)

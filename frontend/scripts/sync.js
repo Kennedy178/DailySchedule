@@ -5,7 +5,7 @@ import { renderTasks } from './app.js';
 
 
 // Base URL for FastAPI backend (Will adjust for production)
-const API_BASE_URL = 'http://localhost:8000/tasks';
+const API_BASE_URL = window.API_BASE_URL; // Uses config.js
 
 /* ------------------------------ Sync State ------------------------------ */
 let SYNC_LOCK = false;                         // Mutex for syncPendingTasks
@@ -68,7 +68,7 @@ async function fetchBackendTasks() {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 7000);
             
-            const response = await fetch(API_BASE_URL, {
+            const response = await fetch(`${API_BASE_URL}/tasks`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${access_token}`,
@@ -277,7 +277,7 @@ async function syncPendingTasks() {
                     user_id: task.user_id
                 };
 
-                const res = await fetchWithRetry(API_BASE_URL, {
+                const res = await fetchWithRetry(`${API_BASE_URL}/tasks`, {
                     method: 'POST',
                     headers,
                     body: JSON.stringify(payload)
@@ -331,7 +331,7 @@ async function syncPendingTasks() {
                     user_id: task.user_id
                 };
 
-                const res = await fetchWithRetry(`${API_BASE_URL}/${effectiveId}`, {
+                const res = await fetchWithRetry(`${API_BASE_URL}/tasks/${effectiveId}`, {
                     method: 'PUT',
                     headers,
                     body: JSON.stringify(payload)
@@ -366,7 +366,7 @@ async function syncPendingTasks() {
                 };
 
                 const effectiveId = tempToServerId.get(localId) || localId;
-                const res = await fetchWithRetry(`${API_BASE_URL}/${effectiveId}`, {
+                const res = await fetchWithRetry(`${API_BASE_URL}/tasks/${effectiveId}`, {
                     method: 'DELETE',
                     headers
                 });

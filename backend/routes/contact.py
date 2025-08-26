@@ -13,7 +13,7 @@ from collections import defaultdict
 
 # Import your email service
 try:
-    from backend.utils.email_service import EmailService
+    from utils.email_service import EmailService
     EMAIL_SERVICE_AVAILABLE = True
 except ImportError as e:
     print(f"Email service import failed: {e}")
