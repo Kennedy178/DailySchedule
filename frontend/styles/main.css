@@ -1563,3 +1563,927 @@ footer a:hover {
         transform: translate(-50%, 0) rotateX(0deg);
     }
 }
+
+
+
+
+
+
+
+
+/*--------------
+Banner Styles ON 1ST custom TASK 
+-----------------*/
+
+#customTaskBanner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #141414;
+    color: #E5E5E5;
+    padding: clamp(12px, 3vw, 16px) clamp(16px, 4vw, 20px);
+    border-radius: 8px;
+    margin: 16px auto;
+    max-width: 600px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(14px, 3.5vw, 16px);
+    line-height: 1.5;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 1000;
+}
+
+#customTaskBanner.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#customTaskBanner.hidden {
+    display: none;
+}
+
+#customTaskBanner p {
+    margin: 0;
+    flex: 1;
+}
+
+#dismissBannerBtn {
+    background: #FFB100;
+    color: #141414;
+    border: none;
+    padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px);
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(12px, 3vw, 14px);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+#dismissBannerBtn:hover {
+    background: #FFC107;
+    transform: scale(1.05);
+}
+
+#dismissBannerBtn:focus {
+    outline: 2px solid #FFD700;
+    outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+    #customTaskBanner {
+        flex-direction: column;
+        text-align: center;
+        padding: 12px 16px;
+        margin: 12px 8px;
+    }
+
+    #dismissBannerBtn {
+        margin-top: 12px;
+        width: 100%;
+        max-width: 200px;
+    }
+}
+/* ------------------
+END OF BANNER STYLES
+ ------------------------*/
+
+
+
+
+
+
+
+
+
+
+
+/* === Auth Section === */
+
+
+#authSection {
+  display: flex !important;  /* Force flex layout */
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Hide/show with JS-friendly classes */
+#authSection.hidden { display: none !important; } 
+.app-content.hidden { display: none !important; }
+
+
+
+
+#authSection {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--bg-dark), #1a1a2e);
+    padding: 1rem;
+    overflow: hidden;
+}
+
+.auth-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: calc(var(--radius) + 4px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+    padding: 2.25rem;
+    width: 100%;
+    max-width: 460px;
+    text-align: center;
+    animation: slideUp 0.7s cubic-bezier(0.33, 1, 0.68, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 177, 0, 0.08), transparent);
+    animation: shimmer 5s infinite;
+}
+
+.auth-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5.2vw, 34px);
+    color: #fff;
+    margin-bottom: 1.25rem;
+    letter-spacing: 0.2px;
+}
+
+.auth-card p {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 1.75rem;
+    font-style: italic;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+/* === Auth Form === */
+#authForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.3rem;
+}
+
+#authForm label {
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    transition: color 0.3s ease;
+}
+
+#authForm input {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: var(--radius);
+    padding: 0.9rem 1.2rem;
+    font-size: 15px;
+    color: #fff;
+    transition: all 0.3s ease-in-out;
+}
+
+#authForm input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 6px rgba(255, 177, 0, 0.3);
+}
+
+/* === Auth Buttons === */
+#authBtn,
+#guestBtn {
+    font-weight: 600;
+    font-size: 15px;
+    padding: 0.85rem 1.5rem;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+#authBtn {
+    background: var(--primary);
+    color: #0E0E10;
+}
+
+#authBtn:hover {
+    background: #ffca28;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 177, 0, 0.3);
+}
+
+#guestBtn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    margin-top: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+#guestBtn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+/* === Auth Links === */
+#authToggle,
+#forgotPassword {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 0.75rem;
+}
+
+#authToggle a,
+#forgotPassword a {
+    color: var(--primary-light);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+#authToggle a:hover,
+#forgotPassword a:hover {
+    color: #ffca28;
+    text-decoration: underline;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* === My Account Dropdown === */
+
+/* My Account Button in Settings Modal */
+#myAccountBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Slightly reduced icon-text spacing for compactness */
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 179, 0, 0.1)); /* Softer gold gradient */
+    border: 1px solid transparent; /* Base for border-image */
+    border-image: linear-gradient(135deg, #FFD700, #FFAA00) 1; /* Metallic gradient edge */
+    color: #FFD700; /* Gold text */
+    padding: 0.7rem 1.4rem; /* More button-like proportions */
+    border-radius: 8px; /* Rounded corners for a modern button look */
+    font-family: 'Inter', sans-serif; /* Premium typography */
+    font-weight: 600; /* Less bold for button-like feel */
+    font-size: 14px; /* Smaller, more button-appropriate size */
+    letter-spacing: 0.5px; /* Subtle spacing */
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); /* Snappier transitions */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), /* Lighter shadow for depth */
+                0 0 6px rgba(255, 215, 0, 0.15); /* Subtle gold glow */
+    margin: 12px 0; /* Balanced spacing in modal */
+    width: 100%; /* Full-width for consistency */
+    max-width: 200px; /* Slightly smaller for button aesthetic */
+}
+
+/* Person SVG Icon */
+#myAccountBtn::before {
+    content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="%23FFD700"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'); /* Slightly smaller gold-filled icon */
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    transform-origin: center;
+    transition: transform 0.2s ease;
+}
+
+/* Hover state */
+#myAccountBtn:hover {
+    background: linear-gradient(135deg, #FFD700, #FFAA00); /* Vibrant gold gradient */
+    color: #1A1A1E; /* Dark text for contrast */
+    transform: translateY(-1px); /* Subtle lift */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), /* Moderate depth */
+                0 0 8px rgba(255, 215, 0, 0.25); /* Soft glow */
+}
+
+#myAccountBtn:hover::before {
+    transform: scale(1.05); /* Subtle icon pop */
+    content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="%231A1A1E"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'); /* Dark icon for contrast */
+}
+
+/* Active state (Tap feedback) */
+#myAccountBtn:active {
+    transform: translateY(0) scale(0.99); /* Minimal press effect */
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1); /* Reduced shadow */
+}
+
+/* Focus state for accessibility */
+#myAccountBtn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3); /* Thinner gold focus ring */
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+    #myAccountBtn {
+        padding: 0.6rem 1.2rem; /* More compact */
+        font-size: 13px; /* Readable */
+        max-width: 180px; /* Smaller for mobile */
+        margin: 10px 0; /* Adjusted spacing */
+    }
+
+    #myAccountBtn::before {
+        content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="%23FFD700"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>');
+        width: 14px;
+        height: 14px;
+    }
+}
+
+/* Extra Small Screens */
+@media (max-width: 400px) {
+    #myAccountBtn {
+        padding: 0.5rem 1rem; /* Ultra compact */
+        font-size: 12px; /* Compact text */
+        max-width: 160px; /* Minimal size */
+        margin: 8px 0; /* Minimal spacing */
+    }
+
+    #myAccountBtn::before {
+        content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="%23FFD700"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>');
+        width: 12px;
+        height: 12px;
+    }
+}
+/* === My Account Dropdown === */
+#myAccount {
+    position: fixed;
+    top: 80px; /* Optimal spacing from top for desktop */
+    right: 20px; /* Consistent edge spacing */
+    background: #1A1A1E; /* Fully opaque, premium dark shade */
+    border: 1px solid rgba(255, 255, 255, 0.12); /* Subtle border for definition */
+    border-radius: var(--radius); /* Consistent with app's radius */
+    padding: 1.75rem; /* Spacious padding for elegance */
+    min-width: 280px; /* Wider for a refined layout */
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5); /* Deeper shadow for depth */
+    z-index: 1000; /* Ensures prominence over other elements */
+    animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth, subtle animation */
+    display: none; /* Hidden by default, toggled by JS */
+}
+
+/* Hidden state */
+#myAccount.hidden {
+    display: none !important;
+}
+
+/* Dropdown content styling */
+#myAccount p {
+    font-size: 15px; /* Balanced for readability */
+    margin-bottom: 1rem; /* Structured spacing */
+    color: var(--muted); /* Muted tone for secondary info */
+    line-height: 1.6; /* Comfortable line height */
+    font-weight: 400; /* Light weight for clarity */
+    letter-spacing: 0.2px; /* Subtle letter spacing for polish */
+}
+
+/* Account type and registration status */
+#myAccount .account-type,
+#myAccount .registration-status {
+    font-size: 16px; /* Prominent size for key info */
+    font-weight: 600; /* Bold for emphasis */
+    color: #E5E5E5; /* High-contrast text */
+    margin-bottom: 0.75rem; /* Consistent spacing */
+    letter-spacing: 0.3px; /* Enhanced readability */
+}
+
+/* Highlight account type with primary color */
+#myAccount .account-type span {
+    color: var(--primary); /* Vibrant primary color for emphasis */
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark)); /* Gradient for flair */
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent; /* Gradient text effect */
+}
+
+/* Separator line for visual hierarchy */
+#myAccount hr {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.15); /* Subtle separator */
+    margin: 1.25rem 0; /* Balanced spacing */
+}
+
+/* Logout button styling */
+#logoutBtn {
+    background: var(--danger); /* Bold danger color */
+    color: #fff; /* High-contrast text */
+    width: 100%; /* Full-width for prominence */
+    padding: 0.95rem; /* Comfortable padding */
+    border: none;
+    border-radius: calc(var(--radius) - 4px); /* Slightly smaller radius */
+    font-size: 15px; /* Readable size */
+    font-weight: 600; /* Bold for confidence */
+    cursor: pointer;
+    transition: all var(--transition); /* Smooth transitions for all properties */
+    margin-top: 0.75rem; /* Balanced spacing */
+    position: relative;
+    overflow: hidden; /* For hover effect */
+}
+
+/* Hover effect with subtle scaling */
+#logoutBtn:hover {
+    background: linear-gradient(135deg, #B00020, #8B0000); /* Refined gradient */
+    transform: scale(1.02); /* Subtle scaling for feedback */
+    box-shadow: 0 6px 16px rgba(176, 0, 32, 0.5); /* Dynamic shadow */
+}
+
+/* Active state for tactile feedback */
+#logoutBtn:active {
+    transform: scale(0.98); /* Slight shrink on click */
+    box-shadow: 0 4px 12px rgba(176, 0, 32, 0.3); /* Reduced shadow */
+}
+
+/* Animation for dropdown appearance */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-12px); /* Slightly larger initial offset */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+    #myAccount {
+        min-width: 240px; /* Compact but usable width */
+        right: 12px; /* Tighter edge spacing */
+        top: 60px; /* Adjusted for mobile header */
+        padding: 1.25rem; /* Slightly reduced padding */
+        border-radius: calc(var(--radius) - 2px); /* Slightly smaller radius */
+    }
+
+    #myAccount p,
+    #myAccount .account-type,
+    #myAccount .registration-status {
+        font-size: 14px; /* Smaller text for mobile */
+        margin-bottom: 0.75rem; /* Tighter spacing */
+    }
+
+    #logoutBtn {
+        padding: 0.8rem; /* Slightly smaller padding */
+        font-size: 14px; /* Adjusted for mobile */
+    }
+}
+
+/* Extra small screens (e.g., very small phones) */
+@media (max-width: 400px) {
+    #myAccount {
+        min-width: 200px; /* Minimum width for usability */
+        right: 8px;
+        top: 50px;
+        padding: 1rem;
+    }
+}
+
+
+
+/* === Animations === */
+@keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-12px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* === Accessibility === */
+#authForm input:focus-visible,
+#authBtn:focus-visible,
+#guestBtn:focus-visible,
+#myAccountBtn:focus-visible,
+#logoutBtn:focus-visible
+ {
+    outline: 2px solid #ffca28;
+    outline-offset: 2px;
+}
+
+/* === Responsive === */
+@media (max-width: 600px) {
+    #authSection {
+        padding: 0.5rem;
+    }
+
+    .auth-card {
+        padding: 1.75rem;
+        width: calc(100% - 1rem);
+        max-width: none;
+        margin: 0.5rem;
+    }
+
+    #authBtn,
+    #guestBtn
+     {
+        font-size: 14px;
+        padding: 0.75rem;
+    }
+
+    .auth-card h2 {
+        font-size: clamp(24px, 5vw, 30px);
+    }
+
+    #authForm input {
+        font-size: 14px;
+        padding: 0.8rem 1rem;
+    }
+
+    #myAccount {
+        min-width: 100%;
+        right: 0;
+        left: 0;
+        margin: 0.5rem 0;
+    }
+
+    #myAccountBtn,
+    #logoutBtn {
+        font-size: 14px;
+        padding: 0.75rem;
+    }
+}
+
+
+
+
+
+
+/* === Logout Confirmation Modal BOTH AUTH-USER & GUEST === */
+#logoutConfirmModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8); /* Darker overlay for premium focus */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000; /* Above all content */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease-out; /* Fast, smooth fade */
+}
+
+#logoutConfirmModal.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Modal Content */
+.logout-modal-content {
+    position: relative;
+    background: #1A1A1E; /* Opaque, premium dark background */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle, elegant border */
+    border-radius: var(--radius); /* Consistent app radius */
+    padding: 2.25rem; /* Generous padding for luxury */
+    max-width: 400px; /* Compact yet balanced */
+    width: 85%; /* Responsive width */
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3); /* Layered shadow for depth */
+    transform: translateY(20px); /* Initial offset for animation */
+    transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.3s ease-out;
+}
+
+#logoutConfirmModal.active .logout-modal-content {
+    transform: translateY(0); /* Slide into place */
+    opacity: 1;
+}
+
+/* Hidden States */
+#authUserLogout.hidden,
+#guestLogoutPrompt.hidden {
+    display: none !important;
+}
+
+/* Visible States */
+#authUserLogout,
+#guestLogoutPrompt {
+    display: block;
+}
+
+/* Modal Header */
+.logout-modal-content h3 {
+    font-size: 22px; /* Bold, prominent header */
+    font-weight: 700; /* Strong emphasis */
+    color: #E5E5E5; /* High-contrast text */
+    margin-bottom: 1.25rem; /* Spacious separation */
+    font-family: 'Inter', sans-serif; /* Consistent typography */
+    letter-spacing: 0.4px; /* Refined spacing */
+    text-align: center; /* Centered for impact */
+}
+
+/* Paragraph Styling */
+.logout-modal-content p {
+    font-size: 14px; /* Clean, readable */
+    color: var(--muted); /* Muted for secondary info */
+    line-height: 1.7; /* Comfortable reading */
+    margin-bottom: 1.25rem; /* Balanced spacing */
+    text-align: center; /* Centered for consistency */
+}
+
+/* Warning Emoji for Authenticated Users */
+#authUserLogout p::before {
+    content: "⚠️";
+    color: var(--primary); /* Highlight with primary color */
+    margin-right: 10px; /* Subtle spacing */
+    font-size: 18px; /* Slightly larger for emphasis */
+}
+
+/* List Styling */
+.logout-modal-content ul {
+    list-style: none; /* Minimalist look */
+    margin: 1rem 0 1.75rem; /* Generous spacing */
+    padding-left: 1.25rem; /* Indent for alignment */
+    text-align: left; /* Left-aligned for clarity */
+}
+
+/* List Items */
+.logout-modal-content ul li {
+    font-size: 13px; /* Compact for hierarchy */
+    color: #E5E5E5; /* Bright, readable text */
+    line-height: 1.7; /* Spacious line height */
+    margin-bottom: 0.6rem; /* Tight but balanced */
+    position: relative;
+}
+
+/* Custom Bullet */
+.logout-modal-content ul li::before {
+    content: "◆"; /* Diamond bullet for premium feel */
+    color: var(--primary); /* Primary color for elegance */
+    position: absolute;
+    left: -1.25rem; /* Precise alignment */
+    font-size: 12px; /* Subtle bullet size */
+}
+
+/* Modal Actions Container (Authenticated Users) */
+.modal-actions {
+    display: flex;
+    gap: 1.25rem; /* Refined spacing */
+    justify-content: center; /* Centered for balanced UX */
+}
+
+/* Danger Button (Log Out Anyway) */
+#confirmLogoutBtn.danger-btn {
+    background: var(--danger); /* Bold danger color */
+    color: #fff; /* High-contrast */
+    padding: 0.9rem 1.75rem; /* Comfortable size */
+    border: none;
+    border-radius: calc(var(--radius) - 4px); /* Consistent radius */
+    font-size: 14px; /* Clear and readable */
+    font-weight: 600; /* Confident weight */
+    cursor: pointer;
+    transition: all var(--transition); /* Smooth transitions */
+    box-shadow: 0 4px 12px rgba(176, 0, 32, 0.3); /* Subtle shadow */
+}
+
+/* Hover effect for danger button */
+#confirmLogoutBtn.danger-btn:hover {
+    background: #8B0000; /* Darker red for focus */
+    transform: translateY(-3px); /* Raised effect */
+    box-shadow: 0 8px 20px rgba(176, 0, 32, 0.5); /* Stronger shadow */
+}
+
+/* Active state for danger button */
+#confirmLogoutBtn.danger-btn:active {
+    transform: translateY(0); /* Reset position */
+    box-shadow: 0 4px 12px rgba(176, 0, 32, 0.2); /* Reduced shadow */
+}
+
+/* Cancel Button */
+#cancelLogoutBtn.cancel-btn {
+    background: transparent; /* Minimalist, premium look */
+    color: #E5E5E5; /* High-contrast */
+    padding: 0.9rem 1.75rem; /* Matches danger button */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border */
+    border-radius: calc(var(--radius) - 4px); /* Consistent radius */
+    font-size: 14px; /* Readable */
+    font-weight: 500; /* Lighter for hierarchy */
+    cursor: pointer;
+    transition: all var(--transition);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+}
+
+/* Hover effect for cancel button */
+#cancelLogoutBtn.cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.15); /* Slight highlight */
+    transform: translateY(-3px); /* Raised effect */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); /* Stronger shadow */
+}
+
+/* Active state for cancel button */
+#cancelLogoutBtn.cancel-btn:active {
+    transform: translateY(0); /* Reset position */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Reduced shadow */
+}
+
+/* Guest Logout Prompt Specific Styling */
+#guestLogoutPrompt.guest-logout-message {
+    text-align: center; /* Welcoming, centered layout */
+}
+
+/* Sign Up Button */
+#goToSignupBtn.auth-btn {
+    background: var(--primary); /* Solid primary color for simplicity */
+    color: #1A1A1E; /* Dark text for contrast */
+    padding: 0.9rem; /* Consistent padding */
+    border: none;
+    border-radius: calc(var(--radius) - 4px); /* Consistent radius */
+    font-size: 15px; /* Slightly larger for prominence */
+    font-weight: 700; /* Bolder for emphasis */
+    cursor: pointer;
+    width: 100%; /* Full-width for impact */
+    margin: 1.25rem 0 1rem; /* Balanced spacing */
+    transition: all var(--transition);
+    box-shadow: 0 4px 12px rgba(255, 202, 40, 0.3); /* Subtle shadow */
+}
+
+/* Hover effect for sign-up button */
+#goToSignupBtn.auth-btn:hover {
+    transform: translateY(-3px); /* Raised effect, standard UX */
+    box-shadow: 0 8px 20px rgba(255, 202, 40, 0.5); /* Bolder shadow */
+    background: var(--primary-light); /* Lighter shade for focus */
+}
+
+/* Active state for sign-up button */
+#goToSignupBtn.auth-btn:active {
+    transform: translateY(0); /* Reset position */
+    box-shadow: 0 4px 12px rgba(255, 202, 40, 0.2); /* Reduced shadow */
+}
+
+/* Sign In Link */
+#goToLoginLink {
+    color: var(--primary); /* Primary color for consistency */
+    text-decoration: none;
+    font-weight: 600; /* Slightly bolder for clarity */
+    font-size: 14px; /* Readable */
+    transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+/* Hover effect for sign-in link */
+#goToLoginLink:hover {
+    color: var(--primary-light); /* Brighter on hover */
+    text-decoration: underline; /* Standard underline for links */
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+    .logout-modal-content {
+        max-width: 90%; /* Flexible width */
+        padding: 1.5rem; /* Compact padding */
+        border-radius: calc(var(--radius) - 3px); /* Slightly smaller radius */
+    }
+
+    .logout-modal-content h3 {
+        font-size: 18px; /* Smaller header */
+    }
+
+    .logout-modal-content p,
+    .logout-modal-content ul li {
+        font-size: 13px; /* Compact text */
+    }
+
+    .modal-actions {
+        flex-direction: column; /* Stack buttons */
+        gap: 0.75rem; /* Tight spacing */
+    }
+
+    #confirmLogoutBtn.danger-btn,
+    #cancelLogoutBtn.cancel-btn,
+    #goToSignupBtn.auth-btn {
+        padding: 0.8rem; /* Smaller padding */
+        font-size: 13px; /* Smaller text */
+        width: 100%; /* Full-width */
+    }
+
+    #goToLoginLink {
+        font-size: 13px; /* Smaller link */
+    }
+}
+
+/* Extra Small Screens */
+@media (max-width: 400px) {
+    .logout-modal-content {
+        padding: 1.25rem; /* Minimal padding */
+        max-width: 95%; /* Tighter fit */
+    }
+
+    .logout-modal-content h3 {
+        font-size: 16px; /* Minimal header */
+    }
+
+    .logout-modal-content p,
+    .logout-modal-content ul li {
+        font-size: 12px; /* Minimal text */
+    }
+
+    #goToLoginLink {
+        font-size: 12px; /* Minimal link size */
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+/* === EYE TOGGLE ON AUTH FORM  === */
+.password-input-container {
+    position: relative;
+    width: 100%;
+}
+
+.password-input-container input[type="password"],
+.password-input-container input[type="text"] {
+    padding-right: 40px; /* Make space for the toggle button */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    outline: none;
+}
+
+.password-toggle .material-icons {
+    font-size: 20px;
+}
+
+.password-toggle:hover {
+    color: #333;
+}
+
+
+
+

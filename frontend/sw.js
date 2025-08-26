@@ -18,7 +18,12 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-    event.waitUntil(self.clients.claim());
+    event.waitUntil(
+        Promise.all([
+            self.clients.claim(),
+            checkTaskReminders() // Run initial check on activation
+        ])
+    );
 });
 
 self.addEventListener('fetch', event => {
@@ -42,15 +47,19 @@ self.addEventListener('message', event => {
         tasks = event.data.tasks;
         userName = event.data.userName;
         enableReminders = event.data.enableReminders;
+        console.log('Service Worker: Synced tasks:', tasks.map(t => t.name), 'userName:', userName, 'enableReminders:', enableReminders);
     } else if (event.data.type === 'TRIGGER_NOTIFICATION') {
         const task = event.data.task;
-        const now = new Date();
         const notificationId = `task-${task.id}-${task.startTime}`;
+        const now = new Date();
 
         if (
-            !lastNotificationTimes.has(notificationId) ||
-            (now - lastNotificationTimes.get(notificationId)) > 15 * 60 * 1000
+            enableReminders &&
+            Notification.permission === 'granted' &&
+            (!lastNotificationTimes.has(notificationId) ||
+             (now - lastNotificationTimes.get(notificationId)) > 10 * 60 * 1000) // 10-minute window
         ) {
+            console.log(`Service Worker: Showing notification for task "${task.name}" at ${task.startTime} via TRIGGER_NOTIFICATION`);
             self.registration.showNotification('Task Reminder', {
                 body: `Hey, ${event.data.userName}! ${task.name} is starting in 10 minutes—let’s do this!😊💪 Priority: ${task.priority}`,
                 icon: './icons/icon-192x192.png',
@@ -59,6 +68,10 @@ self.addEventListener('message', event => {
                 tag: notificationId
             });
             lastNotificationTimes.set(notificationId, now);
+            // Clear after 10 minutes to allow future notifications
+            setTimeout(() => lastNotificationTimes.delete(notificationId), 10 * 60 * 1000);
+        } else {
+            console.log(`Service Worker: Skipped notification for task "${task.name}" via TRIGGER_NOTIFICATION: enableReminders=${enableReminders}, permission=${Notification.permission}, alreadyNotified=${lastNotificationTimes.has(notificationId)}`);
         }
     }
 });
@@ -73,7 +86,6 @@ self.addEventListener('notificationclick', event => {
                         return client.focus();
                     }
                 }
-                // ✅ Open correct relative path
                 return clients.openWindow('./index.html');
             })
         );
@@ -84,37 +96,46 @@ self.addEventListener('notificationclick', event => {
 // Reminder Checking Function
 // -------------------------
 function checkTaskReminders() {
-    if (!enableReminders || !('Notification' in self) || Notification.permission !== 'granted') return;
+    if (!enableReminders || !('Notification' in self) || Notification.permission !== 'granted') {
+        console.log('Service Worker: Skipped checkTaskReminders: enableReminders=', enableReminders, 'Notification supported=', 'Notification' in self, 'permission=', Notification.permission);
+        return Promise.resolve();
+    }
 
     const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-    tasks.forEach(task => {
+    const promises = tasks.map(task => {
         const [hours, minutes] = task.startTime.split(':').map(Number);
-        const taskMinutes = hours * 60 + minutes;
-        const reminderMinutes = taskMinutes - 10;
-        const timeDiff = Math.abs(currentMinutes - reminderMinutes);
+        const startDate = new Date(now);
+        startDate.setHours(hours, minutes, 0, 0);
+        const timeDiff = startDate.getTime() - now.getTime();
+        const notificationId = `task-${task.id}-${task.startTime}`;
 
-        if (timeDiff <= 1) {
-            const notificationId = `task-${task.id}-${task.startTime}`;
-            if (
-                !lastNotificationTimes.has(notificationId) ||
-                (now - lastNotificationTimes.get(notificationId)) > 15 * 60 * 1000
-            ) {
-                self.registration.showNotification('Task Reminder', {
-                    body: `Hey, ${userName}! ${task.name} is starting in 10 minutes—let’s do this!😊💪 Priority: ${task.priority}`,
-                    icon: './icons/icon-192x192.png',
-                    vibrate: [200, 100, 200],
-                    actions: [{ action: 'open', title: 'Open App' }],
-                    tag: notificationId
-                });
+        if (
+            timeDiff >= 0 &&
+            timeDiff <= 10 * 60 * 1000 &&
+            timeDiff >= 9.5 * 60 * 1000 && // 9.5–10 minute window
+            !lastNotificationTimes.has(notificationId)
+        ) {
+            console.log(`Service Worker: Showing notification for task "${task.name}" at ${task.startTime} via checkTaskReminders: timeDiff=${timeDiff}ms`);
+            return self.registration.showNotification('Task Reminder', {
+                body: `Hey, ${userName}! ${task.name} is starting in 10 minutes—let’s do this!😊💪 Priority: ${task.priority}`,
+                icon: './icons/icon-192x192.png',
+                vibrate: [200, 100, 200],
+                actions: [{ action: 'open', title: 'Open App' }],
+                tag: notificationId
+            }).then(() => {
                 lastNotificationTimes.set(notificationId, now);
-            }
+                setTimeout(() => lastNotificationTimes.delete(notificationId), 10 * 60 * 1000);
+            });
+        } else {
+            console.log(`Service Worker: Skipped notification for task "${task.name}" via checkTaskReminders: timeDiff=${timeDiff}ms, alreadyNotified=${lastNotificationTimes.has(notificationId)}`);
+            return Promise.resolve();
         }
     });
+
+    return Promise.all(promises);
 }
 
-setInterval(checkTaskReminders, 60 * 1000);
+setInterval(() => checkTaskReminders(), 30 * 1000); // Run every 30 seconds to match app.js
 
 self.addEventListener('periodicsync', event => {
     if (event.tag === 'check-notifications') {
