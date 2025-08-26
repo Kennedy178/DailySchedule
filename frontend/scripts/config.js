@@ -2,7 +2,7 @@
 // Auto-detect environment and set API base URL
 const API_CONFIG = {
     development: 'http://localhost:8000',
-    production: 'https://getitdone-backend.onrender.com'  // Replace with your actual backend URL
+    production: 'https://getitdone-api.onrender.com'  // actual backend URL
 };
 
 // Detect environment
