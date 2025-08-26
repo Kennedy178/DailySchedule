@@ -6,7 +6,7 @@ import { access_token } from './authHandler.js';
 
 
 // At the top of offline-queue.js
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = window.API_BASE_URL; // Uses config.js
 
 // Queue operation types
 const QUEUE_OPERATIONS = {

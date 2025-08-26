@@ -6,7 +6,7 @@ import asyncio
 from typing import List, Dict, Optional
 from firebase_admin import initialize_app, messaging, credentials
 from firebase_admin.exceptions import FirebaseError
-from backend.utils.supabase_client import supabase
+from utils.supabase_client import supabase
 
 # Set up module-level logger
 logger = logging.getLogger(__name__)

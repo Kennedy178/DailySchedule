@@ -3,6 +3,7 @@
  * Handles FAQ accordions, navigation, lightbox, modal, and contact form
  */
 
+
 class HelpPageManager {
     constructor() {
         this.init();
@@ -415,7 +416,7 @@ setupModal() {
 
             try {
                 // Send to FastAPI backend
-                const response = await fetch('http://localhost:8000/contact/', {  
+                const response = await fetch(`${window.API_BASE_URL}/contact/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -8,17 +8,17 @@ from dotenv import load_dotenv
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-from backend.routes.tasks import router as tasks_router
-from backend.utils.auth_utils import verify_token
-from backend.routes.fcm import router as fcm_router
-from backend.utils.fcm_service import initialize_firebase, send_task_reminder
-from backend.utils.supabase_client import supabase
-# Add this import to your main.py
-from backend.routes.contact import router as contact_router
+# Fixed imports - remove 'backend.' prefix for deployment
+from routes.tasks import router as tasks_router
+from utils.auth_utils import verify_token
+from routes.fcm import router as fcm_router
+from utils.fcm_service import initialize_firebase, send_task_reminder
+from utils.supabase_client import supabase
+from routes.contact import router as contact_router
 
 
 logging.basicConfig(
-    level=logging.ERROR,   # <--- switched to ERROR from INFO--> which allowed info+warning+error
+    level=logging.ERROR,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
         logging.FileHandler("app.log"),
@@ -73,9 +73,7 @@ async def get_user_display_name(user_id: str) -> str:
     Falls back to 'you' if not found.
     """
     try:
-        # First, try to get from auth.users metadata
-        # Let's try querying the users table directly if accessible  
-        # Option 1: Try profiles table on supabase db(already exists)
+        # First, try to get from profiles table
         profiles_response = supabase.table("profiles").select("full_name, display_name").eq("id", user_id).execute()
         
         if profiles_response.data and len(profiles_response.data) > 0:
@@ -85,7 +83,7 @@ async def get_user_display_name(user_id: str) -> str:
             if name:
                 return name.strip()
         
-        # Option 2: Try auth.users table (may require RLS bypass)--but already tken careof n its a fallback after all--
+        # Option 2: Try auth.users table (may require RLS bypass)
         users_response = supabase.table("auth.users").select("email, raw_user_meta_data").eq("id", user_id).execute()
         
         if users_response.data and len(users_response.data) > 0:
@@ -129,7 +127,6 @@ async def check_upcoming_tasks():
         current_datetime = now
         
         # Calculate time window (9.5 to 10.5 minutes from now)
-        # Using slightly wider window to account for processing delays
         start_window = current_datetime + timedelta(minutes=9, seconds=30)
         end_window = current_datetime + timedelta(minutes=10, seconds=30)
         
@@ -163,7 +160,6 @@ async def check_upcoming_tasks():
                 
             else:
                 # Midnight crossover - need two queries
-                # This is rare but possible if checking near midnight
                 logger.debug("Handling midnight crossover in time window")
                 
                 # Query for tasks before midnight
@@ -362,12 +358,15 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
-app.include_router(contact_router)
-# DEVELOPMENT-ONLY: Add CORS middleware to allow frontend requests
-# In production, update allow_origins to your frontend domain
+
+# Updated CORS for production deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5500", "https://your-domain.com"],  # Add your production domain
+    allow_origins=[
+        "http://localhost:5500",  # Local development
+        "http://localhost:3000",  # Alternative local port
+        "https://getitdone-frontend.onrender.com",  # Replace with your actual frontend URL
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -379,6 +378,7 @@ logger.info("🚀 FastAPI application starting...")
 # Include routers
 app.include_router(tasks_router, prefix="/tasks", tags=["Tasks"])
 app.include_router(fcm_router, prefix="/api/fcm", tags=["FCM Notifications"])
+app.include_router(contact_router)
 
 @app.get("/", tags=["Root"])
 async def root():
@@ -400,7 +400,7 @@ async def health_check():
     # Check Firebase status
     firebase_status = "unknown"
     try:
-        from backend.utils.fcm_service import get_firebase_app
+        from utils.fcm_service import get_firebase_app
         firebase_app = get_firebase_app()
         firebase_status = "initialized" if firebase_app else "failed"
     except Exception:

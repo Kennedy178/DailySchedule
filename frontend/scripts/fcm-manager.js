@@ -7,7 +7,7 @@ import { getSetting, setSetting, storeFCMToken, getFCMToken, deleteFCMToken, sto
 import { queueTokenRegistration, queueTokenUnregistration, processAllQueuedOperations } from './offline-queue.js';
 
 // At the top of offline-queue.js
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = window.API_BASE_URL; // Uses config.js
 
 // FCM Manager state
 let fcmToken = null;

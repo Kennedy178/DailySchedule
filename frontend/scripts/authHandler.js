@@ -282,7 +282,7 @@ function setupEventListeners() {
             showLoading(true);
             
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: 'http://localhost:5500/reset-password.html'
+                redirectTo: `${window.location.origin}/reset-password.html`
             });
             
             if (error) throw error;

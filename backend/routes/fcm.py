@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
-from backend.utils.supabase_client import supabase
-from backend.utils.auth_utils import verify_token
-from backend.utils.fcm_service import cleanup_invalid_tokens
+from utils.supabase_client import supabase
+from utils.auth_utils import verify_token
+from utils.fcm_service import cleanup_invalid_tokens
 
 # Set up module-level logger
 logger = logging.getLogger(__name__)

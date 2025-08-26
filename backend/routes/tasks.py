@@ -4,8 +4,8 @@ from pydantic import BaseModel
 from uuid import UUID
 from datetime import time, date
 from typing import Optional
-from backend.utils.supabase_client import supabase
-from backend.utils.auth_utils import verify_token
+from utils.supabase_client import supabase
+from utils.auth_utils import verify_token
 
 # Set up module-level logger
 logger = logging.getLogger(__name__)

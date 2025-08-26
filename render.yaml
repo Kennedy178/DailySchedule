@@ -1,0 +1,37 @@
+services:
+  # Backend API Service
+  - type: web
+    name: taskmaster-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+envVars:
+  - key: PYTHON_VERSION
+    value: 3.11.4
+  - key: SUPABASE_URL
+    sync: false
+  - key: SUPABASE_KEY
+    sync: false
+  - key: SUPABASE_JWT_SECRET
+    sync: false
+  - key: FIREBASE_SERVICE_ACCOUNT
+    sync: false
+  - key: GMAIL_ADDRESS
+    sync: false
+  - key: GMAIL_APP_PASSWORD
+    sync: false
+    
+  # Frontend Static Site
+  - type: static
+    name: taskmaster-frontend
+    staticPublishPath: ./frontend
+    buildCommand: echo "No build needed for static site"
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff

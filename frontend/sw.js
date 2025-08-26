@@ -1,15 +1,3 @@
-// Service Worker for GetItDone App
-// Handles caching, local notifications (guest users), and FCM (authenticated users)
-
-
-
-
-
-
-
-
-
-
 // Import Firebase messaging for FCM support
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
@@ -46,6 +34,7 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open('getitdone-v1').then(cache => {
             return cache.addAll([
+
                 './',
                 './index.html',
                 './manifest.json',
@@ -57,16 +46,28 @@ self.addEventListener('install', event => {
                 './scripts/sync.js',
                 './scripts/fcm-config.js',
                 './scripts/fcm-manager.js',
-                './scripts/offline-queue.js', // Add new offline queue file
+                './scripts/offline-queue.js', 
                 './icons/favicon-32x32.png',
                 './icons/icon-192x192.png',
                 './icons/icon-512x512.png',
                 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',
-                'https://assets.mixkit.co/active_storage/sfx/2297/2297-preview.mp3'
+                'https://assets.mixkit.co/active_storage/sfx/2297/2297-preview.mp3',
+                './story-content.html',
+                './help.html',
+                './tos.html',
+                './privacy.html',
+                './reset-password.html',
+                './styles/help.css',
+                './scripts/help.js',
+                './assets/screenshots/signup.png',
+                './assets/screenshots/confirmation.png',
+                './assets/screenshots/settings.png',
+                './assets/screenshots/tasks.png'
             ]);
         }).then(() => self.skipWaiting())
     );
 });
+
 
 self.addEventListener('activate', event => {
     event.waitUntil(
