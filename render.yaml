@@ -24,8 +24,9 @@ services:
         sync: false
     
   # Frontend Static Site
-  - type: static
+  - type: web
     name: getitdone-frontend
+    env: static
     staticPublishPath: ./frontend
     buildCommand: echo "No build needed for static site"
     headers:
