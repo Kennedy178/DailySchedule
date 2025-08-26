@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help & FAQ - GetItDone</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/help.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="help-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>Help & FAQ</h1>
+                    <p class="header-subtitle">Everything you need to master GetItDone</p>
+                </div>
+                <a href="index.html" class="back-to-app">
+                    <span class="back-icon">←</span>
+                    Back to App
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Floating Navigation Sidebar -->
+    <nav class="floating-nav" id="floatingNav">
+        <div class="nav-header">
+            <span class="nav-title">Quick Jump</span>
+            <button class="nav-toggle" id="navToggle">☰</button>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#getting-started" class="nav-link">Getting Started</a></li>
+            <li><a href="#using-app" class="nav-link">Using the App</a></li>
+            <li><a href="#troubleshooting" class="nav-link">Troubleshooting</a></li>
+            <li><a href="#about" class="nav-link">About</a></li>
+            <li><a href="#history" class="nav-link">History</a></li>
+            <li><a href="#contact" class="nav-link">Contact</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="main-content">
+        <div class="container">
+            <div class="faq-container">
+
+                <!-- Getting Started Section -->
+                <section class="faq-section" id="getting-started">
+                    <div class="section-header" data-target="getting-started-content">
+                        <h2 class="section-title">Getting Started</h2>
+                        <span class="accordion-icon">+</span>
+                    </div>
+                    <div class="section-content" id="getting-started-content">
+                        <div class="content-inner">
+                            <p class="section-intro">Welcome to GetItDone! Getting started is simple and takes less than 2 minutes.</p>
+                            
+                            <div class="content-block">
+                                <h3 class="content-heading">Creating Your Account</h3>
+                                <ol class="step-list">
+                                    <li class="step-item">
+                                        <span class="step-label">Login or Create Account:</span>
+                                        Click the login button and choose to create a new account
+                                    </li>
+                                    <li class="step-item">
+                                        <span class="step-label">Enter Valid Email & Password:</span>
+                                        Use a real email address as you'll need to verify it
+                                    </li>
+                                    <li class="step-item">
+                                        <span class="step-label">Check Your Inbox:</span>
+                                        Look for a confirmation email (check spam folder if not found)
+                                    </li>
+                                    <li class="step-item">
+                                        <span class="step-label">Click Confirmation Link:</span>
+                                        This will automatically sign you in and load your homepage
+                                    </li>
+                                </ol>
+                            </div>
+
+                            <div class="tip-box">
+                                <div class="tip-icon">💡</div>
+                                <div class="tip-content">
+                                    <span class="tip-label">Pro Tip:</span>
+                                    Since you're reading this FAQ, you've already completed the login process! Welcome aboard.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Using the App Section -->
+                <section class="faq-section" id="using-app">
+                    <div class="section-header" data-target="using-app-content">
+                        <h2 class="section-title">Using the App</h2>
+                        <span class="accordion-icon">+</span>
+                    </div>
+                    <div class="section-content" id="using-app-content">
+                        <div class="content-inner">
+                            <div class="content-block">
+                                <h3 class="content-heading">Step 1: Enable Browser Notifications</h3>
+                                <p>When you first use GetItDone, your browser will ask for permission to send notifications. This is essential for task reminders.</p>
+                                <div class="screenshot-container">
+                                    <img src="assets/screenshots/notif.png" alt="Browser notification permission dialog" class="screenshot" data-lightbox="notif.png">
+                                    <p class="screenshot-caption">Click "Allow" when this notification appears</p>
+                                </div>
+                            </div>
+
+                            <div class="content-block">
+                                <h3 class="content-heading">Step 2: Enable App Notifications</h3>
+                                <p>After allowing browser notifications, configure the app's notification settings:</p>
+                                <ol class="step-list">
+                                    <li class="step-item">Click the <span class="highlight">Settings</span> button in the top right corner</li>
+                                    <li class="step-item">Check the box labeled <span class="highlight">"Enable Task Reminders"</span></li>
+                                    <li class="step-item">Optionally add your name for personalized notifications</li>
+                                    <li class="step-item">Click <span class="highlight">Save</span> to apply your settings</li>
+                                </ol>
+                                <div class="screenshot-container">
+                                    <img src="assets/screenshots/settings.png" alt="App settings panel showing notification options" class="screenshot" data-lightbox="settings.png">
+                                    <p class="screenshot-caption">Settings panel - enable notifications here</p>
+                                </div>
+                            </div>
+
+                            <div class="content-block">
+                                <h3 class="content-heading">Step 3: Start Managing Tasks</h3>
+                                <p>You're all set! Use the default loaded tasks or add your own. The app handles everything else automatically.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Troubleshooting Section -->
+                <section class="faq-section" id="troubleshooting">
+                    <div class="section-header" data-target="troubleshooting-content">
+                        <h2 class="section-title">Troubleshooting & FAQ</h2>
+                        <span class="accordion-icon">+</span>
+                    </div>
+                    <div class="section-content" id="troubleshooting-content">
+                        <div class="content-inner">
+                            
+                            <div class="faq-item">
+                                <h3 class="faq-question">I'm not receiving any task reminders</h3>
+                                <div class="faq-answer">
+                                    <p>First, check your app settings and ensure you have ticked "Enable Task Reminders". Additionally, if you installed the app via Brave browser or Firefox, they block notifications by default. Consider installing the app via Chrome for full notification support.</p>
+                                </div>
+                            </div>
+
+                            <div class="faq-item">
+                                <h3 class="faq-question">I didn't receive the confirmation email/reset password link</h3>
+                                <div class="faq-answer">
+                                    <p>Ensure you entered a valid email address and check your spam folder. The email should arrive within a few minutes.</p>
+                                </div>
+                            </div>
+
+                            <div class="faq-item">
+                                <h3 class="faq-question">What if my tasks are recurring?</h3>
+                                <div class="faq-answer">
+                                    <p>Don't worry! All tasks are recurring by default unless you explicitly delete them. All task progress resets at midnight, and their status is saved and accessible via the "View Report" button at the top menu. This saves task progress for the past 7 days, including those completed on time, completed late, or missed. The system resets all task progress fresh each midnight because each new day should start on a fresh state.</p>
+                                </div>
+                            </div>
+
+                            <div class="faq-item">
+                                <h3 class="faq-question">Why do some tasks appear greyed out and I can't mark them as complete?</h3>
+                                <div class="faq-answer">
+                                    <p>The system checks the end time of each task and gives a 15-minute grace period to mark them as complete. If not completed within this time, the task is greyed out and a new "Complete Late" button appears on the task card. If clicked, you must enter a reason why the task is late, upon which it will be marked as complete. The system does this to enforce accountability in a soft way. However, this task will be tracked in the View Report section as having been completed late.</p>
+                                    <div class="screenshot-container">
+                                        <img src="assets/screenshots/late.png" alt="Late task completion dialog" class="screenshot" data-lightbox="late.png">
+                                        <p class="screenshot-caption">Late task completion - accountability feature</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="faq-item">
+                                <h3 class="faq-question">Can I login with the same account across multiple devices?</h3>
+                                <div class="faq-answer">
+                                    <p>Absolutely! Cross-device syncing is supported. Changes made on one device will automatically reflect on any logged-in device in real time.</p>
+                                </div>
+                            </div>
+
+                            <div class="faq-item">
+                                <h3 class="faq-question">What happens when I'm offline and make changes or add tasks?</h3>
+                                <div class="faq-answer">
+                                    <p>The system uses an offline-first architecture - that's one of our key goals. Don't worry, do your work! Any changes you make will be queued and synced to the database when you're back online. Our goal is to handle the heavy lifting for you, so you can handle what really matters.</p>
+                                </div>
+                            </div>
+
+                            <div class="faq-item">
+                                <h3 class="faq-question">Can I delete or edit tasks?</h3>
+                                <div class="faq-answer">
+                                    <p>Absolutely! Use the edit and delete buttons available on each task card.</p>
+                                </div>
+                            </div>
+
+                            <div class="faq-item">
+                                <h3 class="faq-question">I have a suggestion - how can I contact the developer?</h3>
+                                <div class="faq-answer">
+                                    <p>Scroll to the end of this FAQ and you'll see a contact section. Send me a message - I reply fast! Alternatively, at the footer of any page in this app, you'll find a "Contact Developer" link.</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+                <!-- About Section -->
+                <section class="faq-section" id="about">
+                    <div class="section-header" data-target="about-content">
+                        <h2 class="section-title">About</h2>
+                        <span class="accordion-icon">+</span>
+                    </div>
+                    <div class="section-content" id="about-content">
+                        <div class="content-inner">
+                            <div class="about-content">
+                                <h2 class="about-title">About GetItDone</h2>
+                                
+                                <p class="about-intro"><span class="app-name">GetItDone</span> is a modern task management app that cuts through the noise of overcomplicated productivity tools. Built for <span class="emphasis">clarity, speed, and focus</span>, it combines stunning dark aesthetics with glassmorphism design elements to create an experience that's as beautiful as it is functional.</p>
+
+                                <div class="content-block">
+                                    <h3 class="content-heading">What Makes GetItDone Different</h3>
+                                    <p class="philosophy">At its core, <span class="app-name">GetItDone</span> was designed around one simple philosophy: <span class="emphasis">your task manager shouldn't be another task to manage.</span></p>
+                                </div>
+
+                                <div class="feature-grid">
+                                    <div class="feature-card">
+                                        <h4 class="feature-title">Stay Effortlessly Organized</h4>
+                                        <p class="feature-description">A clean, distraction-free interface that gets out of your way and lets you focus on what actually matters.</p>
+                                    </div>
+
+                                    <div class="feature-card">
+                                        <h4 class="feature-title">Sync Without Thinking</h4>
+                                        <p class="feature-description">Seamless cross-device synchronization—start on your phone, finish on your laptop, never miss a beat.</p>
+                                    </div>
+
+                                    <div class="feature-card">
+                                        <h4 class="feature-title">Never Miss What Matters</h4>
+                                        <p class="feature-description">Smart reminders and push notifications that actually help instead of overwhelm.</p>
+                                    </div>
+
+                                    <div class="feature-card">
+                                        <h4 class="feature-title">Work Anywhere, Anytime</h4>
+                                        <p class="feature-description">Full offline capability with intelligent background sync—because productivity shouldn't depend on your WiFi connection.</p>
+                                    </div>
+
+                                    <div class="feature-card">
+                                        <h4 class="feature-title">Security That Just Works</h4>
+                                        <p class="feature-description">Enterprise-grade authentication and token handling that protects your data without adding complexity to your life.</p>
+                                    </div>
+                                </div>
+
+                                <div class="content-block">
+                                    <h3 class="content-heading">Built for Real People</h3>
+                                    <p>Unlike bloated productivity suites that need their own instruction manual, <span class="app-name">GetItDone</span> is lightweight yet powerful—simple enough for everyday to-dos, sophisticated enough for managing complex long-term projects.</p>
+                                    <p>Every pixel, transition, and interaction was obsessively crafted with one goal: keeping you focused on the pure, satisfying feeling of <span class="emphasis">getting things done.</span></p>
+                                </div>
+
+                                <p class="tagline">Because the best productivity tool is the one you actually want to use every day.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- History Section -->
+                <section class="faq-section" id="history">
+                    <div class="section-header" data-target="history-modal">
+                        <h2 class="section-title">History</h2>
+                        <span class="accordion-icon">→</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="content-inner">
+                            <p class="history-modal-trigger">Click to view the complete development story of GetItDone</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Contact Section -->
+                <section class="faq-section" id="contact">
+                    <div class="section-header" data-target="contact-content">
+                        <h2 class="section-title">Feedback & Support</h2>
+                        <span class="accordion-icon">+</span>
+                    </div>
+                    <div class="section-content" id="contact-content">
+                        <div class="content-inner">
+                            <p class="contact-intro">Have a suggestion, found a bug, or need personalized help? I'd love to hear from you!</p>
+                            
+                            <form id="contactForm" class="contact-form">
+                                <!-- Honeypot field - hidden from users -->
+                                <input type="text" name="website" class="honeypot" tabindex="-1" autocomplete="off">
+                                
+                                <div class="form-group">
+                                    <label for="email" class="form-label">Your Email</label>
+                                    <input type="email" id="email" name="email" class="form-input" required placeholder="your@email.com">
+                                </div>
+
+<div class="form-group">
+    <label for="subject" class="form-label">Subject</label>
+    <select id="subject" name="subject" class="form-select" required>
+        <option value="">Select a topic</option>
+        <option value="Bug Report">Bug Report</option>
+        <option value="Feature Request">Feature Request</option>
+        <option value="General Feedback">General Feedback</option>
+        <option value="Technical Support">Technical Support</option>
+        <option value="Other">Other</option>
+    </select>
+</div>
+
+<!-- Custom subject input - initially hidden -->
+<div class="form-group" id="customSubjectGroup" style="display: none;">
+    <label for="customSubject" class="form-label">Custom Subject</label>
+    <input type="text" id="customSubject" name="customSubject" class="form-input" placeholder="Enter your custom subject">
+</div>
+
+                                <div class="form-group">
+                                    <label for="message" class="form-label">Your Message</label>
+                                    <textarea id="message" name="message" class="form-textarea" required placeholder="Tell me what's on your mind..." rows="5"></textarea>
+                                </div>
+
+                                <button type="submit" class="submit-btn">
+                                    <span class="btn-text">Send Message</span>
+                                    <span class="btn-spinner" style="display: none;">Sending...</span>
+                                </button>
+                            </form>
+
+                            <div id="formFeedback" class="form-feedback" style="display: none;"></div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="history-modal">
+        <div class="history-modal-content">
+            <div class="history-modal-header">
+                <h2 class="modal-title">The Story Behind GetItDone</h2>
+                <button class="history-modal-close" id="modalClose">&times;</button>
+            </div>
+<div class="history-modal-body" id="storyContent">
+    <!-- Content will be loaded dynamically -->
+    <p>Loading...</p>
+</div>
+        </div>
+    </div>
+
+    <!-- Image Lightbox -->
+    <div id="lightbox" class="lightbox">
+        <div class="lightbox-content">
+            <img id="lightboxImage" src="" alt="">
+            <button class="lightbox-close" id="lightboxClose">&times;</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="help-footer">
+        <div class="container">
+            <p class="footer-text">
+    <a href="privacy.html">Privacy Policy</a> | 
+    <a href="tos.html">Terms of Service</a>
+                <span class="greyed">Designed and built by Kennedy</span> | 
+                <a href="https://www.linkedin.com/in/kennedy-munene-dsml" target="_blank">LinkedIn</a> | 
+                <a href="https://github.com/Kennedy178" target="_blank">GitHub</a> | 
+                <a href="#contact">Contact Developer</a> | 
+                <span class="greyed">&copy; 2025 Kennedy</span>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="scripts/help.js"></script>
+</body>
+</html>
