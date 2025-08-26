@@ -2,6 +2,15 @@
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
+// Disable console logs in production
+if (location.hostname !== "localhost") {
+    console.log = function () {};
+    console.debug = function () {};
+    console.info = function () {};
+    console.warn = function () {};
+    // Only console.error for actual error reporting
+}
+
 //--To be changed as per indexedDB versioning--
 const DB_NAME = 'getitdone';
 const DB_VERSION = 2;
@@ -32,9 +41,8 @@ try {
 // -------------------------
 self.addEventListener('install', event => {
     event.waitUntil(
-        caches.open('getitdone-v1').then(cache => {
-            return cache.addAll([
-
+        caches.open('getitdone-v1').then(async cache => {
+            const urlsToCache = [
                 './',
                 './index.html',
                 './manifest.json',
@@ -51,7 +59,6 @@ self.addEventListener('install', event => {
                 './icons/icon-192x192.png',
                 './icons/icon-512x512.png',
                 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',
-                'https://assets.mixkit.co/active_storage/sfx/2297/2297-preview.mp3',
                 './story-content.html',
                 './help.html',
                 './tos.html',
@@ -59,11 +66,24 @@ self.addEventListener('install', event => {
                 './reset-password.html',
                 './styles/help.css',
                 './scripts/help.js',
-                './assets/screenshots/signup.png',
-                './assets/screenshots/confirmation.png',
+                './assets/screenshots/late.png',
                 './assets/screenshots/settings.png',
-                './assets/screenshots/tasks.png'
-            ]);
+                './assets/screenshots/notif.png'
+            ];
+
+            // Cache files individually with error handling
+            const cachePromises = urlsToCache.map(async url => {
+                try {
+                    await cache.add(url);
+                    console.log(`✅ Cached: ${url}`);
+                } catch (error) {
+                    console.warn(`⚠️ Failed to cache: ${url}`, error.message);
+                    // Continue with other files - don't fail the entire installation
+                }
+            });
+
+            await Promise.allSettled(cachePromises);
+            console.log('🚀 Service Worker installation completed');
         }).then(() => self.skipWaiting())
     );
 });
