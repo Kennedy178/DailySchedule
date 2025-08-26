@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - GetItDone</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+
+        :root {
+            /* Base colors */
+            --bg-dark: #0D0D0F;
+            --bg-card: rgba(25, 25, 30, 0.85);
+            --bg-panel: rgba(30, 30, 35, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --primary: #FFCA28;
+            --primary-light: #FFD740;
+            --primary-dark: #FFB300;
+            --danger: #B00020;
+            --muted: #A0A0A0;
+            --accent-gradient: linear-gradient(135deg, #FFCA28, #FFB300);
+            --radius: 14px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            --transition: 0.3s ease;
+            /* Enhanced color palette */
+            --text-primary: #F8F9FA;
+            --text-secondary: #E5E5E5;
+            --text-muted: #A0A0A0;
+            --text-subtle: #6C757D;
+            --accent-blue: #4A90E2;
+            --accent-coral: #FF6B6B;
+            --accent-teal: #20C997;
+            --success-green: #28A745;
+            --warning-amber: #FFC107;
+            --surface-elevated: rgba(40, 40, 45, 0.9);
+            --surface-hover: rgba(255, 255, 255, 0.05);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-focus: rgba(74, 144, 226, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            background: var(--bg-dark);
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        .policy-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.8;
+            font-size: 16px;
+            padding: 3rem;
+            max-width: 900px;
+            margin: 2rem auto;
+            box-shadow: var(--shadow);
+            position: relative;
+            min-height: calc(100vh - 4rem);
+        }
+
+        @media (max-width: 768px) {
+            .policy-container {
+                margin: 1rem;
+                padding: 2rem;
+                border-radius: var(--radius);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .policy-container {
+                margin: 0.5rem;
+                padding: 1.5rem;
+                border-radius: var(--radius);
+            }
+        }
+
+        .back-to-app {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            background: var(--surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all var(--transition);
+            backdrop-filter: blur(10px);
+            margin-bottom: 2rem;
+        }
+
+        .back-to-app:hover {
+            background: var(--surface-hover);
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.2);
+        }
+
+        .back-icon {
+            font-size: 1.1rem;
+            transition: transform var(--transition);
+        }
+
+        .back-to-app:hover .back-icon {
+            transform: translateX(-3px);
+        }
+
+        .main-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8em;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            margin: 2rem 0 1.5rem 0;
+            line-height: 1.3;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 2.2em;
+                margin: 1.5rem 0 1rem 0;
+            }
+        }
+
+        .effective-date {
+            font-style: italic;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 2.5rem;
+            font-size: 1.15em;
+            font-weight: 400;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.9em;
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin: 3rem 0 1.5rem 0;
+            border-bottom: 2px solid rgba(74, 144, 226, 0.3);
+            padding-bottom: 0.75rem;
+            position: relative;
+            transition: color var(--transition);
+        }
+
+        .section-title::before {
+            content: '';
+            position: absolute;
+            width: 50px;
+            height: 2px;
+            background: var(--accent-blue);
+            bottom: -2px;
+            left: 0;
+            transition: width var(--transition);
+        }
+
+        .section-title:hover::before {
+            width: 100px;
+        }
+
+        @media (max-width: 768px) {
+            .section-title {
+                font-size: 1.6em;
+                margin: 2.5rem 0 1.25rem 0;
+            }
+        }
+
+        p {
+            margin-bottom: 1.8rem;
+            color: var(--text-secondary);
+        }
+
+        ul {
+            margin-bottom: 1.8rem;
+            padding-left: 2rem;
+            color: var(--text-secondary);
+        }
+
+        ul li {
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        ul li::before {
+            content: '•';
+            color: var(--accent-teal);
+            font-size: 1.2em;
+            position: absolute;
+            left: -1.5rem;
+            top: 0.2rem;
+        }
+
+        strong, b {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        em, i {
+            color: #7DD3FC;
+            font-style: italic;
+        }
+
+        .highlight {
+            background: var(--surface-hover);
+            padding: 0.3em 0.6em;
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-weight: 500;
+            border: 1px solid var(--border-subtle);
+            transition: background var(--transition);
+        }
+
+        .highlight:hover {
+            background: rgba(74, 144, 226, 0.15);
+        }
+
+        a {
+            color: var(--accent-teal);
+            text-decoration: none;
+            transition: color var(--transition);
+        }
+
+        a:hover {
+            color: var(--primary-light);
+            text-decoration: underline;
+        }
+
+        .contact-section {
+            margin-top: 3rem;
+            padding: 2.5rem;
+            background: rgba(32, 201, 151, 0.1);
+            border: 1px solid rgba(32, 201, 151, 0.25);
+            border-radius: var(--radius);
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+
+        .contact-section:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(32, 201, 151, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .contact-section {
+                padding: 2rem;
+                margin-top: 2.5rem;
+            }
+        }
+
+        .contact-section .section-title {
+            color: var(--accent-teal);
+            border-bottom-color: rgba(32, 201, 151, 0.35);
+            margin-top: 0;
+        }
+
+        @media (max-width: 480px) {
+            .policy-container {
+                font-size: 15px;
+                line-height: 1.7;
+            }
+
+            .main-title {
+                font-size: 2em;
+            }
+
+            .section-title {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="policy-container">
+        <a href="index.html" class="back-to-app">
+            <span class="back-icon">←</span>
+            Back to App
+        </a>
+        <h1 class="main-title">Privacy Policy - GetItDone</h1>
+        <div class="effective-date">Effective Date: August 25, 2025</div>
+
+        <p>At <span class="highlight">GetItDone</span>, we respect your privacy. This policy explains what we collect, why we collect it, and how we use it.</p>
+
+        <h2 class="section-title">Information We Collect</h2>
+        <ul>
+            <li><strong>Email (required):</strong> Used only for login and authentication.</li>
+            <li><strong>Tasks (required):</strong> Stored so you can access your tasks on any device.</li>
+            <li><strong>Name (optional):</strong> You may provide a name for personalized notifications (e.g., <em>“Hey Brandon”</em>). If not, we’ll use a generic greeting like <em>“Hey you”</em>.</li>
+            <li><strong>Feedback submissions:</strong> If you send us feedback, we may temporarily log technical details (like your IP address) to prevent spam and abuse.</li>
+            <li><strong>Device identifiers:</strong> We store anonymous device tokens/fingerprints to send you notifications.</li>
+        </ul>
+
+        <h2 class="section-title">How We Use Your Information</h2>
+        <ul>
+            <li>To let you securely log in and access your tasks.</li>
+            <li>To send reminders and notifications (personalized if you choose to add a name).</li>
+            <li>To improve the app and prevent misuse.</li>
+        </ul>
+
+        <h2 class="section-title">What We Don’t Do</h2>
+        <ul>
+            <li>We do <strong>not</strong> sell or share your personal data with third parties.</li>
+            <li>We do <strong>not</strong> collect unnecessary information like your location or phone number.</li>
+            <li>We do <strong>not</strong> use your data for advertising.</li>
+        </ul>
+
+        <h2 class="section-title">Your Choices</h2>
+        <ul>
+            <li>You can edit or delete your tasks anytime.</li>
+            <li>You can update or remove your optional name.</li>
+            <li>You can contact us if you’d like your account and data deleted.</li>
+        </ul>
+
+        <div class="contact-section">
+            <h2 class="section-title">Contact Us</h2>
+            <p>If you have questions about this policy or your data, reach out at: <a href="mailto:support@getitdone.app">support@getitdone.app</a>.</p>
+        </div>
+    </div>
+    <script>
+        document.querySelector('.back-to-app').addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

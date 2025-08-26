@@ -895,28 +895,39 @@ input[type="checkbox"]:not(.notification-toggle):checked + label {
     color: var(--muted);
 }
 
-/*  Footer */
-.footer-wrapper {
-    margin-top: auto;
-    padding-bottom: 20px;
+/* Footer - PWA style */
+.help-footer {
+    background: rgba(14, 14, 16, 0.8);  /* glass effect */
+    backdrop-filter: blur(16px);
+    padding: 1.5rem 0;                  /* reduce padding so it hugs bottom */
+    margin: 0;
+    position: relative;                 /* can stay relative if page content pushes it */
+    width: 100%;
+    bottom: 0;
+    left: 0;
 }
 
-footer {
+.help-footer .footer-text {
     text-align: center;
-    margin-top: 15px;
     font-family: 'Inter', sans-serif;
     font-size: clamp(13px, 3vw, 14px);
-    color: var(--muted);
+    line-height: 1.6;
+    color: var(--muted); /* muted grey for non-link text */
 }
 
-footer a {
+.help-footer .footer-text a {
     color: var(--primary);
     text-decoration: none;
     transition: color var(--transition);
 }
 
-footer a:hover {
+.help-footer .footer-text a:hover {
     color: var(--primary-light);
+}
+
+/* Grey out non-link parts */
+.help-footer .footer-text span.greyed {
+    color: var(--muted);
 }
 
 .hidden {
@@ -2485,5 +2496,72 @@ END OF BANNER STYLES
 }
 
 
+
+
+/* Back to Top Button */
+.back-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    color: var(--text-primary);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all var(--transition);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    visibility: hidden;
+    z-index: 1000;
+}
+
+.back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.back-to-top:hover {
+    background: var(--surface-hover);
+    border-color: var(--accent-blue);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74, 144, 226, 0.2);
+}
+
+.back-to-top-icon {
+    font-size: 1.2rem;
+}
+
+.back-to-top-text {
+    display: none;
+    transition: opacity var(--transition);
+}
+
+.back-to-top:hover .back-to-top-text {
+    display: inline;
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .back-to-top {
+        bottom: 1.5rem;
+        right: 1.5rem;
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .back-to-top {
+        bottom: 1rem;
+        right: 1rem;
+        padding: 0.5rem;
+    }
+}
 
 
