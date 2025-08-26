@@ -3,7 +3,7 @@ import { DB_NAME, DB_VERSION } from './db.js';
 import * as idb from 'https://cdn.jsdelivr.net/npm/idb@7.0.2/+esm';
 import { addTask, getAllTasks, getTaskById, updateTask, deleteTask, setSetting, getSetting,markTaskAsPendingDelete  } from './db.js';
 import { isAuthenticated, initAuth, user, } from './authHandler.js';
-import { fetchBackendTasks, cacheBackendTasks, setupRealtimeSubscriptions, syncPendingTasks } from './sync.js';
+import { fetchBackendTasks, cacheBackendTasks, setupRealtimeSubscriptions, syncPendingTasks, updateUserProfileFlag, checkUserHasCreatedTasks } from './sync.js';
 import { supabase } from './auth.js';
 import { fcmToken, initFCMManager, isTokenRegistered } from './fcm-manager.js';
 import { initOfflineQueue } from './offline-queue.js';
@@ -77,27 +77,35 @@ errorToast.style.cssText = `
 `;
 document.body.appendChild(errorToast);
 
+// Disable console logs in production
+if (location.hostname !== "localhost") {
+    console.log = function () {};
+    console.debug = function () {};
+    // You can also disable others if you want:
+    // console.info = function () {};
+    // console.warn = function () {};
+}
+
 /* Default tasks */
 const defaultTasks = [
-    { start_time: '06:00', end_time: '06:30', name: 'Morning Nature Walk/Virtual 🌳', category: 'Health', priority: 'Medium', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '06:30', end_time: '07:15', name: 'Workout + Shower 🏋️‍♂️🚿', category: 'Fitness', priority: 'Medium', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '07:15', end_time: '07:45', name: 'Cooking Breakfast & Quick Chat Break 🍳 💬', category: 'Routine', priority: 'Medium', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '07:45', end_time: '09:00', name: 'Data Science/ML Study 📖', category: 'Learning', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '09:00', end_time: '10:30', name: 'Focused Project Work 💻', category: 'Project', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '10:30', end_time: '12:30', name: 'Data Science/ML Study 📖', category: 'Learning', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '12:30', end_time: '13:30', name: 'Lunch Cooking & Eating 🍲', category: 'Routine', priority: 'Medium', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '13:30', end_time: '14:30', name: 'Financial Education 📈', category: 'Finance', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '14:30', end_time: '15:00', name: 'Chat Break 💬', category: 'Social', priority: 'Low', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '15:00', end_time: '16:30', name: 'Professional Networking (LinkedIn/X/Medium/Github) + Article Writing 🌐', category: 'Professional', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '16:30', end_time: '17:00', name: 'Data Science/ML Study 💻', category: 'Project', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '17:00', end_time: '19:00', name: 'Movie/Walk/Sports Break 🎬🏀 while making dinner', category: 'Leisure', priority: 'Low', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '19:00', end_time: '19:30', name: 'Evening Workout + Shower 🏋️‍♂️🚿', category: 'Routine', priority: 'Medium', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '19:30', end_time: '20:15', name: 'Eat Dinner + Social Media Check-in 📰 + Chat Break 💬', category: 'Routine', priority: 'Medium', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '20:15', end_time: '22:30', name: 'Project Work 💻', category: 'Project', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '22:30', end_time: '23:00', name: 'Reflection & Goal Setting for Tomorrow 🔮', category: 'Personal Growth', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
-    { start_time: '23:30', end_time: '05:30', name: 'Sleep 🌙', category: 'Health', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] }
+    { start_time: '06:30', end_time: '07:00', name: 'Morning Walk(virtual on Youtube) 🌳🌅', category: 'Health', priority: 'Medium', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '07:00', end_time: '07:45', name: 'Workout + Shower 💪🚿', category: 'Fitness', priority: 'Medium', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '07:45', end_time: '08:15', name: 'Breakfast & Quick Chat Break 🍳 💬', category: 'Routine', priority: 'Medium', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '08:15', end_time: '09:45', name: 'Skill Development/Online Learning 📚', category: 'Learning', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '09:45', end_time: '11:15', name: 'Personal Projects/Portfolio Work 💻', category: 'Project', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '11:15', end_time: '12:45', name: 'Research Career Growth & Industry Insights 🎯', category: 'Career', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '12:45', end_time: '13:45', name: 'Lunch Break & Social Time 🍕', category: 'Routine', priority: 'Medium', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '13:45', end_time: '14:45', name: 'Financial Education/Planning 💰', category: 'Finance', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '14:45', end_time: '15:15', name: 'Chat Break 💬', category: 'Social', priority: 'Low', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '15:15', end_time: '16:45', name: 'Professional Networking i.e (LinkedIn) + Article Writing 🌐', category: 'Professional', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '16:45', end_time: '17:15', name: 'Skill Development/Online Learning 📚', category: 'Learning', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '17:15', end_time: '19:00', name: 'Free Time/Hobbies/Social Activities 🎮🎬', category: 'Leisure', priority: 'Low', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '19:00', end_time: '19:30', name: 'Evening Workout + Shower 🚴‍♂️🚿', category: 'Fitness', priority: 'Medium', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '19:30', end_time: '20:30', name: 'Dinner & Family/Friends Time 🍽️', category: 'Social', priority: 'Medium', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '20:30', end_time: '22:00', name: 'Personal Projects/Side Hustle 🚀', category: 'Project', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '22:00', end_time: '22:30', name: 'Daily Reflection & Tomorrow\'s Planning 📝', category: 'Personal Growth', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] },
+    { start_time: '23:00', end_time: '06:30', name: 'Sleep 😴', category: 'Health', priority: 'High', completed: false, is_late: false, created_at: new Date().toISOString().split('T')[0] }
 ];
-
 /* Show toast notification */
 export function showToast(message) {
     errorToast.textContent = message;
@@ -111,29 +119,280 @@ export function showToast(message) {
 
 
 
+
+
 export function createSpinner() {
     if (spinnerInstance) return spinnerInstance;
     
     const spinner = document.createElement('div');
     spinner.id = 'loadingSpinner';
     spinner.innerHTML = `
-        <div class="spinner"></div>
-        <p>Processing...</p>
+        <div class="spinner-container">
+            <div class="spinner-rings">
+                <div class="ring ring-1"></div>
+                <div class="ring ring-2"></div>
+                <div class="ring ring-3"></div>
+            </div>
+            <div class="spinner-logo">
+                <div class="logo-circle">
+                    <span class="logo-text">✓</span>
+                </div>
+            </div>
+        </div>
+        <div class="spinner-content">
+            <h3 class="spinner-title">GetItDone</h3>
+            <p class="spinner-message">Organizing your tasks...</p>
+            <div class="spinner-dots">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
     `;
+    
     spinner.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0,0,0,0.7);
+        background: linear-gradient(135deg, #0D0D0F 0%, #1A1A20 50%, #0D0D0F 100%);
         display: none;
         justify-content: center;
         align-items: center;
         flex-direction: column;
         z-index: 10000;
         color: white;
+        backdrop-filter: blur(20px);
     `;
+    
+    // advanced CSS styles-extra sleekness
+    const styles = document.createElement('style');
+    styles.textContent = `
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        .spinner-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin-bottom: 30px;
+        }
+        
+        .spinner-rings {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top: 2px solid #FFCA28;
+            animation: spin 2s linear infinite;
+        }
+        
+        .ring-1 {
+            width: 120px;
+            height: 120px;
+            top: -60px;
+            left: -60px;
+            border-top-color: #FFCA28;
+            animation-duration: 2s;
+        }
+        
+        .ring-2 {
+            width: 90px;
+            height: 90px;
+            top: -45px;
+            left: -45px;
+            border-top-color: #FFD740;
+            animation-duration: 1.5s;
+            animation-direction: reverse;
+        }
+        
+        .ring-3 {
+            width: 60px;
+            height: 60px;
+            top: -30px;
+            left: -30px;
+            border-top-color: #FFB300;
+            animation-duration: 1s;
+        }
+        
+        .spinner-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        
+        .logo-circle {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #FFCA28, #FFB300);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(255, 202, 40, 0.4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .logo-text {
+            font-size: 20px;
+            font-weight: bold;
+            color: #0D0D0F;
+            animation: checkmark 2s ease-in-out infinite;
+        }
+        
+        .spinner-content {
+            text-align: center;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .spinner-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #FFCA28, #FFD740);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 8px 0;
+            letter-spacing: 0.5px;
+        }
+        
+        .spinner-message {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            color: #A0A0A0;
+            margin: 0 0 20px 0;
+            opacity: 0.9;
+        }
+        
+        .spinner-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .spinner-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #FFCA28;
+            animation: dotPulse 1.4s ease-in-out infinite both;
+        }
+        
+        .spinner-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+        
+        .spinner-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+        
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(1);
+                box-shadow: 0 0 20px rgba(255, 202, 40, 0.4);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+                box-shadow: 0 0 30px rgba(255, 202, 40, 0.6);
+            }
+        }
+        
+        @keyframes checkmark {
+            0%, 50% {
+                opacity: 1;
+            }
+            51%, 100% {
+                opacity: 0.7;
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes dotPulse {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+        
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .spinner-container {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .ring-1 {
+                width: 100px;
+                height: 100px;
+                top: -50px;
+                left: -50px;
+            }
+            
+            .ring-2 {
+                width: 75px;
+                height: 75px;
+                top: -37.5px;
+                left: -37.5px;
+            }
+            
+            .ring-3 {
+                width: 50px;
+                height: 50px;
+                top: -25px;
+                left: -25px;
+            }
+            
+            .logo-circle {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .logo-text {
+                font-size: 16px;
+            }
+            
+            .spinner-title {
+                font-size: 24px;
+            }
+            
+            .spinner-message {
+                font-size: 14px;
+            }
+        }
+    `;
+    
+    document.head.appendChild(styles);
     document.body.appendChild(spinner);
     spinnerInstance = spinner;
     return spinner;
@@ -146,15 +405,32 @@ export function initGlobalUtils() {
     document.body.appendChild(errorToast);
 }
 
-export function showLoading(show) {
+export function showLoading(show, customMessage = null) {
     const spinner = document.getElementById('loadingSpinner') || createSpinner();
+    
+    // Update message if provided
+    if (customMessage && show) {
+        const messageElement = spinner.querySelector('.spinner-message');
+        if (messageElement) {
+            messageElement.textContent = customMessage;
+        }
+    }
+    
     spinner.style.display = show ? 'flex' : 'none';
+    
+    // Add smooth transition
+    if (show) {
+        spinner.style.opacity = '0';
+        setTimeout(() => {
+            spinner.style.opacity = '1';
+            spinner.style.transition = 'opacity 0.3s ease-in-out';
+        }, 10);
+    }
 }
 
 
 
-
-
+//---UTILITY FUNCS--//
 
 /* Debounce function to limit notification checks */
 function debounce(func, wait) {
@@ -164,6 +440,13 @@ function debounce(func, wait) {
         timeout = setTimeout(() => func(...args), wait);
     };
 }
+
+function endOfDay(date) {
+    const d = new Date(date);
+    d.setHours(23, 59, 59, 999);
+    return d;
+}
+//--END OF UTILITY FUNCS--//
 
 /**
  * Load tasks for either authenticated or guest mode
@@ -186,51 +469,65 @@ export async function loadTasks(mode) {
         firstCustomTaskAdded = (await getSetting('firstCustomTaskAdded')) === 'true';
 
         if (mode === 'authenticated') {
-            if (!isAuthenticated()) {
-                console.warn('Not authenticated, cannot load tasks');
-                showToast('Please sign in to load tasks.', 'error');
-                return;
+    if (!isAuthenticated()) {
+        console.warn('Not authenticated, cannot load tasks');
+        showToast('Please sign in to load tasks.', 'error');
+        return;
+    }
+
+    // Start with local IndexedDB tasks for this user
+    tasks = (await getAllTasks()).filter(task => task.user_id === user.id);
+
+    if (navigator.onLine) {
+        // Fix any broken custom task IDs before syncing
+        for (const task of tasks) {
+            if (task.id.startsWith('customTask') && task.user_id === user.id) {
+                const newTask = { ...task, id: crypto.randomUUID(), pending_sync: 'update' };
+                await updateTask(newTask);
             }
+        }
 
-            // Start with whatever's in IndexedDB for this user
-            tasks = (await getAllTasks()).filter(task => task.user_id === user.id);
+        // Sync pending local changes first
+        await syncPendingTasks();
 
-            if (navigator.onLine) {
-                // Fix bad custom task IDs before sync
-                for (const task of tasks) {
-                    if (task.id.startsWith('customTask') && task.user_id === user.id) {
-                        const newTask = { ...task, id: crypto.randomUUID(), pending_sync: 'update' };
-                        await updateTask(newTask);
-                    }
+        // Check if user has ever created tasks
+        // Check if user has ever created tasks (both local and server)
+const localFlag = (await getSetting('userHasCreatedTasks')) === 'true';
+const serverFlag = await checkUserHasCreatedTasks();
+const userHasCreatedTasks = localFlag || serverFlag;
+
+// Sync the flags if they're mismatched
+if (serverFlag && !localFlag) {
+    await setSetting('userHasCreatedTasks', 'true');
+} else if (localFlag && !serverFlag) {
+    await updateUserProfileFlag(true);
+}
+
+        // Try fetching backend tasks
+        const backendTasks = await fetchBackendTasks();
+
+        if (backendTasks === null) {
+            // Network failure - show reconnecting message
+            if (!userHasCreatedTasks && tasks.length === 0) {
+                showReconnectingState();
+                return; // Don't load anything
+            } else {
+                // User has created tasks before or has cached tasks - use cached
+                console.log("Network failed, using cached tasks");
+                showToast('Using offline data. Reconnecting...', 'warning');
+            }
+        } else if (Array.isArray(backendTasks)) {
+            if (backendTasks.length > 0) {
+                // User has tasks on backend
+                await cacheBackendTasks(backendTasks);
+                tasks = (await getAllTasks()).filter(task => task.user_id === user.id);
+                
+                // Mark that user has created tasks
+                if (!userHasCreatedTasks) {
+                    await setSetting('userHasCreatedTasks', 'true');
                 }
-
-                // Sync local pending tasks before pulling backend data
-                await syncPendingTasks();
-
-                // Pull fresh tasks from backend
-                const backendTasks = await fetchBackendTasks();
-
-                if (backendTasks.length > 0) {
-                    await cacheBackendTasks(backendTasks);
-                    tasks = (await getAllTasks()).filter(task => task.user_id === user.id);
-                } else if (tasks.length === 0) {
-                    // No backend tasks AND no local tasks → load defaults
-                    tasks = defaultTasks.map(task => ({
-                        ...task,
-                        id: crypto.randomUUID(),
-                        user_id: user.id,
-                        pending_sync: 'create'
-                    }));
-                    for (const task of tasks) {
-                        await addTask(task);
-                    }
-                    await syncPendingTasks();
-                    console.log('Loaded and cached default tasks for authenticated user');
-                }
-
-                setupRealtimeSubscriptions();
-            } else if (tasks.length === 0) {
-                // Offline and no tasks locally → load defaults
+            } else if (!userHasCreatedTasks && tasks.length === 0) {
+                // Truly new user - safe to load defaults
                 tasks = defaultTasks.map(task => ({
                     ...task,
                     id: crypto.randomUUID(),
@@ -240,10 +537,21 @@ export async function loadTasks(mode) {
                 for (const task of tasks) {
                     await addTask(task);
                 }
-                console.log('Loaded and cached default tasks for offline authenticated user');
+                await syncPendingTasks();
+                console.log('Loaded defaults for new authenticated user');
+            } else {
+                // User deleted all their tasks but has created before - don't load defaults
+                console.log('User has no tasks but has created before - not loading defaults');
             }
+        }
 
-        } else if (mode === 'guest') {
+        setupRealtimeSubscriptions();
+    } else if (tasks.length === 0) {
+        // Offline & no cached tasks → show offline message
+        showReconnectingState();
+        return;
+    }
+} else if (mode === 'guest') {
             tasks = (await getAllTasks()).filter(task => task.user_id === null);
 
             // Clear pending_sync for guest tasks
@@ -350,6 +658,21 @@ async function handleCustomTaskBanner(tasks) {
     }
 }
 
+function showReconnectingState() {
+    scheduleContainer.innerHTML = `
+        <div class="task" style="text-align: center; padding: 40px;">
+            <h2>🌐 Couldn't load your tasks</h2>
+            <p>Slow network detected. Reconnecting...</p>
+            <div style="margin: 20px 0;">
+                <div class="spinner" style="margin: 0 auto;"></div>
+            </div>
+            <p><a href="story.html" target="_blank">📖 Read a story while you wait</a></p>
+            <button onclick="location.reload()" style="margin-top: 15px; padding: 10px 20px;">
+                🔄 Try Again
+            </button>
+        </div>
+    `;
+}
 
 /* Save daily data to IndexedDB */
 async function saveDailyData() {
@@ -424,8 +747,8 @@ function isTaskStartingSoon(task, now) {
     return startingSoon;
 }
 
-/* Sync tasks with service worker */
-// Update your service worker sync function to include authentication and FCM status
+
+// service worker sync function to include authentication and FCM status
 /* Sync tasks with service worker - GUEST USERS ONLY */
 async function syncTasksWithServiceWorker() {
     // CRITICAL: Only sync for guest users - authenticated users use FCM backend
@@ -705,7 +1028,8 @@ export async function renderTasks(tasksToRender = null) {
 
         fragment.appendChild(taskDiv);
     });
-
+    //Always show notes section at the end
+    // FIXED: Ensure notes section is always rendered
     const notesDiv = document.createElement('div');
     notesDiv.className = 'task';
     notesDiv.innerHTML = `
@@ -864,6 +1188,7 @@ async function getWeeklyStats() {
         totalTasks += dailyTasks.length;
         completedTasks += dailyTasks.filter(task => task.completed).length;
         dailyTasks.forEach(task => {
+            //“live” missed detection during the current day
             if (!task.completed && isTaskExpired(task, now)) {
                 addTaskToDay(missedTasksByDay, todayName, task.name);
             } else if (task.is_late) {
@@ -902,7 +1227,7 @@ async function getWeeklyStats() {
             totalTasks += dailyTasks.length;
             completedTasks += dailyTasks.filter(task => task.completed).length;
             dailyTasks.forEach(task => {
-                if (!task.completed && isTaskExpired(task, new Date(date))) {
+                if (!task.completed && isTaskExpired(task, endOfDay(date))) {
                     addTaskToDay(missedTasksByDay, dayName, task.name);
                 } else if (task.is_late) {
                     addTaskToDay(lateTasksByDay, dayName, task.name);
@@ -1510,47 +1835,101 @@ addTaskBtn.addEventListener('click', async () => {
         };
     }
 
+    // 1. CLOSE FORM IMMEDIATELY - Give instant feedback to user
+    taskForm.classList.remove('active');
+    clearForm(taskForm);
+    showToast('Task saved locally. Syncing...', 'info'); // Optional: show saving status
+
+    // 2. DO ALL HEAVY OPERATIONS IN BACKGROUND
     try {
         if (editIndex === '') {
-            // Save to IndexedDB
+            // Save to IndexedDB first (this should be fast)
             await addTask(task);
-            // Re-fetch sorted tasks from IndexedDB
+            
+            // Update local tasks array
             tasks = await getAllTasks();
-
-            // Show first custom task banner if needed
-            const wasEmpty = tasks.filter(t => !t.id.startsWith('customTask')).length === 1;
-            if (wasEmpty && customTaskBanner) {
-                await setSetting('hasCustomTasks', 'true');
-                hasCustomTasks = true;
-                customTaskBanner.classList.remove('hidden');
-                customTaskBanner.classList.add('active');
-                await setSetting('firstCustomTaskAdded', 'true');
-            }
+            
+            // Update UI immediately
+            lastRenderHash = ''; 
+            await renderTasks(tasks);
+            
+            // Show success message
+            showToast('Task added successfully!', 'success');
+            
+            // Background operations (don't await these - let them run async)
+            Promise.all([
+                // Banner check
+                (async () => {
+                    const wasEmpty = tasks.filter(t => !t.id.startsWith('customTask')).length === 1;
+                    if (wasEmpty && customTaskBanner) {
+                        await setSetting('hasCustomTasks', 'true');
+                        hasCustomTasks = true;
+                        customTaskBanner.classList.remove('hidden');
+                        customTaskBanner.classList.add('active');
+                        await setSetting('firstCustomTaskAdded', 'true');
+                    }
+                })(),
+                
+                // Settings update (background)
+                setSetting('taskCounter', taskCounter.toString()),
+                saveDailyData(),
+                
+                // Profile updates (background) - these can be slow
+                (async () => {
+                    if (isAuthenticated()) {
+                        try {
+                            await setSetting('userHasCreatedTasks', 'true');
+                            await updateUserProfileFlag(true);
+                        } catch (error) {
+                            console.error('Background profile update failed:', error);
+                        }
+                    }
+                })(),
+                
+                // Notification (background)
+                triggerNotification(task)
+            ]).catch(error => {
+                console.error('Background operations failed:', error);
+                // Don't show error to user since main task was saved successfully
+            });
+            
         } else {
+            // Edit task
             await updateTask(task);
-            // Re-fetch sorted tasks from IndexedDB
             tasks = await getAllTasks();
+            
+            // Update UI immediately
+            lastRenderHash = ''; 
+            await renderTasks(tasks);
+            showToast('Task updated successfully!', 'success');
+            
+            // Background operations
+            Promise.all([
+                setSetting('taskCounter', taskCounter.toString()),
+                saveDailyData(),
+                triggerNotification(task),
+                
+                // Profile updates (background)
+                (async () => {
+                    if (isAuthenticated()) {
+                        try {
+                            await setSetting('userHasCreatedTasks', 'true');
+                            await updateUserProfileFlag(true);
+                        } catch (error) {
+                            console.error('Background profile update failed:', error);
+                        }
+                    }
+                })()
+            ]).catch(error => {
+                console.error('Background operations failed:', error);
+            });
         }
 
-        // Tasks are already sorted from getAllTasks()
-        
-        lastRenderHash = ''; 
-        await renderTasks(tasks);
-
-        // Save settings
-        await setSetting('taskCounter', taskCounter.toString());
-        await saveDailyData();
-        triggerNotification(task);
-
-        //  Close form immediately
-        taskForm.classList.remove('active');
-        clearForm(taskForm);
-
-        //  Sync in background
+        // Sync operations (background) - don't block UI
         if (isAuthenticated() && navigator.onLine) {
             syncPendingTasks().catch(error => {
                 console.error('Background sync failed:', error);
-                showToast('Task saved locally, sync failed', 'warning');
+                showToast('Task saved locally, sync will retry later', 'warning');
             });
         } else {
             syncTasksWithServiceWorker().catch(error => {
@@ -1560,7 +1939,10 @@ addTaskBtn.addEventListener('click', async () => {
 
     } catch (error) {
         console.error('Error saving task:', error);
-        showToast('Failed to save task. Check console for details.');
+        showToast('Failed to save task. Please try again.', 'error');
+        
+        // Reopen form if critical save failed
+        taskForm.classList.add('active');
     }
 });
 
@@ -1589,6 +1971,11 @@ saveEditBtn.addEventListener('click', async () => {
 
     category = category === 'Custom' ? customCategory : category;
 
+    // CLOSE MODAL IMMEDIATELY
+    editTaskModal.classList.remove('active');
+    clearForm(editTaskModal);
+    showToast('Updating task...', 'info');
+
     try {
         const task = await getTaskById(tasks[parseInt(editIndex)].id);
         task.start_time = startTime;
@@ -1597,20 +1984,41 @@ saveEditBtn.addEventListener('click', async () => {
         task.category = category;
         task.priority = priority;
         task.pending_sync = task.pending_sync || 'update';
+        
         await updateTask(task);
         tasks[parseInt(editIndex)] = task;
-        console.log(`Saved edited task "${task.name}", tasks now: [${tasks.map(t => t.name).join(', ')}]`);
-        //tasks = sortTasksByTime(tasks);
-        await saveDailyData();
-        lastRenderHash = ''; // Force re-render
+        
+        // Update UI immediately
+        lastRenderHash = '';
         renderTasks();
-        editTaskModal.classList.remove('active');
-        clearForm(editTaskModal);
-        await syncTasksWithServiceWorker(); // Sync after editing task
-        triggerNotification(task); // Check notification for edited task
+        showToast('Task updated successfully!', 'success');
+        
+        // Background operations
+        Promise.all([
+            saveDailyData(),
+            syncTasksWithServiceWorker(),
+            triggerNotification(task),
+            
+            // Profile update (background)
+            (async () => {
+                if (isAuthenticated()) {
+                    try {
+                        await setSetting('userHasCreatedTasks', 'true');
+                        await updateUserProfileFlag(true);
+                    } catch (error) {
+                        console.error('Background profile update failed:', error);
+                    }
+                }
+            })()
+        ]).catch(error => {
+            console.error('Background operations failed:', error);
+        });
+        
     } catch (error) {
         console.error('Error saving edited task:', error);
-        showToast('Failed to save task. Please try again.');
+        showToast('Failed to save task. Please try again.', 'error');
+        // Reopen modal if critical save failed
+        editTaskModal.classList.add('active');
     }
 });
 
@@ -1621,48 +2029,9 @@ cancelEditBtn.addEventListener('click', () => {
     document.getElementById('editTaskIndex').value = '';
 });
 
-/* Reset to default tasks */
-resetDefaultBtn.addEventListener('click', async () => {
-    if (confirm('Reset to default schedule? All custom tasks will be cleared.')) {
-        try {
-            const db = await idb.openDB(DB_NAME, DB_VERSION);
-            const tx = db.transaction('tasks', 'readwrite');
-            const store = tx.objectStore('tasks');
-            await store.clear();
-            await tx.complete;
-            tasks = defaultTasks.map(task => ({ ...task }));
-            for (const task of tasks) {
-                try {
-                    await addTask(task);
-                } catch (error) {
-                    if (error.name === 'ConstraintError') {
-                        console.log(`Task ${task.id} already exists, skipping`);
-                        continue;
-                    }
-                    throw error;
-                }
-            }
-            hasCustomTasks = false;
-            taskCounter = 0;
-            await setSetting('hasCustomTasks', 'false');
-            await setSetting('taskCounter', '0');
-            await setSetting('firstCustomTaskAdded', 'false');
-            if (customTaskBanner) {
-                customTaskBanner.classList.add('hidden');
-                customTaskBanner.classList.remove('active');
-            }
-            await clearWeeklyData();
-            console.log('Reset to default tasks:', tasks.map(t => t.name));
-            await saveDailyData();
-            lastRenderHash = '';
-            renderTasks();
-            await syncTasksWithServiceWorker(); // Sync after reset
-            notifiedTasks.clear(); // Clear notifications on reset
-        } catch (error) {
-            console.error('Error resetting to default:', error);
-            showToast('Failed to reset to default. Please try again.');
-        }
-    }
+/* Help/FAQ button functionality */
+resetDefaultBtn.addEventListener('click', function() {
+    window.location.href = 'help.html';
 });
 
 
@@ -1676,6 +2045,12 @@ showReportBtn.addEventListener('click', () => {
         statsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 });
+
+// Add this at the top of your file - cache for user profiles
+let profileCache = {
+    displayName: null,
+    lastUpdated: null
+};
 
 /* Show settings modal */
 showSettingsBtn.addEventListener('click', () => {
@@ -1691,80 +2066,143 @@ showSettingsBtn.addEventListener('click', () => {
 saveSettingsBtn.addEventListener('click', async () => {
     const wasEnabled = enableReminders;
     const newUserName = userNameInput.value.trim() || 'you';
-    enableReminders = enableRemindersInput.checked;
+    const newEnableReminders = enableRemindersInput.checked;
+
+    // Validation
+    if (newUserName.length > 50) {
+        showToast('Name too long. Maximum 50 characters.');
+        return;
+    }
+
+    // 1. CLOSE MODAL IMMEDIATELY - Give instant feedback
+    settingsModal.classList.remove('active');
+    showToast('Saving settings...', 'info');
 
     try {
-        // Save to IndexedDB (existing functionality - keep this!)
+        // 2. FAST LOCAL OPERATIONS (await these)
         await setSetting('userName', newUserName);
-        await setSetting('enableReminders', enableReminders.toString());
+        await setSetting('enableReminders', newEnableReminders.toString());
+        
+        // Update local variables
         userName = newUserName;
+        enableReminders = newEnableReminders;
+        
+        console.log('✅ Local settings saved: enableReminders=', enableReminders, 'userName=', newUserName);
 
-        console.log('Saving settings: enableReminders=', enableReminders, 'userName=', newUserName);
+        // Show immediate success for local save
+        showToast('Settings saved locally!', 'success');
 
-        // NEW: Save to Supabase profiles table if user is authenticated
+        // 3. BACKGROUND OPERATIONS (don't await - let them run async)
+        
+        // Background: Supabase profile update with caching
         if (isAuthenticated() && user?.id) {
-            try {
-                console.log('Saving user name to profiles table:', newUserName);
-                
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .upsert({ 
-                        id: user.id, // Use user.id from authHandler.js
-                        display_name: newUserName,
-                        updated_at: new Date().toISOString()
-                    }, {
-                        onConflict: 'id'  // Update if exists, insert if not
-                    });
+            // Check cache to avoid unnecessary API calls
+            const shouldUpdateProfile = (
+                profileCache.displayName !== newUserName || 
+                !profileCache.lastUpdated || 
+                Date.now() - profileCache.lastUpdated > 60000 // Update if older than 1 minute
+            );
 
-                if (error) {
-                    console.error('Failed to save name to profiles:', error);
-                    // Don't block the rest of settings save - just log the error
-                } else {
-                    console.log('✅ User name saved to profiles table successfully');
-                }
-            } catch (profileError) {
-                console.error('Error updating user profile:', profileError);
-                // Continue with local settings save even if profile save fails
+            if (shouldUpdateProfile) {
+                updateUserProfileInBackground(newUserName).catch(error => {
+                    console.error('Background profile update failed:', error);
+                    showToast('Settings saved locally. Profile sync will retry later.', 'warning');
+                });
+            } else {
+                console.log('⚡ Skipping profile update - same name in cache');
+                showToast('Settings updated!', 'success');
             }
         } else {
-            console.log('Guest user - skipping profile save (using local storage only)');
+            console.log('Guest user - using local storage only');
+            showToast('Settings updated!', 'success');
         }
 
-        // Handle notification permissions (existing logic - unchanged)
-        if (enableReminders && !wasEnabled) {
-            Notification.requestPermission().then(async permission => {
-                await setSetting('notificationPermission', permission);
-                console.log('Notification permission:', permission);
-                if (permission === 'denied') {
-                    permissionError.style.display = 'block';
-                    enableRemindersInput.checked = false;
-                    enableReminders = false;
-                    await setSetting('enableReminders', 'false');
-                    showToast('Notifications blocked. Enable in browser settings.');
-                } else {
-                    permissionError.style.display = 'none';
-                    await syncTasksWithServiceWorker();
-                    debouncedCheckNotifications();
-                }
-            });
-        } else {
-            await syncTasksWithServiceWorker(); // Sync on any settings change
-        }
+        // Background: Handle notification permissions
+        handleNotificationPermissions(wasEnabled, enableReminders).catch(error => {
+            console.error('Notification permission handling failed:', error);
+        });
 
-        settingsModal.classList.remove('active');
-        
-        // Optional: Show success message
-        if (isAuthenticated()) {
-            showToast('Settings and profile updated successfully!');
-        } else {
-            showToast('Settings saved successfully!');
-        }
+        // Background: Service worker sync
+        syncTasksWithServiceWorker().catch(error => {
+            console.error('Service worker sync failed:', error);
+        });
 
     } catch (error) {
-        console.error('Error saving settings:', error);
-        showToast('Failed to save settings. Please try again.');
+        console.error('Error saving settings locally:', error);
+        showToast('Failed to save settings. Please try again.', 'error');
+        
+        // Reopen modal if critical local save failed
+        settingsModal.classList.add('active');
+        userNameInput.value = userName; // Reset to previous value
+        enableRemindersInput.checked = enableReminders;
     }
 });
+
+// Separate function for background profile update with caching
+async function updateUserProfileInBackground(newUserName) {
+    console.log('🔄 Updating user profile in background:', newUserName);
+    
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .upsert({ 
+                id: user.id,
+                display_name: newUserName,
+                updated_at: new Date().toISOString()
+            }, {
+                onConflict: 'id'
+            });
+
+        if (error) {
+            throw error;
+        }
+
+        // Update cache on success
+        profileCache.displayName = newUserName;
+        profileCache.lastUpdated = Date.now();
+        
+        console.log('✅ Profile updated successfully at the database');
+        showToast('Profile synced to cloud!', 'success');
+        
+    } catch (error) {
+        console.error('❌ Failed to update profile:', error);
+        throw error; // Re-throw so caller can handle
+    }
+}
+
+// Separate function for notification permission handling
+async function handleNotificationPermissions(wasEnabled, enableReminders) {
+    if (enableReminders && !wasEnabled) {
+        try {
+            const permission = await Notification.requestPermission();
+            await setSetting('notificationPermission', permission);
+            console.log('Notification permission:', permission);
+            
+            if (permission === 'denied') {
+                // Update UI to show error
+                permissionError.style.display = 'block';
+                
+                // Reset the setting
+                enableRemindersInput.checked = false;
+                enableReminders = false;
+                await setSetting('enableReminders', 'false');
+                
+                showToast('Notifications blocked. Enable in browser settings.', 'warning');
+            } else {
+                permissionError.style.display = 'none';
+                await syncTasksWithServiceWorker();
+                debouncedCheckNotifications();
+                showToast('Notifications enabled!', 'success');
+            }
+        } catch (error) {
+            console.error('Notification permission error:', error);
+            showToast('Failed to set notification permissions', 'warning');
+        }
+    } else {
+        // Just sync for any other settings change
+        await syncTasksWithServiceWorker();
+    }
+}
 
 /* Cancel settings */
 cancelSettingsBtn.addEventListener('click', () => {
@@ -1773,6 +2211,35 @@ cancelSettingsBtn.addEventListener('click', () => {
     enableRemindersInput.checked = enableReminders;
     permissionError.style.display = 'none';
 });
+
+// Optional: Add function to clear profile cache when user logs out
+export function clearProfileCache() {
+    profileCache = {
+        displayName: null,
+        lastUpdated: null
+    };
+}
+
+// Optional: Add function to preload profile cache when user logs in
+export async function preloadProfileCache() {
+    if (!isAuthenticated() || !user?.id) return;
+    
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('display_name')
+            .eq('id', user.id)
+            .single();
+
+        if (data && !error) {
+            profileCache.displayName = data.display_name;
+            profileCache.lastUpdated = Date.now();
+            console.log('✅ Profile cache preloaded:', data.display_name);
+        }
+    } catch (error) {
+        console.error('Failed to preload profile cache:', error);
+    }
+}
 
 /* Handle late task reason input */
 lateReasonInput.addEventListener('input', () => {
@@ -1878,28 +2345,18 @@ function attachTaskActions() {
                 // Update local array
                 tasks = tasks.filter(t => t.id !== task.id);
 
-                // If no tasks remain, restore defaults
-                if (tasks.length === 0) {
-                    tasks = defaultTasks.map(task => ({ ...task }));
-                    for (const defaultTask of tasks) {
-                        try {
-                            await addTask(defaultTask);
-                        } catch (error) {
-                            if (error.name === 'ConstraintError') {
-                                console.log(`Task ${defaultTask.id} already exists, skipping`);
-                                continue;
-                            }
-                            throw error;
-                        }
-                    }
-                    hasCustomTasks = false;
-                    await setSetting('hasCustomTasks', 'false');
-                    await setSetting('firstCustomTaskAdded', 'false');
-                    if (customTaskBanner) {
-                        customTaskBanner.classList.add('hidden');
-                        customTaskBanner.classList.remove('active');
-                    }
-                }
+                // If no tasks remain, show empty state
+if (tasks.length === 0) {
+    console.log('All tasks deleted - showing empty state');
+    hasCustomTasks = false;
+    await setSetting('hasCustomTasks', 'false');
+    await setSetting('firstCustomTaskAdded', 'false');
+    if (customTaskBanner) {
+        customTaskBanner.classList.add('hidden');
+        customTaskBanner.classList.remove('active');
+    }
+    // Don't load any defaults - just show empty UI
+}
 
                 console.log(
                     `Deleted task "${task.name}", tasks now: [${tasks.map(t => t.name).join(', ')}]`
@@ -1995,10 +2452,10 @@ if (moreOptionsBtn && mobileDropdown) {
         }
     });
 
-    document.getElementById('mobileResetDefaultBtn')?.addEventListener('click', () => {
-        document.getElementById('resetDefaultBtn').click();
-        mobileDropdown.classList.remove('active');
-    });
+document.getElementById('mobileResetDefaultBtn')?.addEventListener('click', function() {
+    window.location.href = 'help.html';
+    mobileDropdown.classList.remove('active');
+});
 
     document.getElementById('mobileShowReportBtn')?.addEventListener('click', () => {
         document.getElementById('showReportBtn').click();
@@ -2010,7 +2467,37 @@ if (moreOptionsBtn && mobileDropdown) {
         mobileDropdown.classList.remove('active');
     });
 }
+// Handle Contact Developer link - redirect to help page
+document.addEventListener('DOMContentLoaded', function() {
+    const contactLink = document.getElementById('contactDeveloper');
+    
+    if (contactLink) {
+        contactLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Redirect to help.html with parameters to open contact form
+            window.location.href = 'help.html?openContact=true#contact';
+        });
+    }
+});
+// Back to Top Button Functionality
+const backToTopBtn = document.getElementById('backToTopBtn');
 
+if (backToTopBtn) {
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            backToTopBtn.classList.add('visible');
+        } else {
+            backToTopBtn.classList.remove('visible');
+        }
+    });
+}
 /* Window resize handling */
 window.addEventListener('resize', () => {
     if (isCelebrating) {
@@ -2026,44 +2513,54 @@ window.addEventListener('resize', () => {
 
 
 
-/* Updated init function - Different strategies for auth vs guest */
-async function init() {
-    try {
-        initGlobalUtils();
-        await initAuth();
+/* Updated init function - Different strategies for auth vs guest */ 
+async function init() {     
+    try {         
+        initGlobalUtils();         
+        await initAuth();                  
         
-        // Initialize the offline queue system
-        await initOfflineQueue();
+        // Initialize the offline queue system         
+        await initOfflineQueue();                  
         
-        // Initialize FCM manager
-        await initFCMManager();
+        // Initialize FCM manager         
+        await initFCMManager();                  
         
-        // Load lastResetDate from IndexedDB at startup
-        const savedResetDate = await getSetting('lastResetDate');
-        const currentDate = new Date().toDateString();
-
-        // If we haven't reset yet today, do it immediately on startup
-        if (savedResetDate !== currentDate) {
-            await checkDateChange();
-        }
-
-        // Always schedule daily reset checks
-        setInterval(checkDateChange, 30000);
-
-        // CRITICAL: Different notification strategies based on auth status
+        // Load lastResetDate from IndexedDB at startup         
+        const savedResetDate = await getSetting('lastResetDate');         
+        const currentDate = new Date().toDateString();          
+        
+        // If we haven't reset yet today, do it immediately on startup         
+        if (savedResetDate !== currentDate) {             
+            await checkDateChange();         
+        }          
+        
+        // Always schedule daily reset checks         
+        setInterval(checkDateChange, 30000);          
+        
+        // PRELOAD PROFILE CACHE: If user is already authenticated on page load
         if (isAuthenticated()) {
-            console.log("Authenticated user: FCM backend handles all notifications");
-            // No local notification polling for authenticated users
-        } else {
-            console.log("Guest user: enabling local notification polling");
-            // Enable local notification checking for guests
-            setInterval(debouncedCheckNotifications, 30000);
+            console.log("Authenticated user detected on init - preloading profile cache");
+            try {
+                await preloadProfileCache();
+            } catch (error) {
+                console.error('Failed to preload profile cache on init:', error);
+            }
         }
         
-    } catch (error) {
-        console.error('App initialization failed:', error);
-        showToast('Failed to initialize app completely. Some features may not work.');
-    }
-}
+        // CRITICAL: Different notification strategies based on auth status         
+        if (isAuthenticated()) {             
+            console.log("Authenticated user: FCM backend handles all notifications");             
+            // No local notification polling for authenticated users         
+        } else {             
+            console.log("Guest user: enabling local notification polling");             
+            // Enable local notification checking for guests             
+            setInterval(debouncedCheckNotifications, 30000);         
+        }              
+        
+    } catch (error) {         
+        console.error('App initialization failed:', error);         
+        showToast('Failed to initialize app completely. Some features may not work.');     
+    } 
+}  
 
 init();
