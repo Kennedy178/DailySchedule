@@ -46,36 +46,77 @@ async function fetchWithRetry(url, options, maxRetries = 3, baseDelay = 1000) {
 async function fetchBackendTasks() {
     if (!isAuthenticated()) {
         console.warn('Not authenticated, skipping backend task fetch');
-        return [];
+        return null; // Changed from [] to null for network failure indication
     }
 
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 7000);
-        const response = await fetch(API_BASE_URL, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${access_token}`,
-                'Content-Type': 'application/json',
-            },
-            signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
+    let retries = 0;
+    const maxRetries = 3;
+    const retryDelay = 1000;
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    while (retries <= maxRetries) {
+        try {
+            if (!access_token) {
+                console.log(`fetchBackendTasks: No access token available (attempt ${retries + 1})`);
+                if (retries < maxRetries) {
+                    retries++;
+                    await new Promise(resolve => setTimeout(resolve, retryDelay * retries));
+                    continue;
+                }
+                return null; // Network/auth failure
+            }
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 7000);
+            
+            const response = await fetch(API_BASE_URL, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${access_token}`,
+                    'Content-Type': 'application/json',
+                },
+                signal: controller.signal,
+            });
+            
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                if (response.status === 401 && retries < maxRetries) {
+                    console.log(`fetchBackendTasks: Got 401, auth not ready yet (attempt ${retries + 1}). Retrying...`);
+                    retries++;
+                    await new Promise(resolve => setTimeout(resolve, retryDelay * retries));
+                    continue;
+                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const tasks = await response.json();
+            console.log(`Fetched ${tasks.length} tasks for user ${user.id}`);
+            return tasks; // Return actual tasks array (could be empty [])
+
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log(`fetchBackendTasks: Request timed out (attempt ${retries + 1})`);
+            } else if (error.message.includes('401') && retries < maxRetries) {
+                console.log(`fetchBackendTasks: Auth error, retrying (attempt ${retries + 1})`);
+            } else if (retries >= maxRetries) {
+                console.error('fetchBackendTasks: Max retries reached, network failure');
+                return null; // Network failure after all retries
+            } else {
+                console.log(`fetchBackendTasks: Error occurred (attempt ${retries + 1}):`, error.message);
+            }
+
+            if (retries < maxRetries) {
+                retries++;
+                await new Promise(resolve => setTimeout(resolve, retryDelay * retries));
+            } else {
+                console.error('Fetch tasks failed after all retries:', error.message);
+                return null; // Network failure
+            }
         }
-
-        const tasks = await response.json();
-        console.log(`Fetched ${tasks.length} tasks for user ${user.id}`);
-        return tasks;
-    } catch (error) {
-        console.error('Fetch tasks failed:', error.message);
-        const localTasks = await getAllTasks();
-        return localTasks.filter(task => task.user_id === user.id) || [];
     }
-}
 
+    return null; // Network failure fallback
+}
 /* -------------------------- Cache from Backend -------------------------- */
 async function cacheBackendTasks(backendTasks) {
     try {
@@ -359,6 +400,8 @@ async function syncPendingTasks() {
 }
 
 /* -------------------------- Supabase Realtime -------------------------- */
+let currentSubscription = null; // Store subscription globally for cleanup
+
 function setupRealtimeSubscriptions() {
     if (!isAuthenticated() || !navigator.onLine) {
         console.warn('Not authenticated or offline, skipping real-time subscriptions');
@@ -366,12 +409,14 @@ function setupRealtimeSubscriptions() {
     }
 
     try {
-        let subscription = null;
-        if (subscription) {
-            subscription.unsubscribe();
+        // Clean up any existing subscription first
+        if (currentSubscription) {
+            currentSubscription.unsubscribe();
+            currentSubscription = null;
+            console.log('Cleaned up previous subscription');
         }
 
-        subscription = supabase
+        currentSubscription = supabase
             .channel('tasks')
             .on(
                 'postgres_changes',
@@ -442,7 +487,7 @@ function setupRealtimeSubscriptions() {
                         const userTasks = freshTasks.filter((t) => t.user_id === user.id);
                         // Tasks are already sorted from getAllTasks()
 
-                        console.log(`Rendering ${sortedTasks.length} sorted user tasks:`, sortedTasks.map(t => ({
+                        console.log(`Rendering ${userTasks.length} sorted user tasks:`, userTasks.map(t => ({
                             id: t.id,
                             name: t.name,
                             completed: t.completed,
@@ -460,11 +505,104 @@ function setupRealtimeSubscriptions() {
 
         console.log('Real-time subscriptions set up for user', user.id);
 
-        window.addEventListener('unload', () => {
-            try { subscription.unsubscribe(); } catch {}
-        });
+        // Modern cleanup using visibilitychange
+        setupSubscriptionCleanup();
+
     } catch (error) {
         console.error('Failed to set up real-time subscriptions:', error.message);
+    }
+}
+
+// Separate function for managing subscription lifecycle
+function setupSubscriptionCleanup() {
+    // Remove any existing listeners to avoid duplicates
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Add the new listener
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+}
+
+function handleVisibilityChange() {
+    if (document.visibilityState === 'hidden') {
+        // Clean up subscription when app is hidden
+        if (currentSubscription) {
+            try {
+                currentSubscription.unsubscribe();
+                currentSubscription = null;
+                console.log('Subscription cleaned up - app hidden');
+            } catch (error) {
+                console.error('Error cleaning up subscription:', error);
+            }
+        }
+    } else if (document.visibilityState === 'visible' && isAuthenticated() && navigator.onLine) {
+        // Reestablish subscription when app becomes visible again
+        if (!currentSubscription) {
+            console.log('App visible again - reestablishing subscription');
+            setupRealtimeSubscriptions();
+        }
+    }
+}
+
+// Optional: Function to manually cleanup subscription (useful for logout)
+function cleanupRealtimeSubscriptions() {
+    if (currentSubscription) {
+        try {
+            currentSubscription.unsubscribe();
+            currentSubscription = null;
+            console.log('Manual subscription cleanup completed');
+        } catch (error) {
+            console.error('Error during manual cleanup:', error);
+        }
+    }
+    
+    // Remove the visibility listener
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+}
+
+
+
+// In sync.js - add a simple cache to avoid redundant calls
+let profileUpdateCache = new Set();
+
+async function updateUserProfileFlag(hasCreatedTasks = true) {
+    if (!isAuthenticated()) return;
+    
+    const cacheKey = `${user.id}-${hasCreatedTasks}`;
+    if (profileUpdateCache.has(cacheKey)) {
+        console.log('Profile update already in progress or completed');
+        return;
+    }
+    
+    profileUpdateCache.add(cacheKey);
+    
+    try {
+        const { error } = await supabase
+            .from('profiles')
+            .update({ has_created_tasks: hasCreatedTasks })
+            .eq('id', user.id);
+                     
+        if (error) throw error;
+        console.log('Updated profile has_created_tasks flag');
+    } catch (error) {
+        console.error('Failed to update profile flag:', error);
+        profileUpdateCache.delete(cacheKey); // Remove from cache on error
+    }
+}
+async function checkUserHasCreatedTasks() {
+    if (!isAuthenticated()) return false;
+    
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('has_created_tasks')
+            .eq('id', user.id)
+            .single();
+            
+        if (error) throw error;
+        return data?.has_created_tasks || false;
+    } catch (error) {
+        console.error('Failed to check profile flag:', error);
+        return false; // Assume false on error
     }
 }
 
@@ -485,4 +623,4 @@ function retrySyncTasks() {
     });
 }
 
-export { fetchBackendTasks, cacheBackendTasks, syncPendingTasks, setupRealtimeSubscriptions, retrySyncTasks };
+export { fetchBackendTasks, cacheBackendTasks, syncPendingTasks, setupRealtimeSubscriptions, retrySyncTasks, cleanupRealtimeSubscriptions,updateUserProfileFlag, checkUserHasCreatedTasks };
