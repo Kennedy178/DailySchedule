@@ -81,9 +81,9 @@ document.body.appendChild(errorToast);
 if (location.hostname !== "localhost") {
     console.log = function () {};
     console.debug = function () {};
-    // You can also disable others if you want:
-    // console.info = function () {};
-    // console.warn = function () {};
+    console.info = function () {};
+    console.warn = function () {};
+    // Only console.error for actual error reporting
 }
 
 /* Default tasks */
