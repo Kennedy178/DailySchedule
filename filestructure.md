@@ -1,41 +1,51 @@
-
-# logic.md
-
-│
+# Project File Structure
 
 getitdone/
 │
-├── frontend/                          # Frontend (PWA)
-│   ├── index.html                     # Phase 1 – Created when separating files (base UI structure)
-│   ├── manifest.json                  # Phase 1 – Added when making app installable as a PWA
-│   ├── sw.js                          # Phase 2 → Updated later in Phase 6 (local caching first, then push handling)
-│   │
+├── frontend/
+│   ├── index.html              # Main app page, footer with "Contact Developer" link
+|   |──story-content.html
+│   ├── help.html              # Help/FAQ page with contact form (add honeypot field)
+|   ├── tos.html               # Terms of service
+|   ├── privacy.html           # privacy policy
+|   ├── reset-password.html
+│   ├── manifest.json
+│   ├── sw.js
 │   ├── styles/
-│   │   └── main.css                   # Phase 1 – Separated from HTML (UI styling, responsive layout)
-│   │
+│   │   ├── main.css
+│   │   └── help.css           # Styles for FAQ, contact form, honeypot (hidden)
 │   ├── scripts/
-│   │   ├── app.js                     # Phase 1 – Initial task UI logic (will later integrate Supabase in Phase 5)
-│   │   ├── db.js                      # Phase 2 – Replaces localStorage with IndexedDB + offline queue logic
-    |   ├── auth.js                    #  Google OAuth login/logout (Supabase client)
-    |   ├── sync.js                    # Offline queue & sync with backend
-│   │   └── notifications.js           # Phase 6 – Push/local notification handling (FCM + local)
-│   │
-│   └── icons/
-│       ├── favicon-32x32.png          # Phase 1 – Added for branding & PWA
-│       ├── icon-192x192.png           # Phase 1 – Required PWA icon size
-│       └── icon-512x512.png           # Phase 1 – Required PWA icon size
+│   │   ├── app.js
+│   │   ├── db.js
+│   │   ├── auth.js
+│   │   ├── authHandler.js
+│   │   ├── sync.js
+│   │   ├── fcm-config.js
+│   │   ├── fcm-manager.js
+│   │   └── help.js            # FAQ and form logic (success/error messages)
+│   ├── icons/
+│   │   ├── favicon-32x32.png
+│   │   ├── icon-192x192.png
+│   │   └── icon-512x512.png
+│   └── assets/
+│       └── screenshots/       # FAQ screenshots
+│           ├── signup.png
+│           ├── confirmation.png
+│           ├── settings.png
+│           └── tasks.png
 │
-├── backend/                           # FastAPI backend
-│   ├── main.py                        # Phase 4 – FastAPI entry point (routing, middleware, app setup)
-│   ├── requirements.txt               # Phase 4 – Python dependencies (FastAPI, Supabase client, APScheduler)
-│   │
+├── backend/
+│   ├── main.py
+│   ├── requirements.txt
 │   ├── routes/
-│   │   └── tasks.py                   # Phase 4 – CRUD API for tasks + auth token verification
-│   │
+│   │   ├── tasks.py
+│   │   ├── fcm.py
+│   │   └── contact.py         # Handle form, check honeypot, trigger email
 │   ├── utils/
-│   │   ├── supabase_client.py         # Phase 4 – Connect FastAPI to Supabase DB
-│   │   └── notifications.py           # Phase 6 – APScheduler + FCM push notification logic
-│   │
-│   └── .env                           # Phase 4 – Added for Supabase keys, later expanded in Phase 6 for FCM keys
+│   │   ├── supabase_client.py
+│   │   ├── auth_utils.py
+│   │   ├── fcm_service.py
+│   │   └── email_service.py   # Send emails via Gmail SMTP (From + Reply-To)
+│   └── .env                   # GMAIL_ADDRESS, GMAIL_APP_PASSWORD
 │
-└── README.md                          # Phase 1 – Project overview; updated at each major phase for documentation
+└── README.md                  # Document new features
