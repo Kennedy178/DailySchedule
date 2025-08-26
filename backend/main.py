@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, time, timedelta
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Response
 from dotenv import load_dotenv
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -418,6 +419,11 @@ async def health_check():
             "notification_cache": cache_size
         }
     }
+
+@app.head("/health", tags=["Health"])
+async def health_check_head():
+    """Lightweight health check for HEAD requests (UptimeRobot free tier)."""
+    return Response(status_code=200)
 
 # Optional: Add endpoint to trigger manual task check (for testing)
 @app.post("/api/admin/trigger-task-check", tags=["Admin"])
