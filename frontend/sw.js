@@ -2,6 +2,15 @@
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
+
+if (self.location.hostname !== "localhost") {
+    console.log = function () {};
+    console.debug = function () {};
+    console.info = function () {};
+    console.warn = function () {};
+    // Keep console.error for actual error reporting
+}
+
 //--To be changed as per indexedDB versioning--
 const DB_NAME = 'getitdone';
 const DB_VERSION = 2;

@@ -76,15 +76,16 @@ async function initAuth() {
                
                 // With:
                 try {
-                    const token = await registerFCMToken();
-                    if (token) {
-                        console.log('FCM: Successfully registered');
-                    } else {
-                        console.log('FCM: Registration skipped (browser limitations)');
-                    }
-                } catch (error) {
-                    console.log('FCM: Failed gracefully, app continues normally');
-                }
+    // Small delay to ensure settings are loaded
+    setTimeout(async () => {
+        const token = await registerFCMToken();
+        if (token) {
+            console.log('FCM: Successfully registered after login');
+        }
+    }, 1500);
+} catch (error) {
+    console.log('FCM: Failed gracefully, app continues normally');
+}
                 try {
         await preloadProfileCache();
     } catch (error) {

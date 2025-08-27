@@ -5,7 +5,7 @@ import { addTask, getAllTasks, getTaskById, updateTask, deleteTask, setSetting, 
 import { isAuthenticated, initAuth, user, } from './authHandler.js';
 import { fetchBackendTasks, cacheBackendTasks, setupRealtimeSubscriptions, syncPendingTasks, updateUserProfileFlag, checkUserHasCreatedTasks } from './sync.js';
 import { supabase } from './auth.js';
-import { fcmToken, initFCMManager, isTokenRegistered } from './fcm-manager.js';
+import { fcmToken, initFCMManager, registerFCMToken, isTokenRegistered } from './fcm-manager.js';
 import { initOfflineQueue } from './offline-queue.js';
 
 
@@ -2092,11 +2092,15 @@ saveSettingsBtn.addEventListener('click', async () => {
         // Show immediate success for local save
         showToast('Settings saved locally!', 'success');
 
+        // Dispatch custom event for settings change
+        document.dispatchEvent(new CustomEvent('settingsChange', {
+            detail: { setting: 'enableReminders', value: newEnableReminders.toString() }
+        }));
+
         // 3. BACKGROUND OPERATIONS (don't await - let them run async)
         
         // Background: Supabase profile update with caching
         if (isAuthenticated() && user?.id) {
-            // Check cache to avoid unnecessary API calls
             const shouldUpdateProfile = (
                 profileCache.displayName !== newUserName || 
                 !profileCache.lastUpdated || 
@@ -2511,7 +2515,27 @@ window.addEventListener('resize', () => {
 });
 
 
+function listenForSettingsChange() {
+    document.addEventListener('settingsChange', async (event) => {
+        if (event.detail.setting === 'enableReminders' && event.detail.value === 'true') {
+            console.log('FCM: enableReminders toggled to true, attempting token registration');
+            try {
+                const token = await registerFCMToken();
+                if (token) {
+                    showToast('Notifications enabled successfully!', 'success');
+                } else {
+                    showToast('Failed to enable notifications. Please try again.', 'warning');
+                }
+            } catch (error) {
+                console.error('FCM: Error registering token after settings change:', error);
+                showToast('Failed to enable notifications. Please try again.', 'error');
+            }
+        }
+    });
+}
 
+// Call  during app initialization
+listenForSettingsChange();
 
 /* Updated init function - Different strategies for auth vs guest */ 
 async function init() {     
@@ -2524,6 +2548,9 @@ async function init() {
         
         // Initialize FCM manager         
         await initFCMManager();                  
+        
+        // Start listening for settings changes
+        listenForSettingsChange();
         
         // Load lastResetDate from IndexedDB at startup         
         const savedResetDate = await getSetting('lastResetDate');         
@@ -2561,6 +2588,6 @@ async function init() {
         console.error('App initialization failed:', error);         
         showToast('Failed to initialize app completely. Some features may not work.');     
     } 
-}  
+}
 
 init();
