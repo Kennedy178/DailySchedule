@@ -18,15 +18,19 @@ from utils.supabase_client import supabase
 from routes.contact import router as contact_router
 
 
+import logging
+
 logging.basicConfig(
-    level=logging.ERROR,
+    level=logging.ERROR,  # Only log ERROR and CRITICAL messages
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
         logging.FileHandler("app.log"),
         logging.StreamHandler()
     ]
 )
+
 logger = logging.getLogger(__name__)
+
 
 # Load environment variables
 load_dotenv()
@@ -195,6 +199,8 @@ async def check_upcoming_tasks():
                 
                 # Combine results
                 upcoming_tasks = (tasks_response_1.data or []) + (tasks_response_2.data or [])
+                logger.info(f"DEBUG: Query found {len(upcoming_tasks)} tasks: {[task.get('name', 'NO_NAME') + ' at ' + task.get('start_time', 'NO_TIME') for task in upcoming_tasks]}")
+                
                 
         except Exception as e:
             logger.error(f"Supabase error fetching upcoming tasks: {str(e)}")
