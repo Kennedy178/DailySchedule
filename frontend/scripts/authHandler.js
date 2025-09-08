@@ -5,6 +5,7 @@ import { retrySyncTasks, cleanupRealtimeSubscriptions } from './sync.js';
 import { initFCMManager, registerFCMToken, unregisterFCMToken, handleSettingsChange } from './fcm-manager.js';
 import { initOfflineQueue, processAllQueuedOperations } from './offline-queue.js';
 
+
 /* Initialize global auth variables */
 let user = null;
 let access_token = null;
@@ -12,18 +13,8 @@ let isSignUp = false;
 let isGuest = false;
 let hasSelectedMode = null;
 
-/* Environment detection helper */
-function getBaseUrl() {
-    return window.location.origin;
-}
-
-function isDevelopment() {
-    return window.location.hostname === 'localhost' || 
-           window.location.hostname === '127.0.0.1' ||
-           window.location.hostname.includes('localhost');
-}
-
 /* Initialize auth and UI */
+// Update initAuth function to include offline queue initialization
 async function initAuth() {
     try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -52,6 +43,7 @@ async function initAuth() {
             console.log('Offline queue initialized successfully');
         } catch (queueError) {
             console.error('Failed to initialize offline queue:', queueError);
+            // Continue initialization even if offline queue fails
         }
 
         // Load tasks according to mode
@@ -80,35 +72,25 @@ async function initAuth() {
                 await loadTasks('authenticated');
                 retrySyncTasks(); // Start retry listener
 
-                // Handle email confirmation success
-                const hashParams = new URLSearchParams(window.location.hash.slice(1));
-                if (hashParams.get('type') === 'signup') {
-                    showToast('Account confirmed! Welcome to GetItDone!', 'success');
-                    // Clean the URL hash
-                    setTimeout(() => {
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                    }, 1000);
-                }
-
                 //--- Register FCM token for authenticated user----
+               
+                // With:
                 try {
-                    // Small delay to ensure settings are loaded
-                    setTimeout(async () => {
-                        const token = await registerFCMToken();
-                        if (token) {
-                            console.log('FCM: Successfully registered after login');
-                        }
-                    }, 1500);
-                } catch (error) {
-                    console.log('FCM: Failed gracefully, app continues normally');
-                }
-
+    // Small delay to ensure settings are loaded
+    setTimeout(async () => {
+        const token = await registerFCMToken();
+        if (token) {
+            console.log('FCM: Successfully registered after login');
+        }
+    }, 1500);
+} catch (error) {
+    console.log('FCM: Failed gracefully, app continues normally');
+}
                 try {
-                    await preloadProfileCache();
-                } catch (error) {
-                    console.error('Failed to preload profile cache:', error);
-                }
-
+        await preloadProfileCache();
+    } catch (error) {
+        console.error('Failed to preload profile cache:', error);
+    }
                 //--- Process any queued operations now that we're authenticated---
                 if (navigator.onLine) {
                     setTimeout(() => processAllQueuedOperations(), 2000); // Small delay for auth to settle
@@ -144,11 +126,6 @@ async function initAuth() {
             updateUI();
         });
 
-        // Handle URL hash parameters for email confirmation on index.html
-        if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-            handleEmailConfirmation();
-        }
-
         // Initial UI render
         updateUI();
         setupEventListeners();
@@ -171,33 +148,12 @@ async function initAuth() {
     }
 }
 
-/* Handle email confirmation on index.html */
-function handleEmailConfirmation() {
-    const hashParams = new URLSearchParams(window.location.hash.slice(1));
-    const accessToken = hashParams.get('access_token');
-    const type = hashParams.get('type');
-    
-    if (accessToken && type === 'signup') {
-        console.log('Email confirmation detected, user should be auto-logged in');
-        
-        // Clean the URL hash after a short delay
-        setTimeout(() => {
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }, 1000);
-        
-        // Show success message - this will be overridden by the auth state change listener
-        setTimeout(() => {
-            if (!user) { // Only show if auth state change hasn't triggered yet
-                showToast('Email confirmed! Signing you in...', 'success');
-            }
-        }, 500);
-    }
-}
 
 /* Update UI based on auth state using class toggling */
 function updateUI() {
     const authSection = document.getElementById('authSection');
     const appContent = document.querySelector('.container');
+    const myAccount = document.getElementById('myAccount');
 
     // Toggle auth/task UI
     if (hasSelectedMode === 'authenticated' || hasSelectedMode === 'guest') {
@@ -235,6 +191,7 @@ function updateMyAccount() {
     }
 }
 
+
 function setupEventListeners() {
     // Get all DOM elements
     const authForm = document.getElementById('authForm');
@@ -262,22 +219,17 @@ function setupEventListeners() {
             showLoading(true);
 
             const { data, error } = isSignUp 
-                ? await signUp(email, password, {
-                    emailRedirectTo: `${getBaseUrl()}/index.html`
-                })
+                ? await signUp(email, password)
                 : await signIn(email, password);
 
             if (error) throw error;
 
             if (isSignUp) {
-                showToast('Account created! Please check your email to confirm your account.', 'success');
-                // Clear form
-                document.getElementById('email').value = '';
-                document.getElementById('password').value = '';
+                showToast('Account created! Please verify your email.');
             } else if (data?.user) {
                 user = data.user;
                 access_token = data.session?.access_token;
-                showToast('Welcome back! Loading your tasks...', 'success');
+                showToast('Welcome back! Redirecting...');
                 hasSelectedMode = 'authenticated';
                 await setSetting('hasSelectedMode', 'authenticated');
                 await loadTasks('authenticated');
@@ -289,9 +241,7 @@ function setupEventListeners() {
             if (message.includes('Invalid')) {
                 message = 'Incorrect email or password';
             } else if (message.includes('confirmed')) {
-                message = 'Please verify your email first. Check your inbox!';
-            } else if (message.includes('rate limit')) {
-                message = 'Too many attempts. Please wait a moment before trying again.';
+                message = 'Please verify your email first';
             }
 
             authError.textContent = message;
@@ -311,13 +261,6 @@ function setupEventListeners() {
         authToggle.innerHTML = isSignUp 
             ? 'Already have an account? <a href="#">Sign In</a>' 
             : 'No account? <a href="#">Sign Up</a>';
-            
-        // Clear any previous errors
-        const authError = document.getElementById('authError');
-        if (authError) {
-            authError.textContent = '';
-            authError.classList.remove('visible');
-        }
     });
 
     // 3. Forgot Password
@@ -340,7 +283,7 @@ function setupEventListeners() {
             showLoading(true);
             
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${getBaseUrl()}/reset-password.html`
+                redirectTo: `${window.location.origin}/reset-password.html`
             });
             
             if (error) throw error;
@@ -378,7 +321,8 @@ function setupEventListeners() {
         await setSetting('hasSelectedMode', 'guest');
         await loadTasks('guest');
         updateUI();
-        showToast('Continuing as guest. Tasks saved locally.', 'info');
+        showToast('Continuing as guest. Tasks saved locally.');
+        // Note: No FCM registration for guests - they use local notifications
     });
 
     // 5. My Account Dropdown
@@ -397,7 +341,7 @@ function setupEventListeners() {
         }
     });
 
-    // 7. Toggle Password Visibility
+        // 7. Toggle Password Visibility
     window.togglePasswordVisibility = function() {
         const passwordInput = document.getElementById('password');
         const toggleButton = document.getElementById('togglePassword');
@@ -429,6 +373,7 @@ function setupEventListeners() {
         logoutModal.classList.add('active');
         document.body.style.overflow = 'hidden';
     });
+
 
     // New guest mode buttons
     document.getElementById('goToSignupBtn')?.addEventListener('click', async () => {
@@ -464,91 +409,78 @@ function setupEventListeners() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    // Keep existing modal handlers
-    confirmLogoutBtn?.addEventListener('click', async () => {
-        console.log('🔄 Logout button clicked - starting logout process');
+// Keep existing modal handlers
+confirmLogoutBtn?.addEventListener('click', async () => {
+    console.log('🔄 Logout button clicked - starting logout process');
+    
+    // 1. CLOSE MODAL IMMEDIATELY - Give instant feedback
+    document.getElementById('logoutConfirmModal').classList.remove('active');
+    document.body.style.overflow = '';
+    showToast('Signing out...', 'info');
+    
+    try {
+        console.log('🔄 Step 1: Starting signOut process');
         
-        // 1. CLOSE MODAL IMMEDIATELY - Give instant feedback
-        document.getElementById('logoutConfirmModal').classList.remove('active');
-        document.body.style.overflow = '';
-        showToast('Signing out...', 'info');
+        // 2. FAST LOCAL CLEANUP (await these - should be quick)
+        console.log('🔄 Step 2: Cleaning up local data');
+        user = null;
+        isGuest = false;
+        access_token = null;
+        hasSelectedMode = null;
         
-        try {
-            console.log('🔄 Step 1: Starting signOut process');
-            
-            // 2. FAST LOCAL CLEANUP (await these - should be quick)
-            console.log('🔄 Step 2: Cleaning up local data');
-            user = null;
-            isGuest = false;
-            access_token = null;
-            hasSelectedMode = null;
-            
-            // Local storage cleanup
-            await setSetting('hasSelectedMode', null);
-            await setSetting('hasMigratedTasks', null);
-            
-            // Clear cache immediately
-            clearProfileCache();
-            console.log('✅ Local cleanup completed');
-            
-            // 3. UPDATE UI IMMEDIATELY
-            console.log('🔄 Step 3: Updating UI');
-            updateUI();
-            showToast('Signed out successfully!', 'success');
-            console.log('✅ UI updated, user should see signed out state');
-            
-            // 4. BACKGROUND OPERATIONS (don't await - let them run async)
-            console.log('🔄 Step 4: Starting background cleanup');
-            
-            // Background: Supabase signout
-            if (user) {
-                signOut().then(() => {
-                    console.log('✅ Supabase signOut completed');
-                }).catch(error => {
-                    console.error('❌ Supabase signOut failed (non-critical):', error);
-                });
-            } else {
-                console.log('ℹ️ No user to sign out from Supabase');
-            }
-            
-            // Background: Cleanup subscriptions
-            Promise.resolve().then(() => {
-                try {
-                    cleanupRealtimeSubscriptions();
-                    console.log('✅ Realtime subscriptions cleaned up');
-                } catch (error) {
-                    console.error('❌ Subscription cleanup failed (non-critical):', error);
-                }
+        // Local storage cleanup
+        await setSetting('hasSelectedMode', null);
+        await setSetting('hasMigratedTasks', null);
+        
+        // Clear cache immediately
+        clearProfileCache();
+        console.log('✅ Local cleanup completed');
+        
+        // 3. UPDATE UI IMMEDIATELY
+        console.log('🔄 Step 3: Updating UI');
+        updateUI();
+        showToast('Signed out successfully!', 'success');
+        console.log('✅ UI updated, user should see signed out state');
+        
+        // 4. BACKGROUND OPERATIONS (don't await - let them run async)
+        console.log('🔄 Step 4: Starting background cleanup');
+        
+        // Background: Supabase signout
+        if (user) {
+            signOut().then(() => {
+                console.log('✅ Supabase signOut completed');
+            }).catch(error => {
+                console.error('❌ Supabase signOut failed (non-critical):', error);
+                // Don't show error to user since they're already logged out locally
             });
-            
-            console.log('🎉 Logout process completed successfully');
-            
-        } catch (error) {
-            console.error('❌ Critical logout error:', error);
-            showToast('Logout completed with some errors', 'warning');
-            
-            // Even if there's an error, ensure user appears logged out
-            user = null;
-            isGuest = false;
-            access_token = null;
-            hasSelectedMode = null;
-            updateUI();
+        } else {
+            console.log('ℹ️ No user to sign out from Supabase');
         }
-    });
-
-    // Close modal handlers
-    cancelLogoutBtn?.addEventListener('click', () => {
-        document.getElementById('logoutConfirmModal').classList.remove('active');
-        document.body.style.overflow = '';
-    });
-
-    // Close modal when clicking outside
-    logoutModal?.addEventListener('click', (e) => {
-        if (e.target === logoutModal) {
-            logoutModal.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-    });
+        
+        // Background: Cleanup subscriptions
+        Promise.resolve().then(() => {
+            try {
+                cleanupRealtimeSubscriptions();
+                console.log('✅ Realtime subscriptions cleaned up');
+            } catch (error) {
+                console.error('❌ Subscription cleanup failed (non-critical):', error);
+            }
+        });
+        
+        console.log('🎉 Logout process completed successfully');
+        
+    } catch (error) {
+        console.error('❌ Critical logout error:', error);
+        showToast('Logout completed with some errors', 'warning');
+        
+        // Even if there's an error, ensure user appears logged out
+        user = null;
+        isGuest = false;
+        access_token = null;
+        hasSelectedMode = null;
+        updateUI();
+    }
+});
 }
 
 /* Create inline auth error element */
