@@ -1,7 +1,7 @@
 import * as idb from 'https://cdn.jsdelivr.net/npm/idb@7.0.2/+esm';
 
 export const DB_NAME = 'getitdone';
-export const DB_VERSION = 2;
+export const DB_VERSION = 3; // Increment version
 
 export const dbPromise = idb.openDB(DB_NAME, DB_VERSION, {
   upgrade(db, oldVersion, newVersion, transaction) {
@@ -21,6 +21,12 @@ export const dbPromise = idb.openDB(DB_NAME, DB_VERSION, {
     if (!db.objectStoreNames.contains('notification_queue')) {
       db.createObjectStore('notification_queue', { keyPath: 'id' });
     }
+    if (!db.objectStoreNames.contains('auth_store')) {
+            db.createObjectStore('auth_store');
+            console.log('Created auth_store');
+        }
+    
+    
   }
 });
 

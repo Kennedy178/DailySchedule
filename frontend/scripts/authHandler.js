@@ -3,8 +3,8 @@ import { showToast, renderTasks, showLoading, loadTasks, clearProfileCache, prel
 import { getAllTasks, updateTask, setSetting, getSetting, deleteTasksByUserId } from './db.js';
 import { retrySyncTasks, cleanupRealtimeSubscriptions } from './sync.js';
 import { initFCMManager, registerFCMToken, unregisterFCMToken, handleSettingsChange } from './fcm-manager.js';
-import { initOfflineQueue, processAllQueuedOperations } from './offline-queue.js';
-
+import { initOfflineQueue, processAllQueuedOperations, hasPendingTasks } from './offline-queue.js';
+import { authStateManager } from './authStateManager.js';
 
 /* Initialize global auth variables */
 let user = null;
@@ -16,92 +16,105 @@ let hasSelectedMode = null;
 /* Initialize auth and UI */
 // Update initAuth function to include offline queue initialization
 async function initAuth() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    loadingOverlay.style.display = 'flex';
+
     try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-
-        // Restore state from storage
-        user = session?.user || null;
-        access_token = session?.access_token || null;
-        hasSelectedMode = await getSetting('hasSelectedMode') || null;
-
-        // Ensure authenticated mode is valid
-        if (hasSelectedMode === 'authenticated' && !isAuthenticated()) {
-            hasSelectedMode = null;
-            await setSetting('hasSelectedMode', null);
+        // 1. Check IndexedDB first for cached auth state
+        const cachedSession = await authStateManager.getAuthState();
+        if (cachedSession) {
+            try {
+                await supabase.auth.setSession(cachedSession);
+                user = cachedSession.user;
+                access_token = cachedSession.access_token;
+                hasSelectedMode = 'authenticated';
+                await setSetting('hasSelectedMode', 'authenticated');
+            } catch (sessionError) {
+                console.warn('Failed to restore cached session:', sessionError);
+                await authStateManager.clearAuthState();
+            }
         }
 
-        // Restore guest flag immediately if stored
-        if (hasSelectedMode === 'guest') {
-            isGuest = true;
-            console.log("Guest restored from hasSelectedMode");
-        }
-
-        // Initialize offline queue system early
+        // 2. Initialize offline queue early
         try {
             await initOfflineQueue();
             console.log('Offline queue initialized successfully');
         } catch (queueError) {
             console.error('Failed to initialize offline queue:', queueError);
-            // Continue initialization even if offline queue fails
         }
 
-        // Load tasks according to mode
+        // 3. Check current session state
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+
+        // Update state based on current session
+        user = session?.user || user;
+        access_token = session?.access_token || access_token;
+        
+        // Restore mode from settings if not already set
+        if (!hasSelectedMode) {
+            hasSelectedMode = await getSetting('hasSelectedMode');
+        }
+
+        // 4. Handle guest mode
         if (hasSelectedMode === 'guest') {
+            isGuest = true;
             await loadTasks('guest');
-        } else if (hasSelectedMode === 'authenticated' && navigator.onLine) {
-            await loadTasks('authenticated');
-        } else if (hasSelectedMode === 'authenticated' && !navigator.onLine) {
-            await loadTasks('authenticated'); // cached only
-            console.log('Offline: Using cached tasks for authenticated user');
         }
 
-        // Auth state change listener
+        // 5. Handle authenticated mode
+        if (hasSelectedMode === 'authenticated') {
+            if (navigator.onLine) {
+                await loadTasks('authenticated');
+                retrySyncTasks();
+            } else {
+                await loadTasks('authenticated'); // Will use cached tasks
+                console.log('Offline: Using cached tasks for authenticated user');
+            }
+        }
+
+        // 6. Set up auth state change listener
         supabase.auth.onAuthStateChange(async (event, session) => {
             console.log("Auth event:", event);
-
-            user = session?.user || null;
-            access_token = session?.access_token || null;
-
-            if (event === 'SIGNED_IN' && !window.location.pathname.includes('reset-password.html')) {
-                // Authenticated login
+            
+            if (event === 'SIGNED_IN') {
+                const sessionData = {
+                    user: session.user,
+                    access_token: session.access_token
+                };
+                await authStateManager.saveAuthState(sessionData);
+                
+                user = session.user;
+                access_token = session.access_token;
                 isGuest = false;
                 hasSelectedMode = 'authenticated';
+                
                 await setSetting('hasSelectedMode', 'authenticated');
-                await deleteTasksByUserId(null); // Delete guest tasks
+                await deleteTasksByUserId(null);
                 await loadTasks('authenticated');
-                retrySyncTasks(); // Start retry listener
-
-                //--- Register FCM token for authenticated user----
-               
-                // With:
+                
+                // Handle FCM and profile cache
                 try {
-    // Small delay to ensure settings are loaded
-    setTimeout(async () => {
-        const token = await registerFCMToken();
-        if (token) {
-            console.log('FCM: Successfully registered after login');
-        }
-    }, 1500);
-} catch (error) {
-    console.log('FCM: Failed gracefully, app continues normally');
-}
-                try {
-        await preloadProfileCache();
-    } catch (error) {
-        console.error('Failed to preload profile cache:', error);
-    }
-                //--- Process any queued operations now that we're authenticated---
-                if (navigator.onLine) {
-                    setTimeout(() => processAllQueuedOperations(), 2000); // Small delay for auth to settle
+                    setTimeout(async () => {
+                        const token = await registerFCMToken();
+                        if (token) console.log('FCM: Registered after login');
+                    }, 1500);
+                    
+                    await preloadProfileCache();
+                } catch (error) {
+                    console.log('Non-critical service initialization failed:', error);
                 }
 
-            } else if (event === 'SIGNED_OUT') {
-                //--- Unregister FCM token before logout----
+                if (navigator.onLine) {
+                    setTimeout(() => processAllQueuedOperations(), 2000);
+                }
+            }
+            
+            if (event === 'SIGNED_OUT') {
+                await authStateManager.clearAuthState();
                 await unregisterFCMToken();
                 clearProfileCache();
                 
-                // If mode was guest, keep guest
                 if (hasSelectedMode === 'guest') {
                     isGuest = true;
                 } else {
@@ -109,54 +122,46 @@ async function initAuth() {
                     hasSelectedMode = null;
                     await setSetting('hasSelectedMode', null);
                 }
-            } else if (event === 'INITIAL_SESSION') {
-                // Refresh handling
-                if (hasSelectedMode === 'guest') {
-                    isGuest = true;
-                } else {
-                    isGuest = false;
-                }
-                
-                // Process queued operations if authenticated and online
-                if (isAuthenticated() && navigator.onLine) {
-                    setTimeout(() => processAllQueuedOperations(), 1000);
-                }
             }
 
             updateUI();
         });
 
-        // Initial UI render
+        // 7. Initial UI update and event listeners
         updateUI();
         setupEventListeners();
 
-        // Setup online/offline event listeners for queue processing
+        // 8. Network state handlers
         window.addEventListener('online', () => {
-            console.log('Network online - processing queued operations');
             if (isAuthenticated()) {
                 setTimeout(() => processAllQueuedOperations(), 1000);
             }
         });
 
-        window.addEventListener('offline', () => {
-            console.log('Network offline - operations will be queued');
-        });
-
     } catch (error) {
         console.error('Init auth error:', error);
         showToast('Error initializing session', 'error');
+    } finally {
+        loadingOverlay.style.display = 'none';
     }
 }
 
-
-/* Update UI based on auth state using class toggling */
-function updateUI() {
+// Keep your existing updateUI function as is
+async function updateUI() {
     const authSection = document.getElementById('authSection');
     const appContent = document.querySelector('.container');
-    const myAccount = document.getElementById('myAccount');
 
-    // Toggle auth/task UI
-    if (hasSelectedMode === 'authenticated' || hasSelectedMode === 'guest') {
+    if (hasSelectedMode === 'authenticated') {
+        // Check for offline tasks if user is authenticated
+        if (!navigator.onLine) {
+            const hasTasks = await hasPendingTasks();
+            if (hasTasks) {
+                console.log('Offline mode: Found pending tasks');
+            }
+        }
+        authSection.classList.add('hidden');
+        appContent.classList.remove('hidden');
+    } else if (hasSelectedMode === 'guest') {
         authSection.classList.add('hidden');
         appContent.classList.remove('hidden');
     } else {
@@ -164,7 +169,6 @@ function updateUI() {
         appContent.classList.add('hidden');
     }
 
-    // Update My Account dropdown
     updateMyAccount();
 }
 

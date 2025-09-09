@@ -3,6 +3,7 @@
 
 import { storeQueuedNotification, getAllQueuedNotifications, deleteQueuedNotification } from './db.js';
 import { access_token } from './authHandler.js';
+import { authStateManager } from './authStateManager.js';
 
 
 // At the top of offline-queue.js
@@ -268,10 +269,30 @@ async function retryTokenUnregistration(data) {
 }
 
 /**
+ * Check if there are pending tasks in the queue
+ */
+async function hasPendingTasks() {
+    try {
+        const queueItems = await getAllQueuedNotifications();
+        return queueItems.length > 0;
+    } catch (error) {
+        console.error('Offline Queue: Error checking pending tasks:', error);
+        return false;
+    }
+}
+
+
+/**
  * Process all queued operations
  */
 async function processAllQueuedOperations() {
     try {
+                // Check auth state first
+        const authState = await authStateManager.getAuthState();
+        if (!authState) {
+            console.log('Offline Queue: No auth state found, skipping sync');
+            return;
+        }
         if (!navigator.onLine) {
             console.log('Offline Queue: Still offline, skipping queue processing');
             return;
@@ -475,6 +496,7 @@ async function clearAllQueueItems() {
     }
 }
 
+
 // Export functions
 export {
     // Core queue operations
@@ -483,6 +505,7 @@ export {
     queueTokenUnregistration,
     
     // Processing and retry
+    hasPendingTasks,
     processAllQueuedOperations,
     retryQueueItem,
     
