@@ -431,8 +431,8 @@ async function shouldEnableFCM() {
   const browser = detectBrowser();
   
   try {
-    if (!isAuthenticated()) {
-      console.log('FCM: Skipped - user not authenticated');
+    if (!isAuthenticated() || isGuest) {
+      console.log('FCM: Skipped - user is in guest mode or not authenticated');
       return false;
     }
     
@@ -605,6 +605,11 @@ async function processQueuedOperations() {
 
 // Register FCM token with enhanced error handling
 async function registerFCMToken() {
+    // Add early exit for guest mode
+  if (!isAuthenticated() || isGuest) {
+    console.log('FCM: Skipping token registration - user in guest mode');
+    return null;
+  }
   const browser = detectBrowser();
   console.log(`FCM: Detected browser: ${browser}`);
   

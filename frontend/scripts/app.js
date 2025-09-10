@@ -886,7 +886,7 @@ async function sendLocalNotification(task) {
 }
 
 
-/* Check notifications with debouncing - GUEST USERS ONLY */
+/* Check f with debouncing - GUEST USERS ONLY */
 const debouncedCheckNotifications = debounce(() => {
     console.log(`checkNotifications called at ${new Date().toISOString()}`);
     
@@ -2518,22 +2518,32 @@ window.addEventListener('resize', () => {
 function listenForSettingsChange() {
     document.addEventListener('settingsChange', async (event) => {
         if (event.detail.setting === 'enableReminders' && event.detail.value === 'true') {
+            // Skip FCM for guest mode
+            if (!isAuthenticated() || isGuest) {
+                console.log('Guest mode - using local notifications only');
+                return;
+            }
+            
             console.log('FCM: enableReminders toggled to true, attempting token registration');
             try {
                 const token = await registerFCMToken();
                 if (token) {
                     showToast('Notifications enabled successfully!', 'success');
                 } else {
-                    showToast('Failed to enable notifications. Please try again.', 'warning');
+                    // Don't show error toast for guest mode
+                    if (isAuthenticated()) {
+                        showToast('Failed to enable notifications. Please try again.', 'warning');
+                    }
                 }
             } catch (error) {
                 console.error('FCM: Error registering token after settings change:', error);
-                showToast('Failed to enable notifications. Please try again.', 'error');
+                if (isAuthenticated()) {
+                    showToast('Failed to enable notifications. Please try again.', 'error');
+                }
             }
         }
     });
 }
-
 // Call  during app initialization
 listenForSettingsChange();
 

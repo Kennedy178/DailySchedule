@@ -358,6 +358,25 @@ function setupEventListeners() {
             passwordInput.focus();
         }
     }
+        // Close modal when clicking cancel button
+    cancelLogoutBtn?.addEventListener('click', () => {
+        logoutModal.classList.remove('active');
+        document.body.style.overflow = '';
+    });
+
+    // Close modal when clicking outside
+    logoutModal?.addEventListener('click', (e) => {
+        // Check if click is outside the modal content
+        if (e.target === logoutModal) {
+            logoutModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    });
+
+    // Prevent clicks inside modal content from closing the modal
+    document.querySelector('.logout-modal-content')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
 
     // 8. Logout Confirmation Flow
     logoutBtn?.addEventListener('click', (e) => {
