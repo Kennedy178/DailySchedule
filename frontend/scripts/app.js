@@ -2592,7 +2592,18 @@ async function init() {
             console.log("Guest user: enabling local notification polling");             
             // Enable local notification checking for guests             
             setInterval(debouncedCheckNotifications, 30000);         
-        }              
+        }   
+                if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.getRegistration();
+            if (registration && registration.active) {
+                registration.active.postMessage({
+                    type: 'UPDATE_AUTH_STATE',
+                    isAuthenticated: isAuthenticated(),
+                    enableReminders: enableReminders,
+                    fcmToken: await getFCMToken() // Add function to get current token
+                });
+            }
+        }           
         
     } catch (error) {         
         console.error('App initialization failed:', error);         

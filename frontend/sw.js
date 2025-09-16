@@ -121,6 +121,26 @@ self.addEventListener('message', event => {
                    'isAuthenticated:', isAuthenticated,
                    'hasFCMToken:', !!fcmToken);
     } 
+    else if (event.data.type === 'UPDATE_AUTH_STATE') {
+        // New handler for auth state updates
+        const oldState = isAuthenticated;
+        isAuthenticated = event.data.isAuthenticated;
+        enableReminders = event.data.enableReminders;
+        fcmToken = event.data.fcmToken || null;
+        
+        console.log('SW: Auth state updated:', {
+            oldState,
+            newState: isAuthenticated,
+            enableReminders,
+            hasFCMToken: !!fcmToken
+        });
+
+        // Clear notification cache if auth state changes
+        if (oldState !== isAuthenticated) {
+            lastNotificationTimes.clear();
+            console.log('SW: Notification cache cleared due to auth state change');
+        }
+    }
     else if (event.data.type === 'TRIGGER_NOTIFICATION') {
         const task = event.data.task;
         const notificationId = `task-${task.id}-${task.startTime}`;
