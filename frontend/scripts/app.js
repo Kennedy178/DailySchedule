@@ -2,7 +2,7 @@
 import { DB_NAME, DB_VERSION } from './db.js';
 import * as idb from 'https://cdn.jsdelivr.net/npm/idb@7.0.2/+esm';
 import { addTask, getAllTasks, getTaskById, updateTask, deleteTask, setSetting, getSetting,markTaskAsPendingDelete  } from './db.js';
-import { isAuthenticated, initAuth, user, } from './authHandler.js';
+import { isAuthenticated, initAuth, user,isGuest } from './authHandler.js';
 import { fetchBackendTasks, cacheBackendTasks, setupRealtimeSubscriptions, syncPendingTasks, updateUserProfileFlag, checkUserHasCreatedTasks } from './sync.js';
 import { supabase } from './auth.js';
 import { fcmToken, initFCMManager, registerFCMToken, isTokenRegistered } from './fcm-manager.js';
