@@ -7,6 +7,11 @@ import { fetchBackendTasks, cacheBackendTasks, setupRealtimeSubscriptions, syncP
 import { supabase } from './auth.js';
 import { fcmToken, initFCMManager, registerFCMToken, isTokenRegistered } from './fcm-manager.js';
 import { initOfflineQueue } from './offline-queue.js';
+import { 
+    getToken, 
+    messaging, 
+    vapidKey 
+} from './fcm-config.js';
 
 
 /* Initialize global variables */
@@ -2593,14 +2598,27 @@ async function init() {
             // Enable local notification checking for guests             
             setInterval(debouncedCheckNotifications, 30000);         
         }   
-                if ('serviceWorker' in navigator) {
+        if ('serviceWorker' in navigator) {
             const registration = await navigator.serviceWorker.getRegistration();
             if (registration && registration.active) {
+                // Get FCM token using the exported getToken function
+                let currentToken = null;
+                if (messaging) {
+                    try {
+                        currentToken = await getToken(messaging, {
+                            vapidKey: vapidKey,
+                            serviceWorkerRegistration: registration
+                        });
+                    } catch (error) {
+                        console.log('FCM token fetch failed:', error);
+                    }
+                }
+
                 registration.active.postMessage({
                     type: 'UPDATE_AUTH_STATE',
                     isAuthenticated: isAuthenticated(),
                     enableReminders: enableReminders,
-                    fcmToken: await getFCMToken() // Add function to get current token
+                    fcmToken: currentToken
                 });
             }
         }           
