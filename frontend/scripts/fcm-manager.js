@@ -2,7 +2,7 @@
 // Handles Firebase Cloud Messaging token management, permissions, and offline queue
 
 import { messaging, getTokenWithCustomSW, vapidKey, isFCMAvailable } from './fcm-config.js';
-import { isAuthenticated, user, access_token } from './authHandler.js';
+import { isAuthenticated, user, access_token,isGuest } from './authHandler.js';
 import { getSetting, setSetting, storeFCMToken, getFCMToken, deleteFCMToken, storeQueuedNotification, getAllQueuedNotifications, deleteQueuedNotification } from './db.js';
 import { queueTokenRegistration, queueTokenUnregistration, processAllQueuedOperations } from './offline-queue.js';
 

@@ -522,4 +522,4 @@ function isAuthenticated() {
 }
 
 /* Export functions for app.js */
-export { initAuth, isAuthenticated, user, supabase, access_token };
+export { initAuth, isAuthenticated, user, supabase, access_token,isGuest };
