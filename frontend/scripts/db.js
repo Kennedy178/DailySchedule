@@ -74,10 +74,21 @@ async function getAllTasks(includePendingDeletes = false) {
     const tasks = await store.getAll();
     await tx.complete;
         
-    let filteredTasks = tasks;
-    if (!includePendingDeletes) {
-      filteredTasks = tasks.filter(task => task.pending_sync !== 'delete');
-    }
+    // Improve filtering logic
+        const filteredTasks = tasks.filter(task => {
+            if (!includePendingDeletes && task.pending_sync === 'delete') {
+                return false;
+            }
+            // Also filter out duplicates by content
+            const isDuplicate = tasks.find(t => 
+                t.id !== task.id && 
+                t.name === task.name && 
+                t.start_time === task.start_time &&
+                t.user_id === task.user_id &&
+                t.created_at > task.created_at
+            );
+            return !isDuplicate;
+        });
 
     // Format time fields to remove seconds before sorting and returning
     const formattedTasks = filteredTasks.map(task => ({
