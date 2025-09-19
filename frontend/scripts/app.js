@@ -1845,18 +1845,16 @@ addTaskBtn.addEventListener('click', async () => {
     clearForm(taskForm);
     showToast('Task saved locally. Syncing...', 'info'); // Optional: show saving status
 
-    // 2. DO ALL HEAVY OPERATIONS IN BACKGROUND
+    // 2. DO ALL OPERATIONS WITH LOCAL ARRAY FIRST
     try {
         if (editIndex === '') {
-            // Save to IndexedDB first (this should be fast)
+            // NEW TASK: Add to local array and render immediately
+            tasks.push(task);
+            lastRenderHash = '';
+            await renderTasks(tasks); // Render with local array
+            
+            // Then persist to IndexedDB
             await addTask(task);
-            
-            // Update local tasks array
-            tasks = await getAllTasks();
-            
-            // Update UI immediately
-            lastRenderHash = ''; 
-            await renderTasks(tasks);
             
             // Show success message
             showToast('Task added successfully!', 'success');
@@ -1893,19 +1891,20 @@ addTaskBtn.addEventListener('click', async () => {
                 
                 // Notification (background)
                 triggerNotification(task)
-            ]).catch(error => {
+            ].filter(Boolean)).catch(error => {
                 console.error('Background operations failed:', error);
                 // Don't show error to user since main task was saved successfully
             });
             
         } else {
-            // Edit task
-            await updateTask(task);
-            tasks = await getAllTasks();
+            // EDIT TASK: Update in local array first
+            tasks[parseInt(editIndex)] = task;
+            lastRenderHash = '';
+            await renderTasks(tasks); // Render with updated local array
             
-            // Update UI immediately
-            lastRenderHash = ''; 
-            await renderTasks(tasks);
+            // Then persist to IndexedDB
+            await updateTask(task);
+            
             showToast('Task updated successfully!', 'success');
             
             // Background operations
@@ -1925,7 +1924,7 @@ addTaskBtn.addEventListener('click', async () => {
                         }
                     }
                 })()
-            ]).catch(error => {
+            ].filter(Boolean)).catch(error => {
                 console.error('Background operations failed:', error);
             });
         }
@@ -1945,6 +1944,17 @@ addTaskBtn.addEventListener('click', async () => {
     } catch (error) {
         console.error('Error saving task:', error);
         showToast('Failed to save task. Please try again.', 'error');
+        
+        // Remove from local array if save failed (for new tasks)
+        if (editIndex === '') {
+            tasks = tasks.filter(t => t.id !== task.id);
+            await renderTasks(tasks);
+        } else {
+            // For edits, reload from database to restore original state
+            tasks = await getAllTasks();
+            lastRenderHash = '';
+            await renderTasks(tasks);
+        }
         
         // Reopen form if critical save failed
         taskForm.classList.add('active');
@@ -2344,42 +2354,54 @@ function attachTaskActions() {
     btn.addEventListener('click', async () => {
         const index = parseInt(btn.getAttribute('data-index'));
         const task = tasks[index];
-
+        
         if (confirm(`Delete "${task.name}"?`)) {
             try {
-                // Mark for deletion instead of deleting immediately
-                await markTaskAsPendingDelete(task.id);
-                await syncPendingTasks(); // Push DELETE to Supabase
-
-                // Update local array
+                // 1. Update UI immediately for better responsiveness
                 tasks = tasks.filter(t => t.id !== task.id);
-
-                // If no tasks remain, show empty state
-if (tasks.length === 0) {
-    console.log('All tasks deleted - showing empty state');
-    hasCustomTasks = false;
-    await setSetting('hasCustomTasks', 'false');
-    await setSetting('firstCustomTaskAdded', 'false');
-    if (customTaskBanner) {
-        customTaskBanner.classList.add('hidden');
-        customTaskBanner.classList.remove('active');
-    }
-    // Don't load any defaults - just show empty UI
-}
-
+                
+                // 2. Handle empty state logic
+                if (tasks.length === 0) {
+                    console.log('All tasks deleted - showing empty state');
+                    hasCustomTasks = false;
+                    await setSetting('hasCustomTasks', 'false');
+                    await setSetting('firstCustomTaskAdded', 'false');
+                    if (customTaskBanner) {
+                        customTaskBanner.classList.add('hidden');
+                        customTaskBanner.classList.remove('active');
+                    }
+                    // Don't load any defaults - just show empty UI
+                }
+                
+                // 3. Render immediately
+                lastRenderHash = '';
+                await renderTasks(tasks);
+                
                 console.log(
                     `Deleted task "${task.name}", tasks now: [${tasks.map(t => t.name).join(', ')}]`
                 );
-
-                await saveDailyData();
-                lastRenderHash = '';
-                renderTasks();
-                await syncTasksWithServiceWorker(); // Still sync with SW after local changes
-                notifiedTasks.delete(task.id); // Clear notification status
-
+                
+                // 4. Clear notification status
+                notifiedTasks.delete(task.id);
+                
+                // 5. Backend operations
+                await markTaskAsPendingDelete(task.id);
+                
+                // 6. Background sync operations
+                Promise.all([
+                    syncPendingTasks(),
+                    saveDailyData(),
+                    syncTasksWithServiceWorker()
+                ]).catch(error => {
+                    console.error('Background operations failed:', error);
+                });
+                
             } catch (error) {
                 console.error('Error deleting task:', error);
                 showToast('Failed to delete task. Please try again.');
+                // Restore task if local delete fails
+                tasks.push(task);
+                await renderTasks(tasks);
             }
         }
     });
