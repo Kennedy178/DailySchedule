@@ -3,6 +3,8 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
 
+
+
 //if (self.location.hostname !== "localhost") {
     //console.log = function () {};
     //console.debug = function () {};
@@ -42,8 +44,8 @@ try {
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open('getitdone-v1').then(cache => {
+            console.log('SW: Caching app shell');
             return cache.addAll([
-
                 './',
                 './index.html',
                 './manifest.json',
@@ -55,7 +57,8 @@ self.addEventListener('install', event => {
                 './scripts/sync.js',
                 './scripts/fcm-config.js',
                 './scripts/fcm-manager.js',
-                './scripts/offline-queue.js', 
+                './scripts/offline-queue.js',
+                './scripts/authStateManager.js',
                 './icons/favicon-32x32.png',
                 './icons/icon-192x192.png',
                 './icons/icon-512x512.png',
@@ -69,9 +72,23 @@ self.addEventListener('install', event => {
                 './scripts/help.js',
                 './assets/screenshots/late.png',
                 './assets/screenshots/settings.png',
-                './assets/screenshots/notif.png'
-            ]);
-        }).then(() => self.skipWaiting())
+                './assets/screenshots/notif.png',
+                'https://fonts.googleapis.com/icon?family=Material+Icons',
+                'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap',
+                'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap',
+                'https://cdn.jsdelivr.net/npm/idb@7/build/umd.js',
+                'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
+                'https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js',
+                'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm',
+                'https://cdn.jsdelivr.net/npm/idb@7.0.2/+esm'
+            ]).then(() => {
+                console.log('SW: App shell cached successfully');
+                return self.skipWaiting();
+            }).catch(error => {
+                console.error('SW: Failed to cache app shell:', error);
+                throw error;
+            });
+        })
     );
 });
 
@@ -79,18 +96,96 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
     event.waitUntil(
         Promise.all([
-            self.clients.claim(),
-            checkTaskReminders(), // Run initial check on activation
-            processOfflineQueue() // Process any queued notifications
-        ])
+            self.clients.claim(), // This ensures the service worker takes control immediately
+            checkTaskReminders(),
+            processOfflineQueue(),
+            // Clean up old caches if needed
+            caches.keys().then(cacheNames => {
+                return Promise.all(
+                    cacheNames.map(cacheName => {
+                        if (cacheName !== 'getitdone-v1') {
+                            console.log('SW: Deleting old cache:', cacheName);
+                            return caches.delete(cacheName);
+                        }
+                    })
+                );
+            })
+        ]).then(() => {
+            console.log('SW: Activated and claimed clients');
+        })
     );
 });
 
+
+
+
+
+
 self.addEventListener('fetch', event => {
+    // Ignore HEAD requests
+    if (event.request.method === 'HEAD') {
+        return;
+    }
+
     event.respondWith(
-        caches.match(event.request).then(response => {
-            return response || fetch(event.request);
-        })
+        (async () => {
+            const cache = await caches.open('getitdone-v1');
+
+            // Check if this is a navigation request (page refresh/load)
+            if (event.request.mode === 'navigate') {
+                // Check if we have cached auth state
+                if (cachedAuthState) {
+                    try {
+                        // First try network
+                        const networkResponse = await fetch(event.request);
+                        if (networkResponse.ok) {
+                            const newResponse = new Response(networkResponse.body, {
+                                status: 200,
+                                headers: new Headers({
+                                    ...Object.fromEntries(networkResponse.headers.entries()),
+                                    'X-Auth-State': JSON.stringify(cachedAuthState)
+                                })
+                            });
+                            return newResponse;
+                        }
+                    } catch (error) {
+                        console.log('SW: Network fetch failed, using cached response');
+                    }
+
+                    // If network fails, use cached response with auth state
+                    const cachedResponse = await cache.match('./index.html');
+                    if (cachedResponse) {
+                        const newResponse = new Response(cachedResponse.body, {
+                            status: 200,
+                            headers: new Headers({
+                                ...Object.fromEntries(cachedResponse.headers.entries()),
+                                'X-Auth-State': JSON.stringify(cachedAuthState)
+                            })
+                        });
+                        return newResponse;
+                    }
+                }
+            }
+
+            // For all other requests, try cache first
+            const cachedResponse = await cache.match(event.request);
+            if (cachedResponse) {
+                return cachedResponse;
+            }
+
+            // Try network for uncached resources
+            try {
+                const networkResponse = await fetch(event.request);
+                if (networkResponse.ok && event.request.method === 'GET' && 
+                    !event.request.url.includes('/api/')) {
+                    cache.put(event.request, networkResponse.clone());
+                }
+                return networkResponse;
+            } catch (error) {
+                console.log('SW: Network request failed:', error);
+                throw error;
+            }
+        })()
     );
 });
 
@@ -103,6 +198,7 @@ let enableReminders = false;
 let isAuthenticated = false;
 let fcmToken = null;
 let lastNotificationTimes = new Map();
+let hasRestoredState = false;
 
 // -------------------------
 // Message Handling from Main Thread
@@ -162,7 +258,22 @@ self.addEventListener('message', event => {
         console.log('SW: Manual offline queue processing triggered');
         event.waitUntil(processOfflineQueue());
     }
+    // Add this case to your existing message event listener
+    else if (event.data.type === 'CHECK_OFFLINE_STATE') {
+        // Send offline state to client
+        event.ports[0].postMessage({
+            type: 'OFFLINE_STATE',
+            isOffline: !navigator.onLine
+        });
+    }
+    // Add this case to your existing message event listener
+    else if (event.data.type === 'SYNC_AUTH_STATE') {
+        cachedAuthState = event.data.state;
+        console.log('SW: Cached auth state updated:', cachedAuthState);
+    }
 });
+
+
 
 // Alternative aggressive approach - assume closed unless proven otherwise
 self.addEventListener('push', event => {

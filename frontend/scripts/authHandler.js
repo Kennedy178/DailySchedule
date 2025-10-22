@@ -6,6 +6,24 @@ import { initFCMManager, registerFCMToken, unregisterFCMToken, handleSettingsCha
 import { initOfflineQueue, processAllQueuedOperations, hasPendingTasks } from './offline-queue.js';
 import { authStateManager } from './authStateManager.js';
 
+
+// Add this function at the top
+function hideAllUI() {
+    const authSection = document.getElementById('authSection');
+    const appContent = document.querySelector('.container');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    
+    if (authSection) authSection.classList.add('hidden');
+    if (appContent) appContent.classList.add('hidden');
+    if (loadingOverlay) loadingOverlay.style.display = 'flex';
+}
+
+// Add this function too
+function showInitialUI() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
+}
+
 /* Initialize global auth variables */
 let user = null;
 let access_token = null;
@@ -13,25 +31,78 @@ let isSignUp = false;
 let isGuest = false;
 let hasSelectedMode = null;
 
-/* Initialize auth and UI */
-// Update initAuth function to include offline queue initialization
-async function initAuth() {
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    loadingOverlay.style.display = 'flex';
-
+async function checkStoredAuthState() {
     try {
-        // 1. Check IndexedDB first for cached auth state
-        const cachedSession = await authStateManager.getAuthState();
-        if (cachedSession) {
-            try {
-                await supabase.auth.setSession(cachedSession);
-                user = cachedSession.user;
-                access_token = cachedSession.access_token;
-                hasSelectedMode = 'authenticated';
-                await setSetting('hasSelectedMode', 'authenticated');
-            } catch (sessionError) {
-                console.warn('Failed to restore cached session:', sessionError);
-                await authStateManager.clearAuthState();
+        const savedState = await authStateManager.getAuthState();
+        console.log('Checking stored auth state:', savedState);
+        
+        if (savedState) {
+            // Restore mode and session
+            hasSelectedMode = savedState.selectedMode;
+            
+            if (savedState.session) {
+                user = savedState.session.user;
+                access_token = savedState.session.access_token;
+            }
+
+            // Load tasks before showing UI
+            if (hasSelectedMode) {
+                await loadTasks(hasSelectedMode);
+                await updateUI(); // This will show the correct UI
+                
+                if (!navigator.onLine) {
+                    showToast('Working offline. Changes will sync when back online.', 'info');
+                }
+                return true;
+            }
+        }
+        return false;
+    } catch (error) {
+        console.error('Error checking stored auth state:', error);
+        return false;
+    }
+}
+
+/* Initialize auth and UI */
+async function initAuth() {
+    hideAllUI(); // Hide everything first
+    
+    try {
+        // Check stored state first
+        if (!navigator.onLine) {
+            const hasStoredState = await checkStoredAuthState();
+            if (hasStoredState) {
+                showInitialUI();
+                return; // Exit early if we restored offline state
+            } else {
+                showToast('You are offline. Some features may be limited.', 'warning');
+            }
+        }
+        // 1. Check IndexedDB first for cached auth state and mode
+        const savedState = await authStateManager.getAuthState();
+        
+        if (savedState) {
+            // Restore mode from saved state
+            hasSelectedMode = savedState.selectedMode || await getSetting('hasSelectedMode');
+            
+            if (savedState.session) {
+                try {
+                    await supabase.auth.setSession(savedState.session);
+                    user = savedState.session.user;
+                    access_token = savedState.session.access_token;
+                    
+                    if (!hasSelectedMode) {
+                        hasSelectedMode = 'authenticated';
+                        await setSetting('hasSelectedMode', 'authenticated');
+                    }
+                } catch (sessionError) {
+                    console.warn('Failed to restore session:', sessionError);
+                    // Only clear if online, keep state if offline
+                    if (navigator.onLine) {
+                        await authStateManager.clearAuthState();
+                        hasSelectedMode = null;
+                    }
+                }
             }
         }
 
@@ -43,19 +114,15 @@ async function initAuth() {
             console.error('Failed to initialize offline queue:', queueError);
         }
 
-        // 3. Check current session state
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-
-        // Update state based on current session
-        user = session?.user || user;
-        access_token = session?.access_token || access_token;
-        
-        // Restore mode from settings if not already set
-        if (!hasSelectedMode) {
-            hasSelectedMode = await getSetting('hasSelectedMode');
+        // 3. If online, verify current session state
+        if (navigator.onLine) {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (!error && session) {
+                user = session.user;
+                access_token = session.access_token;
+            }
         }
-
+        
         // 4. Handle guest mode
         if (hasSelectedMode === 'guest') {
             isGuest = true;
@@ -79,8 +146,12 @@ async function initAuth() {
             
             if (event === 'SIGNED_IN') {
                 const sessionData = {
-                    user: session.user,
-                    access_token: session.access_token
+                    session: {
+                        user: session.user,
+                        access_token: session.access_token
+                    },
+                    selectedMode: 'authenticated',
+                    lastUsed: Date.now()
                 };
                 await authStateManager.saveAuthState(sessionData);
                 
@@ -123,7 +194,6 @@ async function initAuth() {
                     await setSetting('hasSelectedMode', null);
                 }
             }
-
             updateUI();
         });
 
@@ -132,41 +202,63 @@ async function initAuth() {
         setupEventListeners();
 
         // 8. Network state handlers
-        window.addEventListener('online', () => {
-            if (isAuthenticated()) {
-                setTimeout(() => processAllQueuedOperations(), 1000);
+        // 8. Network state handlers
+        window.addEventListener('online', async () => {
+            // Verify session when back online
+            if (hasSelectedMode === 'authenticated') {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (error || !session) {
+                    // Only clear if verification fails
+                    await authStateManager.clearAuthState();
+                    hasSelectedMode = null;
+                    updateUI();
+                } else {
+                    // Session is valid, process queued operations
+                    setTimeout(() => processAllQueuedOperations(), 1000);
+                }
             }
+            showToast('Back online!', 'success'); // Add this line
+        });
+
+        // Add offline handler
+        window.addEventListener('offline', () => {
+            showToast('You are offline. Changes will be synced when connection is restored.', 'warning');
         });
 
     } catch (error) {
         console.error('Init auth error:', error);
-        showToast('Error initializing session', 'error');
+        showToast('Error initializing app', 'error');
     } finally {
-        loadingOverlay.style.display = 'none';
+        showInitialUI();
     }
 }
-
 // Keep your existing updateUI function as is
 async function updateUI() {
     const authSection = document.getElementById('authSection');
     const appContent = document.querySelector('.container');
 
-    if (hasSelectedMode === 'authenticated') {
-        // Check for offline tasks if user is authenticated
+    if (!authSection || !appContent) {
+        console.error('Required UI elements not found');
+        return;
+    }
+
+    // First hide both
+    authSection.classList.add('hidden');
+    appContent.classList.add('hidden');
+
+    if (hasSelectedMode === 'authenticated' || hasSelectedMode === 'guest') {
+        // Show app content for both authenticated and guest users
+        appContent.classList.remove('hidden');
+        
         if (!navigator.onLine) {
             const hasTasks = await hasPendingTasks();
             if (hasTasks) {
                 console.log('Offline mode: Found pending tasks');
             }
         }
-        authSection.classList.add('hidden');
-        appContent.classList.remove('hidden');
-    } else if (hasSelectedMode === 'guest') {
-        authSection.classList.add('hidden');
-        appContent.classList.remove('hidden');
     } else {
+        // No mode selected, show auth form
         authSection.classList.remove('hidden');
-        appContent.classList.add('hidden');
     }
 
     updateMyAccount();
@@ -318,15 +410,27 @@ function setupEventListeners() {
 
     // 4. Guest Mode
     guestBtn?.addEventListener('click', async () => {
-        isGuest = true;
-        user = null;
-        access_token = null;
-        hasSelectedMode = 'guest';
-        await setSetting('hasSelectedMode', 'guest');
-        await loadTasks('guest');
-        updateUI();
-        showToast('Continuing as guest. Tasks saved locally.');
-        // Note: No FCM registration for guests - they use local notifications
+        try {
+            // Save guest state with new format
+            const guestData = {
+                session: null,
+                selectedMode: 'guest',
+                lastUsed: Date.now()
+            };
+            await authStateManager.saveAuthState(guestData);
+            
+            isGuest = true;
+            user = null;
+            access_token = null;
+            hasSelectedMode = 'guest';
+            await setSetting('hasSelectedMode', 'guest');
+            await loadTasks('guest');
+            updateUI();
+            showToast('Continuing as guest. Tasks saved locally.');
+        } catch (error) {
+            console.error('Error setting guest mode:', error);
+            showToast('Error setting guest mode', 'error');
+        }
     });
 
     // 5. My Account Dropdown
@@ -520,6 +624,53 @@ function createAuthError() {
 function isAuthenticated() {
     return !!access_token;
 }
+
+window.addEventListener('load', async () => {
+    hideAllUI(); // Hide everything first
+    
+    try {
+        // Check if page was loaded with auth state from service worker
+        const authStateHeader = document.querySelector('meta[name="x-auth-state"]');
+        if (authStateHeader) {
+            const savedState = JSON.parse(authStateHeader.content);
+            if (savedState) {
+                console.log('Found auth state from service worker:', savedState);
+                // Restore the state
+                hasSelectedMode = savedState.selectedMode;
+                if (savedState.session) {
+                    user = savedState.session.user;
+                    access_token = savedState.session.access_token;
+                }
+                
+                // Load tasks and update UI
+                await loadTasks(hasSelectedMode);
+                await updateUI();
+                
+                if (!navigator.onLine) {
+                    showToast('Working offline. Changes will sync when back online.', 'info');
+                }
+                showInitialUI();
+                return;
+            }
+        }
+
+        // Fallback to checking stored state
+        const hasStoredState = await checkStoredAuthState();
+        if (!hasStoredState) {
+            if (!navigator.onLine) {
+                showToast('You are offline. Some features may be limited.', 'warning');
+            }
+            // No stored state, show auth form
+            const authSection = document.getElementById('authSection');
+            if (authSection) authSection.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error in load event:', error);
+        showToast('Error loading app state', 'error');
+    } finally {
+        showInitialUI(); // Remove loading overlay
+    }
+});
 
 /* Export functions for app.js */
 export { initAuth, isAuthenticated, user, supabase, access_token,isGuest };
