@@ -61,11 +61,11 @@ async function checkStoredAuthState() {
                 await loadTasks(hasSelectedMode);
                 
                 // EXPLICITLY show the correct UI
-                const authSection = document.getElementById('authSection');
-                const appContent = document.querySelector('.container');
+                //const authSection = document.getElementById('authSection');
+                //const appContent = document.querySelector('.container');
                 
-                if (authSection) authSection.classList.add('hidden');
-                if (appContent) appContent.classList.remove('hidden');
+                //if (authSection) authSection.classList.add('hidden');
+                //if (appContent) appContent.classList.remove('hidden');
                 
                 if (!navigator.onLine) {
                     showToast('Working offline. Changes will sync when back online.', 'info');
@@ -145,8 +145,8 @@ async function initAuth() {
             isGuest = true;
             await loadTasks('guest');
             // Explicitly show app content
-            document.getElementById('authSection')?.classList.add('hidden');
-            document.querySelector('.container')?.classList.remove('hidden');
+            //document.getElementById('authSection')?.classList.add('hidden');
+           // document.querySelector('.container')?.classList.remove('hidden');
 
         }
 
@@ -160,8 +160,8 @@ async function initAuth() {
                 console.log('Offline: Using cached tasks for authenticated user');
             }
             // Explicitly show app content
-            document.getElementById('authSection')?.classList.add('hidden');
-            document.querySelector('.container')?.classList.remove('hidden');
+            //document.getElementById('authSection')?.classList.add('hidden');
+            //document.querySelector('.container')?.classList.remove('hidden');
         }
 
         // 6. Set up auth state change listener
