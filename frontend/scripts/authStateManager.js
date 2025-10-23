@@ -1,13 +1,22 @@
 import * as idb from 'https://cdn.jsdelivr.net/npm/idb@7.0.2/+esm';
 import { dbPromise, DB_NAME } from './db.js';
 
+// Disable console logs in production
+if (location.hostname !== "localhost") {
+    console.log = function () {};
+    console.debug = function () {};
+    console.info = function () {};
+    console.warn = function () {};
+    //Only console.error for actual error reporting
+}
+
+
 const AUTH_STORE = 'auth_store';
 
 class AuthStateManager {
     constructor() {
         this.dbPromise = dbPromise; // Use existing database connection
-    }
-
+    }   
 async saveAuthState(sessionData) {
     try {
         // sessionData should include both session and mode

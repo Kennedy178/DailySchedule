@@ -5,6 +5,20 @@
 /*  Font Imports */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
 
+
+/* Prevent flash of incorrect content during load */
+/*LET JS DECIDE WAT TO SHOW ON UI*/
+.container,
+#authSection {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.container:not(.hidden),
+#authSection:not(.hidden) {
+    opacity: 1;
+}
+
 /*  Global Reset & Typography */
 * {
     margin: 0;

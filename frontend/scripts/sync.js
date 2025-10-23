@@ -2,7 +2,14 @@ import { user, access_token, isAuthenticated, supabase } from './authHandler.js'
 import { addTask, updateTask, deleteTask, getAllTasks, deleteTasksByUserId, getTaskById } from './db.js';
 import { renderTasks } from './app.js';
 
-
+// Disable console logs in production
+if (location.hostname !== "localhost") {
+    console.log = function () {};
+    console.debug = function () {};
+    console.info = function () {};
+    console.warn = function () {};
+    //Only console.error for actual error reporting
+}
 
 // Base URL for FastAPI backend (Will adjust for production)
 const API_BASE_URL = window.API_BASE_URL; // Uses config.js

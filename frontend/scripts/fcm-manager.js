@@ -6,7 +6,19 @@ import { isAuthenticated, user, access_token,isGuest } from './authHandler.js';
 import { getSetting, setSetting, storeFCMToken, getFCMToken, deleteFCMToken, storeQueuedNotification, getAllQueuedNotifications, deleteQueuedNotification } from './db.js';
 import { queueTokenRegistration, queueTokenUnregistration, processAllQueuedOperations } from './offline-queue.js';
 
-// At the top of offline-queue.js
+
+
+// Disable console logs in production
+if (location.hostname !== "localhost") {
+    console.log = function () {};
+    console.debug = function () {};
+    console.info = function () {};
+    console.warn = function () {};
+    //Only console.error for actual error reporting
+}
+
+
+
 const API_BASE_URL = window.API_BASE_URL; // Uses config.js
 
 // FCM Manager state

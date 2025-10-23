@@ -1,10 +1,12 @@
 
-//if (location.hostname !== "localhost") {
-    //console.log = function () {};
-    //console.debug = function () {};
-    //console.info = function () {};
-    //console.warn = function () {};
-//}
+// Disable console logs in production
+if (location.hostname !== "localhost") {
+    console.log = function () {};
+    console.debug = function () {};
+    console.info = function () {};
+    console.warn = function () {};
+    //Only console.error for actual error reporting
+}
 // frontend/scripts/config.js
 // Auto-detect environment and set API base URL
 const API_CONFIG = {

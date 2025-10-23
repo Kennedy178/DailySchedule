@@ -119,6 +119,7 @@ async def check_upcoming_tasks():
     """
     Background job that runs every 60 seconds to check for upcoming tasks
     and send FCM notifications to authenticated users.
+    FIXED: Now checks all non-completed tasks, not just those created today.
     """
     try:
         logger.info("Running scheduled task reminder check...")
@@ -139,20 +140,18 @@ async def check_upcoming_tasks():
         start_time_str = start_window.time().strftime("%H:%M:%S")
         end_time_str = end_window.time().strftime("%H:%M:%S")
         
-        logger.debug(f"Checking for tasks between {start_time_str} and {end_time_str} on {current_date}")
+        logger.debug(f"Checking for tasks between {start_time_str} and {end_time_str}")
         
         upcoming_tasks = []
         
         try:
-            # Handle potential midnight crossover
+            # ✅ FIXED: Removed created_at filter - check ALL non-completed tasks
             if start_window.date() == end_window.date():
                 # Same day - simple range query
                 tasks_response = supabase.table("tasks").select(
                     "id, user_id, name, start_time, priority, created_at"
                 ).eq(
                     "completed", False
-                ).eq(
-                    "created_at", current_date.isoformat()  # Today's tasks only
                 ).gte(
                     "start_time", start_time_str
                 ).lte(
@@ -172,8 +171,6 @@ async def check_upcoming_tasks():
                     "id, user_id, name, start_time, priority, created_at"
                 ).eq(
                     "completed", False
-                ).eq(
-                    "created_at", current_date.isoformat()
                 ).gte(
                     "start_time", start_time_str
                 ).lte(
@@ -187,8 +184,6 @@ async def check_upcoming_tasks():
                     "id, user_id, name, start_time, priority, created_at"
                 ).eq(
                     "completed", False
-                ).eq(
-                    "created_at", end_window.date().isoformat()
                 ).gte(
                     "start_time", "00:00:00"
                 ).lte(
@@ -199,13 +194,10 @@ async def check_upcoming_tasks():
                 
                 # Combine results
                 upcoming_tasks = (tasks_response_1.data or []) + (tasks_response_2.data or [])
-                logger.info(f"DEBUG: Query found {len(upcoming_tasks)} tasks: {[task.get('name', 'NO_NAME') + ' at ' + task.get('start_time', 'NO_TIME') for task in upcoming_tasks]}")
-                
                 
         except Exception as e:
             logger.error(f"Supabase error fetching upcoming tasks: {str(e)}")
             return
-        
         
         if not upcoming_tasks:
             logger.debug("No upcoming tasks found")
@@ -372,7 +364,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5500",  # Local development
         "http://localhost:3000",  # Alternative local port
-        "https://getitdone-frontend.onrender.com",  # Replace with your actual frontend URL
+        "https://getitdone-frontend.onrender.com",  # actual frontend URL
     ],
     allow_credentials=True,
     allow_methods=["*"],

@@ -83,13 +83,13 @@ errorToast.style.cssText = `
 document.body.appendChild(errorToast);
 
 // Disable console logs in production
-//if (location.hostname !== "localhost") {
-    //console.log = function () {};
-    //console.debug = function () {};
-    //console.info = function () {};
-    //console.warn = function () {};
-    // Only console.error for actual error reporting
-//}
+if (location.hostname !== "localhost") {
+    console.log = function () {};
+    console.debug = function () {};
+    console.info = function () {};
+    console.warn = function () {};
+    //Only console.error for actual error reporting
+}
 
 /* Default tasks */
 const defaultTasks = [

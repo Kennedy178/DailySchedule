@@ -6,7 +6,16 @@ import { access_token } from './authHandler.js';
 import { authStateManager } from './authStateManager.js';
 
 
-// At the top of offline-queue.js
+// Disable console logs in production
+if (location.hostname !== "localhost") {
+    console.log = function () {};
+    console.debug = function () {};
+    console.info = function () {};
+    console.warn = function () {};
+    //Only console.error for actual error reporting
+}
+
+
 const API_BASE_URL = window.API_BASE_URL; // Uses config.js
 
 // Queue operation types
