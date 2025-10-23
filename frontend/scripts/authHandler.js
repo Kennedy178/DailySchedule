@@ -7,7 +7,17 @@ import { initOfflineQueue, processAllQueuedOperations, hasPendingTasks } from '.
 import { authStateManager } from './authStateManager.js';
 
 
-// Add this function at the top
+
+// Disable console logs in production
+if (location.hostname !== "localhost") {
+    console.log = function () {};
+    console.debug = function () {};
+    console.info = function () {};
+    console.warn = function () {};
+    //Only console.error for actual error reporting
+}
+
+
 function hideAllUI() {
     const authSection = document.getElementById('authSection');
     const appContent = document.querySelector('.container');
@@ -45,10 +55,17 @@ async function checkStoredAuthState() {
                 access_token = savedState.session.access_token;
             }
 
-            // Load tasks before showing UI
+            // Load tasks before showing UI - THIS IS KEY
             if (hasSelectedMode) {
+                console.log('Restoring offline state with mode:', hasSelectedMode);
                 await loadTasks(hasSelectedMode);
-                await updateUI(); // This will show the correct UI
+                
+                // EXPLICITLY show the correct UI
+                const authSection = document.getElementById('authSection');
+                const appContent = document.querySelector('.container');
+                
+                if (authSection) authSection.classList.add('hidden');
+                if (appContent) appContent.classList.remove('hidden');
                 
                 if (!navigator.onLine) {
                     showToast('Working offline. Changes will sync when back online.', 'info');
@@ -127,6 +144,10 @@ async function initAuth() {
         if (hasSelectedMode === 'guest') {
             isGuest = true;
             await loadTasks('guest');
+            // Explicitly show app content
+            document.getElementById('authSection')?.classList.add('hidden');
+            document.querySelector('.container')?.classList.remove('hidden');
+
         }
 
         // 5. Handle authenticated mode
@@ -138,6 +159,9 @@ async function initAuth() {
                 await loadTasks('authenticated'); // Will use cached tasks
                 console.log('Offline: Using cached tasks for authenticated user');
             }
+            // Explicitly show app content
+            document.getElementById('authSection')?.classList.add('hidden');
+            document.querySelector('.container')?.classList.remove('hidden');
         }
 
         // 6. Set up auth state change listener
@@ -203,22 +227,30 @@ async function initAuth() {
 
         // 8. Network state handlers
         // 8. Network state handlers
-        window.addEventListener('online', async () => {
-            // Verify session when back online
-            if (hasSelectedMode === 'authenticated') {
-                const { data: { session }, error } = await supabase.auth.getSession();
-                if (error || !session) {
-                    // Only clear if verification fails
-                    await authStateManager.clearAuthState();
-                    hasSelectedMode = null;
-                    updateUI();
-                } else {
-                    // Session is valid, process queued operations
-                    setTimeout(() => processAllQueuedOperations(), 1000);
-                }
-            }
-            showToast('Back online!', 'success'); // Add this line
-        });
+        // Network state handlers
+window.addEventListener('online', async () => {
+    console.log('Back online - verifying session and refreshing...');
+    showToast('Back online! Refreshing...', 'success');
+    
+    // Verify session when back online
+    if (hasSelectedMode === 'authenticated') {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error || !session) {
+            // Session invalid, clear and show auth
+            await authStateManager.clearAuthState();
+            hasSelectedMode = null;
+            updateUI();
+        } else {
+            // Session valid, process queued operations
+            setTimeout(() => processAllQueuedOperations(), 1000);
+        }
+    }
+    
+    // AUTO-REFRESH: Reload page to restore proper state
+    setTimeout(() => {
+        window.location.reload();
+    }, 1500); // Give 1.5s for toast to show
+});
 
         // Add offline handler
         window.addEventListener('offline', () => {
@@ -629,32 +661,7 @@ window.addEventListener('load', async () => {
     hideAllUI(); // Hide everything first
     
     try {
-        // Check if page was loaded with auth state from service worker
-        const authStateHeader = document.querySelector('meta[name="x-auth-state"]');
-        if (authStateHeader) {
-            const savedState = JSON.parse(authStateHeader.content);
-            if (savedState) {
-                console.log('Found auth state from service worker:', savedState);
-                // Restore the state
-                hasSelectedMode = savedState.selectedMode;
-                if (savedState.session) {
-                    user = savedState.session.user;
-                    access_token = savedState.session.access_token;
-                }
-                
-                // Load tasks and update UI
-                await loadTasks(hasSelectedMode);
-                await updateUI();
-                
-                if (!navigator.onLine) {
-                    showToast('Working offline. Changes will sync when back online.', 'info');
-                }
-                showInitialUI();
-                return;
-            }
-        }
-
-        // Fallback to checking stored state
+        // Check stored state
         const hasStoredState = await checkStoredAuthState();
         if (!hasStoredState) {
             if (!navigator.onLine) {

@@ -5,13 +5,14 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-comp
 
 
 
-//if (self.location.hostname !== "localhost") {
-    //console.log = function () {};
-    //console.debug = function () {};
-    //console.info = function () {};
-    //console.warn = function () {};
-    // Keep console.error for actual error reporting
-//}
+// Disable console logs in production
+if (location.hostname !== "localhost") {
+    console.log = function () {};
+    console.debug = function () {};
+    console.info = function () {};
+    console.warn = function () {};
+    //Only console.error for actual error reporting
+}
 
 //--To be changed as per indexedDB versioning--
 const DB_NAME = 'getitdone';
@@ -131,43 +132,7 @@ self.addEventListener('fetch', event => {
         (async () => {
             const cache = await caches.open('getitdone-v1');
 
-            // Check if this is a navigation request (page refresh/load)
-            if (event.request.mode === 'navigate') {
-                // Check if we have cached auth state
-                if (cachedAuthState) {
-                    try {
-                        // First try network
-                        const networkResponse = await fetch(event.request);
-                        if (networkResponse.ok) {
-                            const newResponse = new Response(networkResponse.body, {
-                                status: 200,
-                                headers: new Headers({
-                                    ...Object.fromEntries(networkResponse.headers.entries()),
-                                    'X-Auth-State': JSON.stringify(cachedAuthState)
-                                })
-                            });
-                            return newResponse;
-                        }
-                    } catch (error) {
-                        console.log('SW: Network fetch failed, using cached response');
-                    }
-
-                    // If network fails, use cached response with auth state
-                    const cachedResponse = await cache.match('./index.html');
-                    if (cachedResponse) {
-                        const newResponse = new Response(cachedResponse.body, {
-                            status: 200,
-                            headers: new Headers({
-                                ...Object.fromEntries(cachedResponse.headers.entries()),
-                                'X-Auth-State': JSON.stringify(cachedAuthState)
-                            })
-                        });
-                        return newResponse;
-                    }
-                }
-            }
-
-            // For all other requests, try cache first
+            // For all requests, try cache first
             const cachedResponse = await cache.match(event.request);
             if (cachedResponse) {
                 return cachedResponse;
@@ -188,7 +153,6 @@ self.addEventListener('fetch', event => {
         })()
     );
 });
-
 // -------------------------
 // State Variables
 // -------------------------

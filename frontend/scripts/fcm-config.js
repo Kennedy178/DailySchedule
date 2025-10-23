@@ -5,12 +5,14 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
 
-//if (location.hostname !== "localhost") {
-    //console.log = function () {};
-    //console.debug = function () {};
-    //console.info = function () {};
-    //console.warn = function () {};
-//}
+// Disable console logs in production
+if (location.hostname !== "localhost") {
+    console.log = function () {};
+    console.debug = function () {};
+    console.info = function () {};
+    console.warn = function () {};
+    //Only console.error for actual error reporting
+}
 
 // Firebase configuration object
 const firebaseConfig = {
