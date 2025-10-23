@@ -2617,3 +2617,51 @@ END OF BANNER STYLES
         border-top-color: var(--primary);
     }
 }
+
+
+
+
+/* Remove gap at bottom */
+footer.help-footer {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+body {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+html {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+
+/* Mobile - remove bottom gap only */
+@media screen and (max-width: 768px) {
+    footer.help-footer {
+        margin: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    
+    footer.help-footer .container {
+        margin: 0 !important;
+        padding: 10px !important;
+    }
+    
+    footer.help-footer p.footer-text {
+        margin: 0 !important;
+    }
+    
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    html {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100% !important;
+    }
+}
