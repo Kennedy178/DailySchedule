@@ -2621,21 +2621,7 @@ END OF BANNER STYLES
 
 
 
-/* Remove gap at bottom */
-footer.help-footer {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
 
-body {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-
-html {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
 
 
 /* Mobile - remove bottom gap only */
