@@ -48,44 +48,30 @@ async function initAuth() {
     hideAllUI(); // Hide everything first
     
     try {
-        // Check stored state first
-        if (!navigator.onLine) {
-            const hasStoredState = await checkStoredAuthState();
-            if (hasStoredState) {
-                showInitialUI();
-                return; // Exit early if we restored offline state
-            } else {
-                showToast('You are offline. Some features may be limited.', 'warning');
-            }
-        }
-        // 1. Check IndexedDB first for cached auth state and mode
-        const savedState = await authStateManager.getAuthState();
-        
-        if (savedState) {
-            // Restore mode from saved state
-            hasSelectedMode = savedState.selectedMode || await getSetting('hasSelectedMode');
+      
+        // 1. Check mode from settings
+        hasSelectedMode = await getSetting('hasSelectedMode');
+
+        if (hasSelectedMode) {
+            const savedAuthState = await authStateManager.getAuthState();
             
-            if (savedState.session) {
+            if (savedAuthState?.session && navigator.onLine) {
                 try {
-                    await supabase.auth.setSession(savedState.session);
-                    user = savedState.session.user;
-                    access_token = savedState.session.access_token;
-                    
-                    if (!hasSelectedMode) {
-                        hasSelectedMode = 'authenticated';
-                        await setSetting('hasSelectedMode', 'authenticated');
-                    }
+                    await supabase.auth.setSession(savedAuthState.session);
+                    user = savedAuthState.session.user;
+                    access_token = savedAuthState.session.access_token;
                 } catch (sessionError) {
                     console.warn('Failed to restore session:', sessionError);
-                    // Only clear if online, keep state if offline
-                    if (navigator.onLine) {
-                        await authStateManager.clearAuthState();
-                        hasSelectedMode = null;
-                    }
+                    await authStateManager.clearAuthState();
+                    hasSelectedMode = null;
                 }
+            } else if (savedAuthState?.session && !navigator.onLine) {
+                // Offline - use cached session
+                user = savedAuthState.session.user;
+                access_token = savedAuthState.session.access_token;
             }
         }
-
+        
         // 2. Initialize offline queue early
         try {
             await initOfflineQueue();
@@ -192,29 +178,36 @@ async function initAuth() {
         // 8. Network state handlers
         // Network state handlers
 window.addEventListener('online', async () => {
-    console.log('Back online - verifying session and refreshing...');
-    showToast('Back online! Refreshing...', 'success');
+    console.log('Back online - syncing...');
+    showToast('Back online! Syncing...', 'success');
     
-    // Verify session when back online
     if (hasSelectedMode === 'authenticated') {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error || !session) {
-            // Session invalid, clear and show auth
-            await authStateManager.clearAuthState();
-            hasSelectedMode = null;
-            updateUI();
-        } else {
-            // Session valid, process queued operations
-            setTimeout(() => processAllQueuedOperations(), 1000);
+        try {
+            // Verify session
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (error || !session) {
+                await authStateManager.clearAuthState();
+                hasSelectedMode = null;
+                updateUI();
+                return;
+            }
+            
+            // Process offline queue first
+            await processAllQueuedOperations();
+            
+            // Force fresh sync from Supabase
+            await loadTasks('authenticated');
+            
+            showToast('Synced successfully!', 'success');
+        } catch (error) {
+            console.error('Sync failed:', error);
+            showToast('Sync failed. Retrying...', 'error');
         }
+    } else if (hasSelectedMode === 'guest') {
+        // Guest mode - just reload local tasks
+        await loadTasks('guest');
     }
-    
-    // AUTO-REFRESH: Reload page to restore proper state
-    setTimeout(() => {
-        window.location.reload();
-    }, 1500); // Give 1.5s for toast to show
 });
-
         // Add offline handler
         window.addEventListener('offline', () => {
             showToast('You are offline. Changes will be synced when connection is restored.', 'warning');
