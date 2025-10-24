@@ -1,7 +1,7 @@
 import { supabase, signUp, signIn, signOut, getSession, resetPassword } from './auth.js';
 import { showToast, renderTasks, showLoading, loadTasks, clearProfileCache, preloadProfileCache } from './app.js';
 import { getAllTasks, updateTask, setSetting, getSetting, deleteTasksByUserId } from './db.js';
-import { retrySyncTasks, cleanupRealtimeSubscriptions } from './sync.js';
+import { retrySyncTasks, cleanupRealtimeSubscriptions, syncPendingTasks, fetchBackendTasks, cacheBackendTasks } from './sync.js';
 import { initFCMManager, registerFCMToken, unregisterFCMToken, handleSettingsChange } from './fcm-manager.js';
 import { initOfflineQueue, processAllQueuedOperations, hasPendingTasks } from './offline-queue.js';
 import { authStateManager } from './authStateManager.js';
@@ -175,10 +175,8 @@ async function initAuth() {
         setupEventListeners();
 
         // 8. Network state handlers
-        // 8. Network state handlers
-        // Network state handlers
-window.addEventListener('online', async () => {
-    console.log('Back online - syncing...');
+       window.addEventListener('online', async () => {
+    console.log('🌐 Back online - syncing...');
     showToast('Back online! Syncing...', 'success');
     
     if (hasSelectedMode === 'authenticated') {
@@ -192,22 +190,43 @@ window.addEventListener('online', async () => {
                 return;
             }
             
-            // Process offline queue first
+            // Check if we have pending operations
+            const allLocal = await getAllTasks(true);
+            const hasPending = allLocal.some(t => t.pending_sync && t.user_id === user?.id);
+            
+            if (hasPending) {
+                console.log('📤 Found pending operations, syncing to server...');
+                // Use YOUR robust sync function
+                await syncPendingTasks();
+                console.log('✅ Pending operations synced');
+                
+                // Wait for server
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            // Process FCM queue
             await processAllQueuedOperations();
             
-            // Force fresh sync from Supabase
+            // Fetch fresh from server
+            console.log('📥 Fetching fresh data...');
             await loadTasks('authenticated');
             
             showToast('Synced successfully!', 'success');
+            
         } catch (error) {
             console.error('Sync failed:', error);
             showToast('Sync failed. Retrying...', 'error');
+            setTimeout(() => retrySyncTasks(), 3000);
         }
     } else if (hasSelectedMode === 'guest') {
-        // Guest mode - just reload local tasks
         await loadTasks('guest');
     }
 });
+        // Add offline handler
+        window.addEventListener('offline', () => {
+            console.log('🔴 Network: Offline');
+            showToast('You are offline. Changes will be synced when connection is restored.', 'warning');
+        });
         // Add offline handler
         window.addEventListener('offline', () => {
             showToast('You are offline. Changes will be synced when connection is restored.', 'warning');

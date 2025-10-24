@@ -125,6 +125,7 @@ async function fetchBackendTasks() {
     return null; // Network failure fallback
 }
 /* -------------------------- Cache from Backend -------------------------- */
+
 async function cacheBackendTasks(backendTasks) {
     try {
         if (!Array.isArray(backendTasks)) {
@@ -132,30 +133,31 @@ async function cacheBackendTasks(backendTasks) {
             return false;
         }
 
-        const localTasks = await getAllTasks();
+        console.log(`cacheBackendTasks: Starting merge of ${backendTasks.length} tasks from backend`);
+
+        // Get current local tasks
+        const localTasks = await getAllTasks(true); // Include pending deletes
         const localMap = new Map(localTasks.map(t => [String(t.id), t]));
-        const backendIdSet = new Set();
+        const backendIdSet = new Set(backendTasks.map(t => String(t.id)));
 
-        console.log('cacheBackendTasks: merging', backendTasks.length, 'tasks');
-
+        // Step 1: Add/Update tasks from backend
         for (const bt of backendTasks) {
             const id = String(bt.id);
-            backendIdSet.add(id);
-
             const existing = localMap.get(id);
 
-            // If we have a local "pending delete", do NOT merge backend copy.
+            // Skip if we have a pending delete locally (we're waiting to delete from server)
             if (existing?.pending_sync === 'delete') {
-                console.log(`cacheBackendTasks: skip merge for ${id} (pending local delete)`);
+                console.log(`cacheBackendTasks: Skipping ${id} - has pending local delete`);
                 continue;
             }
 
-            // Merge strategy:
-            // - Use backend values for canonical fields.
-            // - If local has pending 'create' or 'update', preserve local completed/is_late.
-            const preserveLocalFlags =
-                existing?.pending_sync === 'create' || existing?.pending_sync === 'update';
+            // Skip if we have a pending create/update (preserve local changes)
+            if (existing?.pending_sync === 'create' || existing?.pending_sync === 'update') {
+                console.log(`cacheBackendTasks: Skipping ${id} - has pending local changes`);
+                continue;
+            }
 
+            // Merge task data
             const merged = {
                 id,
                 user_id: bt.user_id ?? existing?.user_id ?? user?.id ?? null,
@@ -164,38 +166,44 @@ async function cacheBackendTasks(backendTasks) {
                 end_time: bt.end_time,
                 category: bt.category,
                 priority: bt.priority,
-                completed: preserveLocalFlags
-                    ? (existing?.completed ?? false)
-                    : (typeof bt.completed !== 'undefined'
-                        ? bt.completed
-                        : (existing?.completed ?? false)),
-                is_late: preserveLocalFlags
-                    ? (existing?.is_late ?? false)
-                    : (typeof bt.is_late !== 'undefined'
-                        ? bt.is_late
-                        : (existing?.is_late ?? false)),
+                completed: bt.completed ?? false,
+                is_late: bt.is_late ?? false,
                 created_at: bt.created_at ?? existing?.created_at ?? new Date().toISOString().split('T')[0],
-                // Keep any local pending_sync intact so we don't lose unsynced intent.
-                pending_sync: existing?.pending_sync ?? null
+                pending_sync: null // Clear sync flag since this is from server
             };
 
             if (existing) {
                 await updateTask(merged);
+                console.log(`cacheBackendTasks: Updated task ${id}`);
             } else {
                 await addTask(merged);
+                console.log(`cacheBackendTasks: Added new task ${id}`);
             }
         }
 
-        // Cleanup: delete local user tasks that aren't on backend AND have no pending sync.
+        // Step 2: Delete local tasks that don't exist on backend anymore
+        // BUT ONLY if they have no pending sync operations
         const localUserTasks = localTasks.filter(t => t.user_id === user?.id);
+        let deletedCount = 0;
+
         for (const lt of localUserTasks) {
-            if (!backendIdSet.has(String(lt.id)) && (lt.pending_sync == null)) {
-                console.log(`cacheBackendTasks: deleting stale local task ${lt.id}`);
-                await deleteTask(lt.id);
+            const localId = String(lt.id);
+            
+            // Keep tasks with pending operations
+            if (lt.pending_sync) {
+                console.log(`cacheBackendTasks: Keeping ${localId} - has pending operation: ${lt.pending_sync}`);
+                continue;
+            }
+
+            // Delete if not in backend anymore
+            if (!backendIdSet.has(localId)) {
+                await deleteTask(localId);
+                deletedCount++;
+                console.log(`cacheBackendTasks: Deleted stale local task ${localId} (${lt.name})`);
             }
         }
 
-        console.log('cacheBackendTasks: merge complete');
+        console.log(`cacheBackendTasks: Merge complete - Added/Updated ${backendTasks.length} tasks, Deleted ${deletedCount} stale tasks`);
         return true;
     } catch (err) {
         console.error('cacheBackendTasks error:', err);
