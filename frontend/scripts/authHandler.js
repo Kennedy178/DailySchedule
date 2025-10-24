@@ -41,44 +41,7 @@ let isSignUp = false;
 let isGuest = false;
 let hasSelectedMode = null;
 
-async function checkStoredAuthState() {
-    try {
-        const savedState = await authStateManager.getAuthState();
-        console.log('Checking stored auth state:', savedState);
-        
-        if (savedState) {
-            // Restore mode and session
-            hasSelectedMode = savedState.selectedMode;
-            
-            if (savedState.session) {
-                user = savedState.session.user;
-                access_token = savedState.session.access_token;
-            }
 
-            // Load tasks before showing UI - THIS IS KEY
-            if (hasSelectedMode) {
-                console.log('Restoring offline state with mode:', hasSelectedMode);
-                await loadTasks(hasSelectedMode);
-                
-                // EXPLICITLY show the correct UI
-                //const authSection = document.getElementById('authSection');
-                //const appContent = document.querySelector('.container');
-                
-                //if (authSection) authSection.classList.add('hidden');
-                //if (appContent) appContent.classList.remove('hidden');
-                
-                if (!navigator.onLine) {
-                    showToast('Working offline. Changes will sync when back online.', 'info');
-                }
-                return true;
-            }
-        }
-        return false;
-    } catch (error) {
-        console.error('Error checking stored auth state:', error);
-        return false;
-    }
-}
 
 /* Initialize auth and UI */
 async function initAuth() {
@@ -657,27 +620,7 @@ function isAuthenticated() {
     return !!access_token;
 }
 
-window.addEventListener('load', async () => {
-    hideAllUI(); // Hide everything first
-    
-    try {
-        // Check stored state
-        const hasStoredState = await checkStoredAuthState();
-        if (!hasStoredState) {
-            if (!navigator.onLine) {
-                showToast('You are offline. Some features may be limited.', 'warning');
-            }
-            // No stored state, show auth form
-            const authSection = document.getElementById('authSection');
-            if (authSection) authSection.classList.remove('hidden');
-        }
-    } catch (error) {
-        console.error('Error in load event:', error);
-        showToast('Error loading app state', 'error');
-    } finally {
-        showInitialUI(); // Remove loading overlay
-    }
-});
+
 
 /* Export functions for app.js */
 export { initAuth, isAuthenticated, user, supabase, access_token,isGuest };
