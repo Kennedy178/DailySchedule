@@ -1,7 +1,7 @@
 import { supabase, signUp, signIn, signOut, getSession, resetPassword } from './auth.js';
 import { showToast, renderTasks, showLoading, loadTasks, clearProfileCache, preloadProfileCache } from './app.js';
-import { getAllTasks, updateTask, setSetting, getSetting, deleteTasksByUserId } from './db.js';
-import { retrySyncTasks, cleanupRealtimeSubscriptions, syncPendingTasks, fetchBackendTasks, cacheBackendTasks } from './sync.js';
+import { getAllTasks, updateTask, setSetting, getSetting, deleteTasksByUserId,deleteTask } from './db.js';
+import { retrySyncTasks, cleanupRealtimeSubscriptions,setupRealtimeSubscriptions, syncPendingTasks, fetchBackendTasks, cacheBackendTasks } from './sync.js';
 import { initFCMManager, registerFCMToken, unregisterFCMToken, handleSettingsChange } from './fcm-manager.js';
 import { initOfflineQueue, processAllQueuedOperations, hasPendingTasks } from './offline-queue.js';
 import { authStateManager } from './authStateManager.js';
@@ -45,6 +45,12 @@ let hasSelectedMode = null;
 
 /* Initialize auth and UI */
 async function initAuth() {
+    // Prevent multiple simultaneous inits
+    if (window.isInitializing) {
+        console.log('⚠️ Init already in progress, skipping');
+        return;
+    }
+    window.isInitializing = true;
     hideAllUI(); // Hide everything first
     
     try {
@@ -93,25 +99,22 @@ async function initAuth() {
         if (hasSelectedMode === 'guest') {
             isGuest = true;
             await loadTasks('guest');
-            // Explicitly show app content
-            //document.getElementById('authSection')?.classList.add('hidden');
-           // document.querySelector('.container')?.classList.remove('hidden');
-
         }
 
-        // 5. Handle authenticated mode
-        if (hasSelectedMode === 'authenticated') {
-            if (navigator.onLine) {
-                await loadTasks('authenticated');
-                retrySyncTasks();
-            } else {
-                await loadTasks('authenticated'); // Will use cached tasks
-                console.log('Offline: Using cached tasks for authenticated user');
-            }
-            // Explicitly show app content
-            //document.getElementById('authSection')?.classList.add('hidden');
-            //document.querySelector('.container')?.classList.remove('hidden');
-        }
+        // 5. Handle authenticated mode - SYNC-FIRST STRATEGY
+if (hasSelectedMode === 'authenticated') {
+    if (navigator.onLine) {
+        console.log('🔄 Init: Online - using sync-first strategy');
+        
+        // Just load tasks - it will sync pending changes and use local cache
+        await loadTasks('authenticated');
+        console.log('✅ Init: Load completed');
+        
+    } else {
+        console.log('📴 Init: Offline - using cached tasks');
+        await loadTasks('authenticated');
+    }
+}
 
         // 6. Set up auth state change listener
         supabase.auth.onAuthStateChange(async (event, session) => {
@@ -174,71 +177,61 @@ async function initAuth() {
         updateUI();
         setupEventListeners();
 
-        // 8. Network state handlers
-       window.addEventListener('online', async () => {
-    console.log('🌐 Back online - syncing...');
+        // 8. Network state handlers - KEEP YOUR EXISTING ONES
+window.addEventListener('online', async () => {
+    console.log('🌐 STEP 1: Back online event fired');
     showToast('Back online! Syncing...', 'success');
     
     if (hasSelectedMode === 'authenticated') {
+        console.log('🌐 STEP 2: In authenticated mode');
+        
         try {
-            // Verify session
-            const { data: { session }, error } = await supabase.auth.getSession();
-            if (error || !session) {
-                await authStateManager.clearAuthState();
-                hasSelectedMode = null;
-                updateUI();
+            // Ensure we have valid auth
+            console.log('🌐 STEP 3: Checking auth state...');
+            const cachedState = await authStateManager.getAuthState();
+            if (cachedState?.session) {
+                user = cachedState.session.user;
+                access_token = cachedState.session.access_token;
+                console.log('🌐 STEP 4: Using cached session for user:', user?.id);
+            } else {
+                console.error('❌ No session available');
+                showToast('Session expired. Please sign in again.', 'error');
                 return;
             }
             
-            // Check if we have pending operations
-            const allLocal = await getAllTasks(true);
-            const hasPending = allLocal.some(t => t.pending_sync && t.user_id === user?.id);
-            
-            if (hasPending) {
-                console.log('📤 Found pending operations, syncing to server...');
-                // Use YOUR robust sync function
-                await syncPendingTasks();
-                console.log('✅ Pending operations synced');
-                
-                // Wait for server
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-            
-            // Process FCM queue
-            await processAllQueuedOperations();
-            
-            // Fetch fresh from server
-            console.log('📥 Fetching fresh data...');
+            console.log('🌐 STEP 5: Calling loadTasks...');
             await loadTasks('authenticated');
             
+            console.log('🌐 STEP 6: Complete! ✅');
             showToast('Synced successfully!', 'success');
             
         } catch (error) {
-            console.error('Sync failed:', error);
-            showToast('Sync failed. Retrying...', 'error');
-            setTimeout(() => retrySyncTasks(), 3000);
+            console.error('❌ FATAL ERROR in online handler:', error);
+            console.error('Error stack:', error.stack);
+            showToast('Sync failed: ' + error.message, 'error');
         }
-    } else if (hasSelectedMode === 'guest') {
-        await loadTasks('guest');
+    } else {
+        console.log('🌐 Not authenticated, mode:', hasSelectedMode);
     }
 });
+
+
         // Add offline handler
         window.addEventListener('offline', () => {
             console.log('🔴 Network: Offline');
             showToast('You are offline. Changes will be synced when connection is restored.', 'warning');
         });
-        // Add offline handler
-        window.addEventListener('offline', () => {
-            showToast('You are offline. Changes will be synced when connection is restored.', 'warning');
-        });
+       
 
     } catch (error) {
         console.error('Init auth error:', error);
         showToast('Error initializing app', 'error');
     } finally {
+        window.isInitializing = false;
         showInitialUI();
     }
 }
+
 // Keep your existing updateUI function as is
 async function updateUI() {
     const authSection = document.getElementById('authSection');

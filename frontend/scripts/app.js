@@ -473,90 +473,148 @@ export async function loadTasks(mode) {
 
         firstCustomTaskAdded = (await getSetting('firstCustomTaskAdded')) === 'true';
 
-        if (mode === 'authenticated') {
+if (mode === 'authenticated') {
     if (!isAuthenticated()) {
         console.warn('Not authenticated, cannot load tasks');
         showToast('Please sign in to load tasks.', 'error');
         return;
     }
-
-    // Start with local IndexedDB tasks for this user
-    tasks = (await getAllTasks()).filter(task => task.user_id === user.id);
-
+    
     if (navigator.onLine) {
-        // Fix any broken custom task IDs before syncing
-        for (const task of tasks) {
-            if (task.id.startsWith('customTask') && task.user_id === user.id) {
-                const newTask = { ...task, id: crypto.randomUUID(), pending_sync: 'update' };
-                await updateTask(newTask);
+        console.log('🔄 LoadTasks: Online - Quick sync process');
+        
+        try {
+            // STEP 1: Get current local tasks first
+            tasks = (await getAllTasks()).filter(task => task.user_id === user.id);
+            console.log(`📱 LoadTasks: Found ${tasks.length} local tasks`);
+            
+            // STEP 2: Fix any broken custom task IDs before syncing
+            let fixedCount = 0;
+            for (const task of tasks) {
+                if (task.id.startsWith('customTask') && task.user_id === user.id) {
+                    const newTask = { ...task, id: crypto.randomUUID(), pending_sync: 'update' };
+                    await updateTask(newTask);
+                    fixedCount++;
+                    console.log(`🔧 LoadTasks: Fixed custom task ID for ${task.name}`);
+                }
             }
-        }
-
-        // Sync pending local changes first
-        await syncPendingTasks();
-
-        // Check if user has ever created tasks
-        // Check if user has ever created tasks (both local and server)
-const localFlag = (await getSetting('userHasCreatedTasks')) === 'true';
-const serverFlag = await checkUserHasCreatedTasks();
-const userHasCreatedTasks = localFlag || serverFlag;
-
-// Sync the flags if they're mismatched
-if (serverFlag && !localFlag) {
-    await setSetting('userHasCreatedTasks', 'true');
-} else if (localFlag && !serverFlag) {
-    await updateUserProfileFlag(true);
-}
-
-        // Try fetching backend tasks
-        const backendTasks = await fetchBackendTasks();
-
-        if (backendTasks === null) {
-            // Network failure - show reconnecting message
-            if (!userHasCreatedTasks && tasks.length === 0) {
-                showReconnectingState();
-                return; // Don't load anything
-            } else {
-                // User has created tasks before or has cached tasks - use cached
-                console.log("Network failed, using cached tasks");
-                showToast('Using offline data. Reconnecting...', 'warning');
-            }
-        } else if (Array.isArray(backendTasks)) {
-            if (backendTasks.length > 0) {
-                // User has tasks on backend
-                await cacheBackendTasks(backendTasks);
+            if (fixedCount > 0) {
                 tasks = (await getAllTasks()).filter(task => task.user_id === user.id);
-                
-                // Mark that user has created tasks
-                if (!userHasCreatedTasks) {
-                    await setSetting('userHasCreatedTasks', 'true');
-                }
-            } else if (!userHasCreatedTasks && tasks.length === 0) {
-                // Truly new user - safe to load defaults
-                tasks = defaultTasks.map(task => ({
-                    ...task,
-                    id: crypto.randomUUID(),
-                    user_id: user.id,
-                    pending_sync: 'create'
-                }));
-                for (const task of tasks) {
-                    await addTask(task);
-                }
-                await syncPendingTasks();
-                console.log('Loaded defaults for new authenticated user');
-            } else {
-                // User deleted all their tasks but has created before - don't load defaults
-                console.log('User has no tasks but has created before - not loading defaults');
+                console.log(`🔧 LoadTasks: Fixed ${fixedCount} custom task IDs`);
             }
+            
+            // STEP 3: Check user flags (with timeout protection)
+            console.log('🔄 LoadTasks: Checking user flags...');
+            let userHasCreatedTasks = false;
+            try {
+                const localFlag = (await getSetting('userHasCreatedTasks')) === 'true';
+                console.log('📱 LoadTasks: Local flag:', localFlag);
+                
+                // Wrap server call with timeout
+                const serverFlagPromise = checkUserHasCreatedTasks();
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Server flag check timeout')), 3000)
+                );
+                
+                const serverFlag = await Promise.race([serverFlagPromise, timeoutPromise])
+                    .catch(err => {
+                        console.warn('⚠️ LoadTasks: Server flag check failed:', err.message);
+                        return localFlag; // Fall back to local flag
+                    });
+                
+                console.log('🌐 LoadTasks: Server flag:', serverFlag);
+                userHasCreatedTasks = localFlag || serverFlag;
+                
+                // Sync flags if needed
+                if (serverFlag && !localFlag) {
+                    await setSetting('userHasCreatedTasks', 'true');
+                } else if (localFlag && !serverFlag) {
+                    updateUserProfileFlag(true).catch(err => 
+                        console.warn('Failed to update profile flag:', err)
+                    );
+                }
+            } catch (flagError) {
+                console.error('⚠️ LoadTasks: Error checking flags:', flagError);
+                // Continue with local value
+                userHasCreatedTasks = (await getSetting('userHasCreatedTasks')) === 'true';
+            }
+            console.log('✅ LoadTasks: User has created tasks:', userHasCreatedTasks);
+            
+            // STEP 4: Handle users with empty cache or new users
+            if (tasks.length === 0) {
+                if (userHasCreatedTasks) {
+                    // User has tasks on server but empty cache - fetch from backend
+                    console.log('🔄 LoadTasks: User has tasks on server, fetching...');
+                    const backendTasks = await fetchBackendTasks();
+                    
+                    if (backendTasks && backendTasks.length > 0) {
+                        await cacheBackendTasks(backendTasks);
+                        tasks = (await getAllTasks()).filter(task => task.user_id === user.id);
+                        console.log(`✅ LoadTasks: Fetched and cached ${tasks.length} tasks from server`);
+                    } else {
+                        console.log('⚠️ LoadTasks: Server fetch failed or returned empty - user may need to refresh');
+                    }
+                } else {
+                    // New user with no tasks - load defaults
+                    console.log('🆕 LoadTasks: New user with no tasks - loading defaults');
+                    tasks = defaultTasks.map(task => ({
+                        ...task,
+                        id: crypto.randomUUID(),
+                        user_id: user.id,
+                        pending_sync: 'create'
+                    }));
+                    for (const task of tasks) {
+                        await addTask(task);
+                    }
+                    console.log('✅ LoadTasks: Loaded defaults for new authenticated user');
+                }
+            }
+            
+            // STEP 5: Sync pending changes to server
+            console.log('🔄 LoadTasks: Syncing pending changes...');
+            await syncPendingTasks();
+            console.log('✅ LoadTasks: Sync completed');
+            
+            // STEP 6: Reload tasks after sync
+            tasks = (await getAllTasks()).filter(task => task.user_id === user.id);
+            console.log(`📱 LoadTasks: Final state - ${tasks.length} tasks loaded`);
+            
+            // Log task names for verification
+            if (tasks.length > 0) {
+                console.log('✅ LoadTasks: Task names:', tasks.map(t => t.name).join(', '));
+            }
+            
+            // Mark that user has created tasks
+            if (!userHasCreatedTasks && tasks.length > 0) {
+                await setSetting('userHasCreatedTasks', 'true');
+            }
+            
+            // STEP 7: Setup realtime subscriptions
+            console.log('🔄 LoadTasks: Setting up realtime subscriptions...');
+            setupRealtimeSubscriptions();
+            console.log('✅ LoadTasks: Realtime subscriptions active');
+            
+        } catch (loadError) {
+            console.error('❌ FATAL ERROR in loadTasks (online):', loadError);
+            console.error('Error stack:', loadError.stack);
+            showToast('Failed to load tasks: ' + loadError.message, 'error');
+            throw loadError; // Re-throw so online handler can catch it
         }
-
-        setupRealtimeSubscriptions();
-    } else if (tasks.length === 0) {
-        // Offline & no cached tasks → show offline message
-        showReconnectingState();
-        return;
+        
+    } else {
+        // Offline mode
+        console.log('📴 LoadTasks: Offline - Loading cached tasks');
+        tasks = (await getAllTasks()).filter(task => task.user_id === user.id);
+        
+        if (tasks.length === 0) {
+            console.log('📴 LoadTasks: No cached tasks available offline');
+            showReconnectingState();
+            return;
+        }
+        
+        console.log(`📴 LoadTasks: Loaded ${tasks.length} cached tasks for offline mode`);
     }
-} else if (mode === 'guest') {
+}else if (mode === 'guest') {
             tasks = (await getAllTasks()).filter(task => task.user_id === null);
 
             // Clear pending_sync for guest tasks
@@ -1778,7 +1836,7 @@ document.getElementById('edit-category').addEventListener('change', () => {
     if (categorySelect.value !== 'Custom') customCategory.value = '';
 });
 
-/* Add or edit task */
+
 /* Add or edit task */
 addTaskBtn.addEventListener('click', async () => {
     const startTime = document.getElementById('startTime').value;
@@ -1849,12 +1907,18 @@ addTaskBtn.addEventListener('click', async () => {
     try {
         if (editIndex === '') {
             // NEW TASK: Add to local array and render immediately
-            tasks.push(task);
+            await addTask(task);  // ← Add to IndexedDB first
+            // Reload sorted tasks from IndexedDB
+            tasks = (await getAllTasks()).filter(t =>
+                isAuthenticated() ? t.user_id === user.id : t.user_id === null
+            ); 
+
+
             lastRenderHash = '';
-            await renderTasks(tasks); // Render with local array
+            await renderTasks(tasks); // ← Now sorted!
             
             // Then persist to IndexedDB
-            await addTask(task);
+            //await addTask(task);
             
             // Show success message
             showToast('Task added successfully!', 'success');
@@ -2578,13 +2642,9 @@ listenForSettingsChange();
 async function init() {     
     try {         
         initGlobalUtils();         
+        
+        // Initialize auth FIRST - this handles offline queue and FCM internally
         await initAuth();                  
-        
-        // Initialize the offline queue system         
-        await initOfflineQueue();                  
-        
-        // Initialize FCM manager         
-        await initFCMManager();                  
         
         // Start listening for settings changes
         listenForSettingsChange();
@@ -2601,16 +2661,6 @@ async function init() {
         // Always schedule daily reset checks         
         setInterval(checkDateChange, 30000);          
         
-        // PRELOAD PROFILE CACHE: If user is already authenticated on page load
-        if (isAuthenticated()) {
-            console.log("Authenticated user detected on init - preloading profile cache");
-            try {
-                await preloadProfileCache();
-            } catch (error) {
-                console.error('Failed to preload profile cache on init:', error);
-            }
-        }
-        
         // CRITICAL: Different notification strategies based on auth status         
         if (isAuthenticated()) {             
             console.log("Authenticated user: FCM backend handles all notifications");             
@@ -2620,6 +2670,8 @@ async function init() {
             // Enable local notification checking for guests             
             setInterval(debouncedCheckNotifications, 30000);         
         }   
+        
+        // Service Worker sync
         if ('serviceWorker' in navigator) {
             const registration = await navigator.serviceWorker.getRegistration();
             if (registration && registration.active) {
@@ -2644,6 +2696,8 @@ async function init() {
                 });
             }
         }           
+        
+        console.log('🎉 App initialization completed successfully');
         
     } catch (error) {         
         console.error('App initialization failed:', error);         

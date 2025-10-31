@@ -318,48 +318,84 @@ async function syncPendingTasks() {
             }
         }
 
-        // ---------- Updates ----------
-        for (const task of updates) {
-            const localId = String(task.id);
-            try {
-                if (inFlightIds.has(localId)) {
-                    console.log(`syncPendingTasks(update): skip in-flight ${localId}`);
-                    continue;
+// ---------- Updates ----------
+for (const task of updates) {
+    const localId = String(task.id);
+    try {
+        if (inFlightIds.has(localId)) {
+            console.log(`syncPendingTasks(update): skip in-flight ${localId}`);
+            continue;
+        }
+        markInFlight(localId);
+
+        const headers = {
+            ...baseHeaders,
+            'Idempotency-Key': `${localId}:${task.created_at || ''}`
+        };
+
+        const effectiveId = tempToServerId.get(localId) || localId;
+        const payload = {
+            name: task.name,
+            start_time: task.start_time,
+            end_time: task.end_time,
+            category: task.category,
+            priority: task.priority,
+            completed: !!task.completed,
+            is_late: !!task.is_late,
+            created_at: task.created_at,
+            user_id: task.user_id
+        };
+
+        // Try UPDATE first
+        try {
+            const res = await fetchWithRetry(`${API_BASE_URL}/tasks/${effectiveId}`, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify(payload)
+            });
+            await updateTask({ ...task, id: effectiveId, pending_sync: null });
+            console.log(`syncPendingTasks: updated task ${effectiveId}`);
+            markInFlight(effectiveId);
+        } catch (updateError) {
+            // If update fails with 400/404, task probably doesn't exist - try CREATE
+            if (updateError.message.includes('400') || updateError.message.includes('404')) {
+                console.log(`syncPendingTasks: Update failed (task doesn't exist on server), creating instead for ${localId}`);
+                
+                try {
+                    const createRes = await fetchWithRetry(`${API_BASE_URL}/tasks`, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify(payload)
+                    });
+                    const json = await createRes.json();
+                    const serverId = String(json.id);
+                    
+                    // Replace local with server version
+                    if (serverId !== localId) {
+                        await deleteTask(localId);
+                        await addTask({ ...task, id: serverId, pending_sync: null });
+                        tempToServerId.set(localId, serverId);
+                        console.log(`syncPendingTasks: Created as new task - mapped ${localId} -> ${serverId}`);
+                    } else {
+                        await updateTask({ ...task, pending_sync: null });
+                        console.log(`syncPendingTasks: Created task ${serverId}`);
+                    }
+                    markInFlight(serverId);
+                } catch (createError) {
+                    console.error(`syncPendingTasks: Both update and create failed for ${localId}`, createError);
+                    throw createError;
                 }
-                markInFlight(localId);
-
-                const headers = {
-                    ...baseHeaders,
-                    'Idempotency-Key': `${localId}:${task.created_at || ''}`
-                };
-
-                const effectiveId = tempToServerId.get(localId) || localId;
-                const payload = {
-                    name: task.name,
-                    start_time: task.start_time,
-                    end_time: task.end_time,
-                    category: task.category,
-                    priority: task.priority,
-                    completed: !!task.completed,
-                    is_late: !!task.is_late,
-                    created_at: task.created_at,
-                    user_id: task.user_id
-                };
-
-                const res = await fetchWithRetry(`${API_BASE_URL}/tasks/${effectiveId}`, {
-                    method: 'PUT',
-                    headers,
-                    body: JSON.stringify(payload)
-                });
-                await updateTask({ ...task, id: effectiveId, pending_sync: null });
-                console.log(`syncPendingTasks: updated task ${effectiveId}`);
-                markInFlight(effectiveId);
-            } catch (err) {
-                console.error(`syncPendingTasks(update): error for ${localId}`, err);
-            } finally {
-                clearInFlight(localId);
+            } else {
+                // Some other error - rethrow
+                throw updateError;
             }
         }
+    } catch (err) {
+        console.error(`syncPendingTasks(update): error for ${localId}`, err);
+    } finally {
+        clearInFlight(localId);
+    }
+}
 
         // ---------- Deletes (logical batch) ----------
         if (deletes.length) {
@@ -622,13 +658,17 @@ async function checkUserHasCreatedTasks() {
 }
 
 /* ------------------------------ Retry on Online ------------------------------ */
+/* ------------------------------ Retry on Online ------------------------------ */
 function retrySyncTasks() {
+    // DISABLED: This was causing conflicts with authHandler.js online handler
+    // The online sync is now handled exclusively in authHandler.js
+    console.log('retrySyncTasks: Function disabled - sync handled by authHandler.js');
+    
+    /*
     window.addEventListener('online', async () => {
         console.log('Network online, retrying sync...');
         try {
-            // Push local changes first to ensure deletes are processed before fetching
             await syncPendingTasks();
-            // Then fetch and merge backend tasks
             const tasks = await fetchBackendTasks();
             await cacheBackendTasks(tasks);
             console.log('Retry sync completed');
@@ -636,6 +676,7 @@ function retrySyncTasks() {
             console.error('Retry sync failed:', error.message);
         }
     });
+    */
 }
 
 export { fetchBackendTasks, cacheBackendTasks, syncPendingTasks, setupRealtimeSubscriptions, retrySyncTasks, cleanupRealtimeSubscriptions,updateUserProfileFlag, checkUserHasCreatedTasks };
