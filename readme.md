@@ -681,7 +681,7 @@ Proprietary and Confidential.
 
 Interested in using GetItDone for your organization? Need custom features? Want to discuss licensing options?
 
-**Contact:** [PLACEHOLDER_EMAIL]  
+**Contact:** - 📧 **Email**: [Email Me](mailto:getitdonepwa@gmail.com) 
 **Response Time:** 24-48 hours
 
 ### Privacy & Data Protection
