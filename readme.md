@@ -430,7 +430,7 @@ GetItDone uses a modern, scalable architecture designed for reliability and perf
 │  └─────────────────────────────────────────────────┘        │
 │                         ↕                                   │
 │  ┌─────────────────────────────────────────────────┐        │
-│  │            External Services                    │       │
+│  │            External Services                    │        │
 │  ├─────────────────────────────────────────────────┤        │
 │  │  • Firebase Cloud Messaging (FCM)               │        │
 │  │  • Gmail SMTP (Email Delivery)                  │        │
