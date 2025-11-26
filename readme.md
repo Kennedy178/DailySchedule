@@ -396,47 +396,47 @@ GetItDone uses a modern, scalable architecture designed for reliability and perf
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     GetItDone Architecture                   │
+│                     GetItDone Architecture                  │
 ├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌─────────────────────────────────────────────────┐       │
-│  │           Frontend Layer (Browser/PWA)          │       │
-│  ├─────────────────────────────────────────────────┤       │
-│  │  • HTML5/CSS3/JavaScript (ES6+)                 │       │
-│  │  • Service Worker (Offline Support)             │       │
-│  │  • IndexedDB (Local Persistence)                │       │
-│  │  • FCM Client (Push Notifications)              │       │
-│  │  • Offline Queue Manager                        │       │
-│  └─────────────────────────────────────────────────┘       │
-│                         ↕                                    │
-│  ┌─────────────────────────────────────────────────┐       │
-│  │          Backend Layer (FastAPI/Python)         │       │
-│  ├─────────────────────────────────────────────────┤       │
-│  │  • REST API Endpoints                           │       │
-│  │  • Authentication Middleware                    │       │
-│  │  • Task Management Logic                        │       │
-│  │  • Notification Service                         │       │
-│  │  • Background Job Scheduler                     │       │
-│  │  • Email Service                                │       │
-│  └─────────────────────────────────────────────────┘       │
-│                         ↕                                    │
-│  ┌─────────────────────────────────────────────────┐       │
-│  │       Database Layer (Supabase/PostgreSQL)      │       │
-│  ├─────────────────────────────────────────────────┤       │
-│  │  • Users & Authentication                       │       │
-│  │  • Tasks & Metadata                             │       │
-│  │  • Sync Logs & Audit Trail                      │       │
-│  │  • Row Level Security (RLS)                     │       │
-│  └─────────────────────────────────────────────────┘       │
-│                         ↕                                    │
-│  ┌─────────────────────────────────────────────────┐       │
-│  │            External Services                     │       │
-│  ├─────────────────────────────────────────────────┤       │
-│  │  • Firebase Cloud Messaging (FCM)               │       │
-│  │  • Gmail SMTP (Email Delivery)                  │       │
-│  │  • Render.com (Hosting & Deployment)            │       │
-│  └─────────────────────────────────────────────────┘       │
-│                                                              │
+│                                                             │
+│  ┌─────────────────────────────────────────────────┐        │
+│  │           Frontend Layer (Browser/PWA)          │        │
+│  ├─────────────────────────────────────────────────┤        │
+│  │  • HTML5/CSS3/JavaScript (ES6+)                 │        │
+│  │  • Service Worker (Offline Support)             │        │
+│  │  • IndexedDB (Local Persistence)                │        │
+│  │  • FCM Client (Push Notifications)              │        │
+│  │  • Offline Queue Manager                        │        │
+│  └─────────────────────────────────────────────────┘        │
+│                         ↕                                   │
+│  ┌─────────────────────────────────────────────────┐        │
+│  │          Backend Layer (FastAPI/Python)         │        │
+│  ├─────────────────────────────────────────────────┤        │
+│  │  • REST API Endpoints                           │        │
+│  │  • Authentication Middleware                    │        │
+│  │  • Task Management Logic                        │        │
+│  │  • Notification Service                         │        │
+│  │  • Background Job Scheduler                     │        │
+│  │  • Email Service                                │        │
+│  └─────────────────────────────────────────────────┘        │
+│                         ↕                                   │
+│  ┌─────────────────────────────────────────────────┐        │
+│  │       Database Layer (Supabase/PostgreSQL)      │        │
+│  ├─────────────────────────────────────────────────┤        │
+│  │  • Users & Authentication                       │        │
+│  │  • Tasks & Metadata                             │        │
+│  │  • Sync Logs & Audit Trail                      │        │
+│  │  • Row Level Security (RLS)                     │        │
+│  └─────────────────────────────────────────────────┘        │
+│                         ↕                                   │
+│  ┌─────────────────────────────────────────────────┐        │
+│  │            External Services                    │       │
+│  ├─────────────────────────────────────────────────┤        │
+│  │  • Firebase Cloud Messaging (FCM)               │        │
+│  │  • Gmail SMTP (Email Delivery)                  │        │
+│  │  • Render.com (Hosting & Deployment)            │        │
+│  └─────────────────────────────────────────────────┘        │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
